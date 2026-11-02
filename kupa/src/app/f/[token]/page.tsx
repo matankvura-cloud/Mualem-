@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { fundByToken, totals, book, bumpViews } from '@/lib/funds';
 import { TOKEN_RE } from '@/lib/tokens';
-import { siteUrl } from '@/lib/site';
+import { siteUrl, BRAND } from '@/lib/site';
+import { memOf } from '@/lib/format';
 import FundPublic from '@/components/FundPublic';
 import Footer from '@/components/Footer';
 
@@ -14,8 +15,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { token } = await params;
   const fund = TOKEN_RE.test(token) ? await fundByToken(token) : null;
   return {
-    title: fund ? `לזכרו של ${fund.display_name}` : 'קופת לזכרו',
-    description: fund ? `במקום פרחים: הקופה של משפחת ${fund.display_name}.` : undefined,
+    title: fund ? `${memOf(fund.gender)} ${fund.display_name}` : BRAND,
+    description: fund ? `${BRAND}: הקופה של משפחת ${fund.display_name}.` : undefined,
     robots: { index: false, follow: false },
   };
 }

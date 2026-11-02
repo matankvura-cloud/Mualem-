@@ -16,6 +16,10 @@ export function EditFundForm({ manage, fund }: { manage: string; fund: Fund }) {
     <form action={action} className="stack card" noValidate>
       <h2 style={{ fontSize: 18 }}>פרטי העמוד</h2>
       <div className="field"><label className="l" htmlFor="display_name">שם הנפטר/ת</label><input id="display_name" name="display_name" type="text" required maxLength={120} defaultValue={fund.display_name} /></div>
+      <div role="radiogroup" aria-label="לזכרו או לזכרה" style={{ display: 'flex', gap: 18 }}>
+        <label className="fd-check"><input type="radio" name="gender" value="m" defaultChecked={fund.gender !== 'f'} />לזכרו</label>
+        <label className="fd-check"><input type="radio" name="gender" value="f" defaultChecked={fund.gender === 'f'} />לזכרה</label>
+      </div>
       <div className="grid2">
         <div className="field"><label className="l" htmlFor="years">שנים</label><input id="years" name="years" type="text" maxLength={60} defaultValue={fund.years ?? ''} /></div>
         <div className="field"><label className="l" htmlFor="city">עיר</label><input id="city" name="city" type="text" maxLength={80} defaultValue={fund.city ?? ''} /></div>

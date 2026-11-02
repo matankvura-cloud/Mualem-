@@ -20,8 +20,8 @@ const app = spawn('npx', ['next', 'start', '-p', String(PORT)], {
   env: { ...process.env, KUPA_LOCAL_DB: 'memory', DATABASE_URL: '', POSTGRES_URL: '',
     MORNING_AUTH_URL: `http://localhost:${MOCK}/idp/v1/oauth/token`, MORNING_API_BASE: `http://localhost:${MOCK}/api/v1`,
     MORNING_ID: 'test-id', MORNING_SECRET: 'test-secret', MORNING_HOOK: 'hook-secret-123', MORNING_PLUGIN_ID: '',
-    ADMIN_PASSWORD: 'admin-pass', NEXT_PUBLIC_SITE_URL: SITE, FEE_PCT: '6' },
-  stdio: ['ignore', 'pipe', 'pipe'],
+    ADMIN_PASSWORD: 'admin-pass', NEXT_PUBLIC_SITE_URL: SITE, FEE_PCT: '6', NEXT_PUBLIC_BRAND: 'במקום פרחים' },
+  stdio: ['ignore', 'pipe', 'pipe'], detached: true,
 });
 app.stdout.on('data', (d) => process.env.E2E_VERBOSE && process.stdout.write('[app] ' + d));
 app.stderr.on('data', (d) => process.stdout.write('[app:err] ' + d));
@@ -192,6 +192,22 @@ try {
   await page.screenshot({ path: OUT + '08-admin-fund.png', fullPage: true });
   await page.goto(manageUrl);
   check((await page.textContent('.stats')).includes('₪450'), 'המשפחה רואה את התשלום לספק');
+  // 9. קופה לזכרה
+  console.log('לזכרה');
+  await page.setViewportSize({ width: 420, height: 860 });
+  await page.goto(`${SITE}/new`);
+  await page.fill('#display_name', 'שרה כהן ז״ל');
+  await page.check('input[name=gender][value=f]');
+  await page.fill('#manager_name', 'דוד כהן');
+  await page.fill('#manager_phone', '0521234567');
+  await page.click('button[type=submit]');
+  await page.waitForURL(/\/m\/[A-Za-z0-9_-]+\?welcome=1/);
+  const pub2 = (await page.locator('.linkbox').first().textContent()).trim();
+  await page.goto(pub2);
+  check((await page.textContent('.fd-eyebrow')).trim() === 'לזכרה של', 'עמוד לזכרה: "לזכרה של"');
+  check((await page.title()).startsWith('לזכרה של שרה'), 'כותרת הדפדפן לזכרה');
+  await page.goto(pub2 + '/give');
+  check((await page.getAttribute('#fdMsg', 'placeholder')).includes('הייתה'), 'placeholder בנקבה');
   await page.goto(`${SITE}/`);
   await page.screenshot({ path: OUT + '00-landing.png', fullPage: true });
 } catch (e) {
@@ -199,7 +215,7 @@ try {
   console.error('שגיאה בבדיקה:', e);
 } finally {
   await browser.close();
-  app.kill('SIGTERM');
+  try { process.kill(-app.pid, 'SIGTERM'); } catch { app.kill('SIGTERM'); }
   mock.close();
 }
 console.log(fails ? `\n${fails} בדיקות נכשלו` : '\nכל הבדיקות עברו');

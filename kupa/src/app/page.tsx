@@ -1,18 +1,18 @@
 import Link from 'next/link';
 import Footer from '@/components/Footer';
-import { FEE_PCT } from '@/lib/site';
+import { FEE_PCT, BRAND, TAGLINE } from '@/lib/site';
 
 export default function Landing() {
   return (
     <div className="fd">
       <section className="land-hero">
-        <p className="fd-eyebrow">קופת לזכרו</p>
-        <h1>במקום פרחים</h1>
+        <p className="fd-eyebrow">{TAGLINE}</p>
+        <h1>{BRAND}</h1>
         <p>
           קופה דיגיטלית לזכר מי שהלך. המשפחה פותחת אותה בדקה, שולחת קישור אחד,
           וכל מי שרוצה לעזור מפקיד ישירות לקופה במקום לשלוח זר.
         </p>
-        <Link className="btn" href="/new">לפתוח קופה לזכרו</Link>
+        <Link className="btn" href="/new">לפתוח קופה</Link>
         <span className="sub">בלי הרשמה · בלי עלות למשפחה · הקישור מוכן מיד</span>
       </section>
 

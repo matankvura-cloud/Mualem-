@@ -18,11 +18,11 @@ export async function updateFund(manage: string, _prev: ActState, fd: FormData):
   const f = cleanFundInput(fd);
   if (!f.display_name || f.display_name.length < 2) return { error: 'צריך את שם הנפטר/ת.' };
   await many(
-    `UPDATE funds SET display_name=$2, years=$3, city=$4, quote=$5, quote_by=$6, photo_initial=$7, purpose=$8, target_ils=$9,
+    `UPDATE funds SET display_name=$2, gender=$16, years=$3, city=$4, quote=$5, quote_by=$6, photo_initial=$7, purpose=$8, target_ils=$9,
        surplus_to=$10, manager_name=COALESCE($11, manager_name), manager_phone=COALESCE($12, manager_phone), manager_email=$13,
        show_amounts=$14, allow_messages=$15, updated_at=now() WHERE id=$1`,
     [fund.id, f.display_name, f.years, f.city, f.quote, f.quote_by, f.display_name.trim().charAt(0), f.purpose, f.target_ils,
-      f.surplus_to, f.manager_name, f.manager_phone, f.manager_email, f.show_amounts, f.allow_messages]);
+      f.surplus_to, f.manager_name, f.manager_phone, f.manager_email, f.show_amounts, f.allow_messages, f.gender]);
   revalidatePath(`/m/${manage}`); revalidatePath(`/f/${fund.token}`);
   return { ok: 'הפרטים נשמרו.' };
 }

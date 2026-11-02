@@ -5,7 +5,7 @@ import type { FundEvent } from './format';
 
 export type Fund = {
   id: string; token: string; manage_token: string; status: 'open' | 'closed';
-  display_name: string; years: string | null; city: string | null; quote: string | null; quote_by: string | null;
+  display_name: string; gender: 'm' | 'f'; years: string | null; city: string | null; quote: string | null; quote_by: string | null;
   photo_initial: string | null; purpose: string | null; target_ils: unknown; surplus_to: string | null;
   events: FundEvent[]; manager_name: string | null; manager_phone: string | null; manager_email: string | null;
   show_amounts: boolean; allow_messages: boolean; fee_pct: unknown; view_count: number;
@@ -87,6 +87,7 @@ export function cleanFundInput(fd: FormData) {
   const email = str(fd.get('manager_email'), 160);
   return {
     display_name: name,
+    gender: fd.get('gender') === 'f' ? 'f' : 'm',
     years: str(fd.get('years'), 60),
     city: str(fd.get('city'), 80),
     quote: str(fd.get('quote'), 300),

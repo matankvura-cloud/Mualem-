@@ -5,6 +5,7 @@ import { allFunds } from '@/lib/funds';
 import { num } from '@/lib/db';
 import { ils, fmtDate } from '@/lib/format';
 import { LoginForm } from './AdminForms';
+import { BRAND } from '@/lib/site';
 import { adminLogout } from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -16,7 +17,7 @@ export default async function AdminPage() {
   const sum = (k: 'raised' | 'fees' | 'paid_out') => funds.reduce((a, f) => a + num(f[k]), 0);
   return (
     <div className="fd fd-wide">
-      <div className="topbar"><Link className="brand" href="/">קופת לזכרו · ניהול</Link>
+      <div className="topbar"><Link className="brand" href="/">{BRAND} · ניהול</Link>
         <form action={adminLogout}><button className="btn-ghost" type="submit" style={{ minHeight: 36, fontSize: 13 }}>לצאת</button></form></div>
       <div className="pad stack" style={{ gap: 16 }}>
         <section className="stats">

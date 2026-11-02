@@ -5,9 +5,9 @@ import { ils, round2 } from '@/lib/format';
 const PRESETS = [180, 360, 540];
 const MIN = 10;
 
-type Props = { token: string; displayName: string; showAmounts: boolean; allowMessages: boolean; feePct: number };
+type Props = { token: string; displayName: string; wasWord: string; showAmounts: boolean; allowMessages: boolean; feePct: number };
 
-export default function GiveForm({ token, displayName, showAmounts, allowMessages, feePct }: Props) {
+export default function GiveForm({ token, displayName, wasWord, showAmounts, allowMessages, feePct }: Props) {
   const [amount, setAmount] = useState<number>(PRESETS[1]);
   const [custom, setCustom] = useState('');
   const [coverFee, setCoverFee] = useState(feePct > 0);
@@ -63,7 +63,7 @@ export default function GiveForm({ token, displayName, showAmounts, allowMessage
         <input id="fdName" name="name" type="text" required maxLength={80} autoComplete="name" />
         {allowMessages ? (<>
           <label className="l" htmlFor="fdMsg" style={{ marginTop: 4 }}>מילה למשפחה (לא חובה)</label>
-          <textarea id="fdMsg" name="message" maxLength={600} placeholder={`${displayName} היה…`} />
+          <textarea id="fdMsg" name="message" maxLength={600} placeholder={`${displayName} ${wasWord}…`} />
         </>) : null}
         <label className="l" htmlFor="fdMail" style={{ marginTop: 4 }}>מייל לקבלה (לא חובה)</label>
         <input id="fdMail" name="email" type="email" autoComplete="email" dir="ltr" maxLength={160} />

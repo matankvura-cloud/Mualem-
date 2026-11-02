@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS funds (
   manage_token text NOT NULL UNIQUE,
   status text NOT NULL DEFAULT 'open' CHECK (status IN ('open','closed')),
   display_name text NOT NULL,
+  -- m = לזכרו, f = לזכרה
+  gender text NOT NULL DEFAULT 'm' CHECK (gender IN ('m','f')),
   years text,
   city text,
   quote text,
@@ -38,6 +40,7 @@ CREATE TABLE IF NOT EXISTS funds (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE funds ADD COLUMN IF NOT EXISTS gender text NOT NULL DEFAULT 'm';
 CREATE INDEX IF NOT EXISTS funds_token_idx ON funds(token);
 CREATE INDEX IF NOT EXISTS funds_manage_idx ON funds(manage_token);
 

@@ -3,8 +3,8 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { fundByManage, totals, depositsOf, payoutsOf } from '@/lib/funds';
 import { TOKEN_RE } from '@/lib/tokens';
-import { siteUrl } from '@/lib/site';
-import { ils, fmtDate, fmtDateTime, eventDay, eventTitle } from '@/lib/format';
+import { siteUrl, BRAND } from '@/lib/site';
+import { ils, fmtDate, fmtDateTime, eventDay, eventTitle, memOf } from '@/lib/format';
 import { num } from '@/lib/db';
 import CopyButton from '@/components/CopyButton';
 import Footer from '@/components/Footer';
@@ -25,13 +25,13 @@ export default async function ManagePage({ params, searchParams }: Props) {
   const visiblePays = pays.filter((p) => p.visible);
   const publicLink = `${site}/f/${fund.token}`;
   const manageLink = `${site}/m/${manage}`;
-  const shareText = encodeURIComponent(`לזכרו של ${fund.display_name}. במקום פרחים, אפשר להפקיד לקופה של המשפחה: ${publicLink}`);
+  const shareText = encodeURIComponent(`${memOf(fund.gender)} ${fund.display_name}. ${BRAND}: אפשר להפקיד לקופה של המשפחה: ${publicLink}`);
   const paid = deps.filter((d) => d.status === 'paid');
   const closed = fund.status === 'closed';
 
   return (
     <div className="fd">
-      <div className="topbar"><Link className="brand" href="/">קופת לזכרו</Link><span className={`pill ${closed ? 'pill-muted' : 'pill-ok'}`}>{closed ? 'הקופה סגורה' : 'הקופה פתוחה'}</span></div>
+      <div className="topbar"><Link className="brand" href="/">{BRAND}</Link><span className={`pill ${closed ? 'pill-muted' : 'pill-ok'}`}>{closed ? 'הקופה סגורה' : 'הקופה פתוחה'}</span></div>
       <div className="pad stack" style={{ gap: 16 }}>
         <div>
           <h1 className="page-title">הקופה של {fund.display_name}</h1>
@@ -52,7 +52,7 @@ export default async function ManagePage({ params, searchParams }: Props) {
           <span className="linkbox">{manageLink}</span>
           <div className="fd-actions" style={{ marginTop: 0 }}>
             <CopyButton text={manageLink} label="העתק קישור ניהול" />
-            <a className="btn-ghost" href={`https://wa.me/?text=${encodeURIComponent(`קישור הניהול של הקופה לזכרו של ${fund.display_name} (לא להעביר הלאה): ${manageLink}`)}`} target="_blank" rel="noopener">לשלוח לעצמי בוואטסאפ</a>
+            <a className="btn-ghost" href={`https://wa.me/?text=${encodeURIComponent(`קישור הניהול של הקופה ${memOf(fund.gender)} ${fund.display_name} (לא להעביר הלאה): ${manageLink}`)}`} target="_blank" rel="noopener">לשלוח לעצמי בוואטסאפ</a>
           </div>
         </section>
 

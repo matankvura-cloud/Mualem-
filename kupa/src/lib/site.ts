@@ -10,5 +10,8 @@ export async function siteUrl(): Promise<string> {
   return `${proto}://${host}`;
 }
 
+/** שם המותג. מוגדר במקום אחד כדי שאפשר יהיה להחליף בלי לגעת בקוד. */
+export const BRAND = process.env.NEXT_PUBLIC_BRAND || 'במקום פרחים';
+export const TAGLINE = 'קופה דיגיטלית לזכר יקיריכם';
 export const CONTACT_PHONE = process.env.NEXT_PUBLIC_CONTACT_PHONE || '';
 export const FEE_PCT = Math.max(0, Math.min(30, Number(process.env.FEE_PCT ?? 6) || 0));

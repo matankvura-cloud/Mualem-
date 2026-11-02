@@ -1,4 +1,4 @@
-/* קופת לזכרו · במקום פרחים — עיצוב לפי הדמו המאושר (Heebo + Frank Ruhl Libre). */
+/* עיצוב לפי הדמו המאושר (Heebo + Frank Ruhl Libre). */
 :root{--bg:#FBFAF7;--ink:#1F2A33;--soft:#5B6472;--line:#E6E2D8;--navy:#1E3A4A;--blue:#2F5D74;--blue-soft:#EAF1F4;--ok:#3E7C5A;--ok-soft:#EAF5EF;--warn:#C98A2C;--warn-soft:#FBF3E4;--err:#9B2C2C;--err-soft:#FBEAEA;color-scheme:light}
 *{box-sizing:border-box} html{background:var(--bg);-webkit-text-size-adjust:100%}
 body{margin:0;font-family:Heebo,Arial,sans-serif;color:var(--ink);direction:rtl;background:var(--bg);line-height:1.5}

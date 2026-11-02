@@ -28,10 +28,10 @@ export async function createFund(_prev: NewState, fd: FormData): Promise<NewStat
 
   const pub = token(12), manage = token(24);
   await many(
-    `INSERT INTO funds (token, manage_token, display_name, years, city, quote, quote_by, photo_initial, purpose, target_ils,
+    `INSERT INTO funds (token, manage_token, display_name, gender, years, city, quote, quote_by, photo_initial, purpose, target_ils,
        surplus_to, events, manager_name, manager_phone, manager_email, show_amounts, allow_messages, fee_pct)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18)`,
-    [pub, manage, f.display_name, f.years, f.city, f.quote, f.quote_by, f.display_name.trim().charAt(0), f.purpose, f.target_ils,
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19)`,
+    [pub, manage, f.display_name, f.gender, f.years, f.city, f.quote, f.quote_by, f.display_name.trim().charAt(0), f.purpose, f.target_ils,
       f.surplus_to, JSON.stringify(events), f.manager_name, f.manager_phone, f.manager_email, f.show_amounts, f.allow_messages, FEE_PCT]);
   redirect(`/m/${manage}?welcome=1`);
 }

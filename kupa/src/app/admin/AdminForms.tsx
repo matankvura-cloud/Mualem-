@@ -6,7 +6,7 @@ export function LoginForm() {
   const [state, action, pending] = useActionState<LoginState, FormData>(adminLogin, undefined);
   return (
     <form action={action} className="fd-pay" style={{ paddingTop: 40 }}>
-      <div><h1>ניהול</h1><p className="lead">מסך הניהול של קופת לזכרו. סיסמה בלבד.</p></div>
+      <div><h1>ניהול</h1><p className="lead">מסך הניהול. סיסמה בלבד.</p></div>
       <div className="field"><label className="l" htmlFor="password">סיסמה</label><input id="password" name="password" type="password" autoComplete="current-password" dir="ltr" required /></div>
       {state?.error ? <p className="fd-err" role="alert">{state.error}</p> : null}
       <button className="btn" type="submit" disabled={pending}>{pending ? 'רגע…' : 'להיכנס'}</button>

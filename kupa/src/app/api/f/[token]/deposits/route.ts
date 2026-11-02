@@ -4,9 +4,9 @@ import { NextResponse } from 'next/server';
 import { fundByToken, EMAIL_RE } from '@/lib/funds';
 import { one, many, num } from '@/lib/db';
 import { TOKEN_RE, ipHash } from '@/lib/tokens';
-import { round2 } from '@/lib/format';
+import { round2, memOf } from '@/lib/format';
 import { createPaymentForm, hookToken } from '@/lib/morning';
-import { siteUrl } from '@/lib/site';
+import { siteUrl, BRAND } from '@/lib/site';
 
 export const runtime = 'nodejs';
 const MIN = 10, MAX = 100000;
@@ -52,7 +52,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
     return json({ error: 'הסליקה לא מוגדרת עדיין.' }, 502);
   }
   const site = await siteUrl();
-  const label = `לזכרו של ${fund.display_name} · במקום פרחים`;
+  const label = `${memOf(fund.gender)} ${fund.display_name} · ${BRAND}`;
   const lines = [{ description: label, price: amount }];
   if (fee > 0) lines.push({ description: `תוספת תפעול ${feePct}%`, price: fee });
 

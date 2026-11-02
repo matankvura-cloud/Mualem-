@@ -1,3 +1,6 @@
+/** לזכרו / לזכרה. */
+export const memOf = (gender: string | null | undefined) => (gender === 'f' ? 'לזכרה של' : 'לזכרו של');
+export const was = (gender: string | null | undefined) => (gender === 'f' ? 'הייתה' : 'היה');
 export const ils = (n: unknown) => `₪${Math.round(Number(n) || 0).toLocaleString('he-IL')}`;
 export const round2 = (n: number) => Math.round(n * 100) / 100;
 

@@ -1,9 +1,10 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
+import { BRAND, TAGLINE } from '@/lib/site';
 
 export const metadata: Metadata = {
-  title: { default: 'קופת לזכרו · במקום פרחים', template: '%s · קופת לזכרו' },
-  description: 'קופה דיגיטלית לזכר יקיריכם. במקום פרחים, מי שרוצה לעזור מפקיד לקופה של המשפחה.',
+  title: { default: BRAND, template: `%s · ${BRAND}` },
+  description: `${TAGLINE}. מי שרוצה לעזור מפקיד לקופה של המשפחה במקום לשלוח פרחים.`,
 };
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#1E3A4A' };
 

@@ -2,7 +2,8 @@
 // מקבל רק מה שמותר להציג לכולם (ראו book() ב-lib/funds).
 import Link from 'next/link';
 import type { Fund, Totals } from '@/lib/funds';
-import { ils, eventDay, eventTitle } from '@/lib/format';
+import { ils, eventDay, eventTitle, memOf } from '@/lib/format';
+import { BRAND } from '@/lib/site';
 import CopyButton from './CopyButton';
 
 type Book = { name: string; message: string | null; amount: number | null }[];
@@ -12,7 +13,7 @@ export default function FundPublic({ fund, t, totals: tot, book, site }: { fund:
   const target = Number(fund.target_ils || 0);
   const pct = raised !== null && target > 0 ? Math.min(100, Math.round((raised / target) * 100)) : null;
   const link = `${site}/f/${t}`;
-  const shareText = encodeURIComponent(`לזכרו של ${fund.display_name}. במקום פרחים, אפשר להפקיד לקופה של המשפחה: ${link}`);
+  const shareText = encodeURIComponent(`${memOf(fund.gender)} ${fund.display_name}. ${BRAND}: אפשר להפקיד לקופה של המשפחה: ${link}`);
   const closed = fund.status === 'closed';
   const messages = book.filter((b) => b.message);
 
@@ -20,7 +21,7 @@ export default function FundPublic({ fund, t, totals: tot, book, site }: { fund:
     <>
       <section className="fd-hero">
         <div className="fd-avatar" aria-hidden="true">{fund.photo_initial || fund.display_name.trim().charAt(0)}</div>
-        <p className="fd-eyebrow">לזכרו של</p>
+        <p className="fd-eyebrow">{memOf(fund.gender)}</p>
         <h1>{fund.display_name}</h1>
         {fund.years || fund.city ? <p className="fd-years">{[fund.years, fund.city].filter(Boolean).join(' · ')}</p> : null}
         {fund.quote ? <p className="fd-quote">״{fund.quote}״{fund.quote_by ? <small>— {fund.quote_by}</small> : null}</p> : null}

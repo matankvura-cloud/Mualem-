@@ -7,7 +7,7 @@ export default function NewFundForm() {
   return (
     <form action={action} className="fd-pay" noValidate>
       <div>
-        <h1>פותחים קופה לזכרו</h1>
+        <h1>פותחים קופה</h1>
         <p className="lead">דקה אחת, ואפשר לשלוח את הקישור. את כל הפרטים אפשר לערוך אחר כך מקישור הניהול.</p>
       </div>
 
@@ -15,6 +15,10 @@ export default function NewFundForm() {
         <legend>מי</legend>
         <div className="field"><label className="l" htmlFor="display_name">שם הנפטר/ת, כפי שיופיע בעמוד</label>
           <input id="display_name" name="display_name" type="text" required maxLength={120} placeholder="למשל: יעקב לוי ז״ל" /></div>
+        <div role="radiogroup" aria-label="לזכרו או לזכרה" style={{ display: 'flex', gap: 18 }}>
+          <label className="fd-check"><input type="radio" name="gender" value="m" defaultChecked />לזכרו</label>
+          <label className="fd-check"><input type="radio" name="gender" value="f" />לזכרה</label>
+        </div>
         <div className="grid2">
           <div className="field"><label className="l" htmlFor="years">שנים</label><input id="years" name="years" type="text" maxLength={60} placeholder="1941 – 2026" /></div>
           <div className="field"><label className="l" htmlFor="city">עיר</label><input id="city" name="city" type="text" maxLength={80} /></div>
