@@ -41,6 +41,14 @@ PLAYWRIGHT_PATH=/path/to/node_modules/playwright npm run test:e2e   # או npm i
 (עם ובלי תוספת, עם סכום מוסתר, ועם ביטול), בודק את ספר הניחומים, הניהול
 המשפחתי, ההודעה-חזרה (אסימון שגוי → 401) ומסך admin. צילומי מסך ב-`tests/out/`.
 
+## הפריסה הקיימת
+פרויקט Vercel: **family-avlut** (נפרס מהענף `ccr-343644c7-ob2tvp` של `matankvura-cloud/Mualem-`, Root Directory `kupa`).
+- כתובת: https://family-avlut.vercel.app · הדומיין `family.avlut.org.il` משויך לפרויקט אבל ה-DNS עדיין מצביע ל-ChatGPT.
+- בלי `DATABASE_URL` האתר רץ על מסד בזיכרון (`KUPA_LOCAL_DB=memory`) עם קופה לדוגמה בקישורים קבועים
+  (`/m/demo-manage-yaakov-levi-2026-kupa`, `/f/demo-yaakov-levi-2026`, `/s/demo-card-yaakov-levi-2026`). הנתונים מתאפסים.
+- ברגע ש-Neon מחובר (`DATABASE_URL`), הוא גובר, הסכמה רצה ב-build, והקופה לדוגמה לא נזרעת.
+- פריסה מחדש: ב-Vercel → Deployments → Redeploy, או חיבור הריפו ב-Settings → Git כדי שכל דחיפה תיפרס.
+
 ## פריסה ב-Vercel (ידני, בידי מתן)
 1. **ריפו**: להעביר את תיקיית `kupa/` לריפו `matankvura-cloud/kupa` (פרטי) — או
    ב-Vercel לבחור Root Directory = `kupa` בריפו הנוכחי.
