@@ -20,5 +20,7 @@ export const IcStone = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d
 export const IcHouse = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M4 11l8-6 8 6v9H4z" /><path d="M9 20v-5h6v5" /></svg>;
 export const IcTruck = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M3 7h11v9H3z" /><path d="M14 10h4l3 3v3h-7" /><circle cx="7" cy="17" r="2" /><circle cx="17" cy="17" r="2" /></svg>;
 export const IcFlowers = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><circle cx="12" cy="8" r="3" /><path d="M12 11v9" /><path d="M12 15c-3 0-5-2-5-4M12 17c3 0 5-2 5-4" /></svg>;
+export const IcSteps = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M4 7h2M9 7h11M4 12h2M9 12h11M4 17h2M9 17h11" /></svg>;
+export const IcDoc = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v4h4M9 12h6M9 16h6" /></svg>;
 export const IcChat = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M4 5h16v11H9l-5 4z" /><path d="M8 9h8M8 12h5" /></svg>;
 export const SUP_ICON = { meal: IcMeal, chairs: IcChairs, stone: IcStone, home: IcHouse, flowers: IcFlowers, transport: IcTruck };

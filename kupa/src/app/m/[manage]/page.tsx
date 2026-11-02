@@ -1,14 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { loadFamily } from './_shared';
-import { payoutsOf, requestsOf, depositsOf } from '@/lib/funds';
+import { payoutsOf, requestsOf, depositsOf, tasksDone, documentsOf } from '@/lib/funds';
+import { GENERAL, planByKey } from '@/data/now';
 import { ils, fmtDate, initials, memOf } from '@/lib/format';
 import { CONTACT_PHONE, SLOGAN } from '@/lib/site';
 import { SUPPLIERS } from '@/data/suppliers';
 import FamilyShell from '@/components/FamilyShell';
 import FamilyCard from '@/components/FamilyCard';
 import CopyButton from '@/components/CopyButton';
-import { IcCoins, IcList, IcPlus, IcPeople, IcHeadset, IcFolder, IcShop, IcCheck, IcUser, IcPhone, IcChat, SUP_ICON } from '@/components/icons';
+import { IcCoins, IcList, IcPlus, IcPeople, IcHeadset, IcFolder, IcShop, IcCheck, IcUser, IcPhone, IcChat, IcSteps, SUP_ICON } from '@/components/icons';
 import { FAMILY_BRAND } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
@@ -19,7 +20,11 @@ export default async function FamilyHome({ params, searchParams }: Props) {
   const { manage } = await params;
   const { welcome } = await searchParams;
   const { fund, tot, publicLink, family, last4 } = await loadFamily(manage);
-  const [pays, reqs, deps] = await Promise.all([payoutsOf(fund.id), requestsOf(fund.id), depositsOf(fund.id)]);
+  const [pays, reqs, deps, done, docs] = await Promise.all([payoutsOf(fund.id), requestsOf(fund.id), depositsOf(fund.id), tasksDone(fund.id), documentsOf(fund.id)]);
+  const plan = planByKey(fund.situation);
+  const allTasks = [...GENERAL.tasks, ...(plan ? plan.tasks : [])];
+  const nextTasks = allTasks.filter((t) => !done.has(t.key)).slice(0, 3);
+  const doneN = allTasks.filter((t) => done.has(t.key)).length;
   const base = `/m/${manage}`;
   const recent = [
     ...pays.filter((p) => p.visible).map((p) => ({ id: p.id, who: p.payee, what: p.purpose, amount: Number(p.amount), at: p.paid_on, status: 'שולם' })),
@@ -28,7 +33,8 @@ export default async function FamilyHome({ params, searchParams }: Props) {
   const donors = deps.filter((d) => d.status === 'paid');
   const hasEvent = (k: string) => fund.events.some((e) => e.kind === k);
   const checks = [
-    { label: 'פרטי העמוד (שם, מילים, תמונה)', done: !!fund.quote },
+    { label: `מסמכים בתיק: ${docs.length}`, done: docs.length > 0 },
+    { label: 'פרטי העמוד (שם, מילים)', done: !!fund.quote },
     { label: 'הלוויה: מתי ואיפה', done: hasEvent('funeral') },
     { label: 'השבעה: כתובת ושעות', done: hasEvent('shiva') },
     { label: 'אזכרת השלושים', done: hasEvent('shloshim') || hasEvent('azkara') },
@@ -42,6 +48,13 @@ export default async function FamilyHome({ params, searchParams }: Props) {
         <div><h1>אנחנו כאן בשבילכם</h1><p>צעד אחד בכל פעם, בקצב שלכם. {memOf(fund.gender)} {fund.display_name}.</p></div>
         {CONTACT_PHONE ? <a className="btn-outline" href={`tel:${CONTACT_PHONE}`} style={{ width: 'auto' }}><IcPhone />בקשת שיחה</a> : null}
       </header>
+
+      <section className="panel" style={{ marginBottom: 18 }}>
+        <h2><IcSteps />הצעדים הבאים <small className="muted" style={{ fontFamily: 'Heebo, Arial, sans-serif', fontWeight: 400 }}>{doneN} מתוך {allTasks.length} בוצעו</small></h2>
+        <div className="fd-bar" aria-hidden="true"><i style={{ width: `${allTasks.length ? Math.round((doneN / allTasks.length) * 100) : 0}%` }} /></div>
+        {nextTasks.length ? <ul className="checks">{nextTasks.map((t) => <li key={t.key}><i /> {t.text}</li>)}</ul> : <p className="muted">כל הצעדים סומנו. כל הכבוד.</p>}
+        <Link className="more" href={`${base}/now`}>{plan ? 'לכל הצעדים ›' : 'לבחור את המצב ולקבל רשימה מותאמת ›'}</Link>
+      </section>
 
       <section className="panel" style={{ marginBottom: 18 }}>
         <h2><IcChat />העוזר של {FAMILY_BRAND}</h2>

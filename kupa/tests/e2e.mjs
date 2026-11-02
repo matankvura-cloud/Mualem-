@@ -262,6 +262,39 @@ try {
   await page.goto(`${SITE}/admin`); await page.click('table.tbl a'); await page.waitForSelector('#payee');
   check((await page.textContent('body')).includes('הספק ביקש דרך הכרטיס'), 'מתן רואה שהבקשה הגיעה מהספק');
 
+  // 10ב. מה עושים עכשיו + המסמכים
+  console.log('מה עכשיו ומסמכים');
+  await page.goto(manageUrl + '/now');
+  check((await page.locator('.checks.tasks li').count()) === 10, 'הרשימה הכללית: 10 צעדים');
+  await page.click('.sit-opt:has-text("פטירה בבית") input');
+  await page.click('form.sit button[type=submit]');
+  await page.waitForSelector('.panel:has-text("פטירה בבית") .checks.tasks');
+  check((await page.locator('.checks.tasks li').count()) === 15, 'אחרי בחירת מצב: 15 צעדים');
+  await page.click('.checks.tasks li >> nth=0 >> .task-toggle');
+  await page.waitForSelector('.checks.tasks li.done');
+  await page.click('.checks.tasks li >> nth=1 >> .task-toggle');
+  await page.waitForFunction(() => document.querySelectorAll('.checks.tasks li.done').length === 2);
+  check((await page.textContent('.fam-head p')).includes('2 מתוך 15'), 'שני צעדים סומנו: 2 מתוך 15');
+  await page.goto(manageUrl);
+  check((await page.textContent('body')).includes('2 מתוך 15 בוצעו'), 'הבית מציג את ההתקדמות');
+  await page.goto(manageUrl + '/file');
+  const pdf = Buffer.from('%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF');
+  await page.setInputFiles('#doc-file', { name: 'teudat-ptira.pdf', mimeType: 'application/pdf', buffer: pdf });
+  await page.selectOption('#doc-kind', 'death-cert');
+  await page.fill('#doc-name', 'תעודת פטירה');
+  await page.click('form[enctype="multipart/form-data"] button[type=submit]');
+  await page.waitForURL(/doc=ok/);
+  check((await page.locator('.docs li').count()) === 1 && (await page.locator('.kinds li.have').count()) === 1, 'המסמך נשמר ומסומן ברשימת המסמכים');
+  const docHref = await page.getAttribute('.docs li a', 'href');
+  const dl = await page.request.get(`${SITE}${docHref}`);
+  check(dl.status() === 200 && dl.headers()['content-type'] === 'application/pdf' && (await dl.body()).equals(pdf), 'המסמך נפתח בחזרה זהה (PDF)');
+  const badDoc = await page.request.get(`${SITE}/m/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/doc/${docHref.split('/doc/')[1]}`);
+  check(badDoc.status() === 404, 'מסמך לא נגיש עם קישור ניהול אחר');
+  await page.setInputFiles('#doc-file', { name: 'big.pdf', mimeType: 'application/pdf', buffer: Buffer.alloc(4.5 * 1024 * 1024, 1) });
+  await page.click('form[enctype="multipart/form-data"] button[type=submit]');
+  await page.waitForURL(/doc=big/);
+  check(true, 'קובץ מעל 4MB נדחה עם הסבר');
+
   // 11. העוזר
   console.log('העוזר');
   await page.goto(manageUrl + '/assistant');
@@ -275,6 +308,7 @@ try {
   const sysText = call.body.system.map((s) => s.text).join('\n');
   check(call.body.model === 'claude-opus-5-5' && call.body.tools?.[0]?.name === 'suggest_payment_request' && call.body.tools[0].strict === true, 'בקשה: הדגם, הכלי strict');
   check(sysText.includes('משפחת לוי') && sysText.includes('₪80') && sysText.includes('חברה קדישא') && !sysText.includes(manageUrl), 'ההקשר: משפחה, יתרה זמינה ₪80, תשלומים, בלי קישור הניהול');
+  check(sysText.includes('[בוצע]') && sysText.includes('תעודת פטירה: תעודת פטירה'), 'ההקשר כולל צעדים ומסמכים');
   check(call.body.fallbacks === 'default' && String(call.headers['anthropic-beta'] || '').includes('server-side-fallback-2026-07-01') && call.body.output_config?.effort === 'low', 'fallbacks ברירת מחדל ומאמץ נמוך');
   await page.fill('#chat-input', 'תזמין קייטרינג לשבעה');
   await page.click('.chat-form button[type=submit]');

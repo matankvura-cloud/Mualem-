@@ -8,7 +8,7 @@ export type Fund = {
   display_name: string; gender: 'm' | 'f'; years: string | null; city: string | null; quote: string | null; quote_by: string | null;
   photo_initial: string | null; purpose: string | null; target_ils: unknown; surplus_to: string | null;
   events: FundEvent[]; manager_name: string | null; manager_phone: string | null; manager_email: string | null;
-  show_amounts: boolean; allow_messages: boolean; fee_pct: unknown; view_count: number;
+  show_amounts: boolean; allow_messages: boolean; fee_pct: unknown; view_count: number; situation: string | null;
   opened_at: unknown; closed_at: unknown; created_at: unknown; updated_at: unknown;
 };
 
@@ -91,6 +91,12 @@ export const payoutsOf = (fundId: string) =>
 
 export const requestsOf = (fundId: string) =>
   many<PayoutRequest>(`SELECT * FROM payout_requests WHERE fund_id = $1 ORDER BY created_at DESC`, [fundId]);
+
+export type DocRow = { id: string; kind: string; name: string; mime: string; size: number; note: string | null; created_at: unknown };
+export const documentsOf = (fundId: string) =>
+  many<DocRow>(`SELECT id, kind, name, mime, size, note, created_at FROM documents WHERE fund_id = $1 ORDER BY created_at DESC`, [fundId]);
+export const tasksDone = async (fundId: string) =>
+  new Set((await many<{ task_key: string }>(`SELECT task_key FROM tasks_done WHERE fund_id = $1`, [fundId])).map((r) => r.task_key));
 
 export function bumpViews(fundId: string) {
   many(`UPDATE funds SET view_count = view_count + 1 WHERE id = $1`, [fundId]).catch(() => {});

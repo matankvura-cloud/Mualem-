@@ -2,12 +2,13 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { FAMILY_BRAND, SLOGAN, HOME_URL } from '@/lib/site';
-import { IcHome, IcFolder, IcCard, IcShop, IcPeople, IcHeadset, IcChat } from './icons';
+import { IcHome, IcCard, IcShop, IcPeople, IcHeadset, IcChat, IcSteps, IcDoc } from './icons';
 
 export const FAM_NAV = [
   { key: 'home', label: 'הבית שלי', path: '', Icon: IcHome },
+  { key: 'now', label: 'מה עכשיו', path: '/now', Icon: IcSteps },
+  { key: 'file', label: 'התיק והמסמכים', path: '/file', Icon: IcDoc },
   { key: 'assistant', label: 'העוזר', path: '/assistant', Icon: IcChat },
-  { key: 'file', label: 'התיק המשפחתי', path: '/file', Icon: IcFolder },
   { key: 'card', label: 'כרטיס ותשלומים', path: '/card', Icon: IcCard },
   { key: 'suppliers', label: 'הטבות וספקים', path: '/suppliers', Icon: IcShop },
   { key: 'help', label: 'עזרה מהקרובים', path: '/help', Icon: IcPeople },

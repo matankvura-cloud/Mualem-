@@ -1,6 +1,6 @@
 // שיחה עם העוזר. מקבל את היסטוריית השיחה מהדפדפן (לא נשמרת אצלנו), מוסיף את
 // ההקשר של המשפחה, ומזרים תשובה כ-NDJSON: שורה לכל טקסט/פעולה.
-import { fundByManage, totals, requestsOf, payoutsOf } from '@/lib/funds';
+import { fundByManage, totals, requestsOf, payoutsOf, tasksDone, documentsOf } from '@/lib/funds';
 import { TOKEN_RE } from '@/lib/tokens';
 import { aiEnabled, allow, chatStream, type ChatTurn } from '@/lib/assistant';
 
@@ -27,11 +27,11 @@ export async function POST(req: Request, ctx: { params: Promise<{ manage: string
   while (history.length && history[0].role !== 'user') history.shift();
   if (!history.length || history[history.length - 1].role !== 'user') return json({ error: 'אין הודעה' }, 400);
 
-  const [tot, requests, payouts] = await Promise.all([totals(fund.id), requestsOf(fund.id), payoutsOf(fund.id)]);
+  const [tot, requests, payouts, done, docs] = await Promise.all([totals(fund.id), requestsOf(fund.id), payoutsOf(fund.id), tasksDone(fund.id), documentsOf(fund.id)]);
   const enc = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
-      for await (const ev of chatStream({ fund, tot, requests, payouts }, history)) {
+      for await (const ev of chatStream({ fund, tot, requests, payouts, done, docs }, history)) {
         controller.enqueue(enc.encode(JSON.stringify(ev) + '\n'));
       }
       controller.close();

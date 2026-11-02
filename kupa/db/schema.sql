@@ -44,6 +44,8 @@ CREATE TABLE IF NOT EXISTS funds (
 );
 ALTER TABLE funds ADD COLUMN IF NOT EXISTS gender text NOT NULL DEFAULT 'm';
 ALTER TABLE funds ADD COLUMN IF NOT EXISTS card_token text UNIQUE;
+-- המצב שהמשפחה בחרה ב"מה עושים עכשיו" (home/hospital/abroad/shiva)
+ALTER TABLE funds ADD COLUMN IF NOT EXISTS situation text;
 CREATE INDEX IF NOT EXISTS funds_card_idx ON funds(card_token);
 CREATE INDEX IF NOT EXISTS funds_token_idx ON funds(token);
 CREATE INDEX IF NOT EXISTS funds_manage_idx ON funds(manage_token);
@@ -107,3 +109,25 @@ CREATE TABLE IF NOT EXISTS payout_requests (
 );
 ALTER TABLE payout_requests ADD COLUMN IF NOT EXISTS source text NOT NULL DEFAULT 'family';
 CREATE INDEX IF NOT EXISTS payout_requests_fund_idx ON payout_requests(fund_id, status, created_at DESC);
+
+-- "מה עושים עכשיו": צעדים שסומנו כבוצעו.
+CREATE TABLE IF NOT EXISTS tasks_done (
+  fund_id uuid NOT NULL REFERENCES funds(id) ON DELETE CASCADE,
+  task_key text NOT NULL,
+  done_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (fund_id, task_key)
+);
+
+-- התיק: מסמכים שהמשפחה שומרת. הקובץ עצמו במסד (עד 4MB); בהמשך אחסון קבצים.
+CREATE TABLE IF NOT EXISTS documents (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  fund_id uuid NOT NULL REFERENCES funds(id) ON DELETE CASCADE,
+  kind text NOT NULL,
+  name text NOT NULL,
+  mime text NOT NULL,
+  size integer NOT NULL,
+  data bytea NOT NULL,
+  note text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS documents_fund_idx ON documents(fund_id, created_at DESC);

@@ -2,7 +2,9 @@
 // כלל ברזל: הוא לא ממציא זכויות, מחירים או הלכה; מה שלא בטוח, הוא מפנה לליווי האישי.
 // פעולה אחת בלבד: להציע בקשת תשלום לספק. ההצעה הופכת לכפתור, והמשפחה מאשרת.
 import Anthropic from '@anthropic-ai/sdk';
-import type { Fund, Totals, PayoutRequest, Payout } from './funds';
+import type { Fund, Totals, PayoutRequest, Payout, DocRow } from './funds';
+import { GENERAL, planByKey } from '@/data/now';
+import { DOC_KINDS } from '@/data/documents';
 import { SUPPLIERS } from '@/data/suppliers';
 import { eventTitle, familyName, memOf, ils } from './format';
 import { BRAND, FAMILY_BRAND, CONTACT_PHONE, SLOGAN } from './site';
@@ -23,10 +25,14 @@ export const QUICK_QUESTIONS = [
 
 /* ---------- הקשר ---------- */
 export type FamilyContext = {
-  fund: Fund; tot: Totals; requests: PayoutRequest[]; payouts: Payout[];
+  fund: Fund; tot: Totals; requests: PayoutRequest[]; payouts: Payout[]; done?: Set<string>; docs?: DocRow[];
 };
 
-function contextText({ fund, tot, requests, payouts }: FamilyContext): string {
+function contextText({ fund, tot, requests, payouts, done, docs }: FamilyContext): string {
+  const plan = planByKey(fund.situation);
+  const tasks = [...GENERAL.tasks, ...(plan ? plan.tasks : [])];
+  const tasksText = tasks.map((t) => `- [${done?.has(t.key) ? 'בוצע' : 'פתוח'}] ${t.text}`).join('\n');
+  const docsText = (docs || []).map((d) => `- ${DOC_KINDS.find((k) => k.key === d.kind)?.name || d.kind}: ${d.name}`).join('\n') || '- עדיין לא הועלו מסמכים';
   const today = new Date().toLocaleDateString('he-IL', { timeZone: 'Asia/Jerusalem', day: 'numeric', month: 'numeric', year: 'numeric' });
   const events = fund.events.map((e) => `- ${eventTitle(e)}: ${[e.date, e.time, e.place, e.address, e.note].filter(Boolean).join(' · ') || 'פרטים חסרים'}`).join('\n') || '- עדיין לא הוזנו אירועים';
   const open = requests.filter((r) => r.status === 'pending').map((r) => `- ${r.payee}: ${ils(r.amount)}${r.purpose ? ` עבור ${r.purpose}` : ''} (ממתין לאישור${r.source === 'supplier' ? ', הספק ביקש' : ''})`).join('\n') || '- אין';
@@ -45,6 +51,11 @@ ${open}
 ${paid}
 ספקים שמקבלים את כרטיס המשפחה:
 ${sups}
+המצב שנבחר ב"מה עושים עכשיו": ${plan ? plan.label : 'לא נבחר'}.
+צעדים:
+${tasksText}
+מסמכים בתיק:
+${docsText}
 ליווי אישי (אדם): ${CONTACT_PHONE ? `טלפון ${CONTACT_PHONE}` : 'דרך מסך "ליווי אישי"'}.`;
 }
 

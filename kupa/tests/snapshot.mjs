@@ -62,6 +62,9 @@ try {
   await page.click('form:has(#payee) button[type=submit]'); await page.waitForSelector('.notice-ok');
   const adminFund = page.url();
   const cardLink0 = (await page.locator('.linkbox').nth(2).textContent()).trim();
+  await page.goto(manage + '/now');
+  await page.click('.sit-opt:has-text("פטירה בבית") input'); await page.click('form.sit button[type=submit]'); await page.waitForSelector('.panel:has-text("פטירה בבית") .checks.tasks');
+  for (const i of [0, 1, 2]) { await page.click(`.checks.tasks li >> nth=${i} >> .task-toggle`); await page.waitForFunction((n) => document.querySelectorAll('.checks.tasks li.done').length === n, i + 1); }
   await page.goto(manage + '/card');
   await page.fill('form:has(#req_note) #payee', 'קייטרינג "שולחן ערוך"'); await page.fill('form:has(#req_note) #amount', '600');
   await page.fill('form:has(#req_note) #purpose', 'ארוחות לשבעה'); await page.fill('form:has(#req_note) #contact', 'אבי 052-0000000');
@@ -74,7 +77,7 @@ try {
   // הדמו נפתח על הבית של המשפחה; עמוד הנחיתה הציבורי הוא מסך משני.
   const screens = [
     ['index', `/m/${m}`, 'המשפחה: הבית'], ['manage-card', `/m/${m}/card`, 'כרטיס ותשלומים'], ['manage-suppliers', `/m/${m}/suppliers`, 'הטבות וספקים'],
-    ['manage-assistant', `/m/${m}/assistant`, 'העוזר'], ['manage-file', `/m/${m}/file`, 'התיק המשפחתי'], ['manage-help', `/m/${m}/help`, 'עזרה מהקרובים'], ['supplier', `/s/${c}`, 'הספק: בקשת חיוב'],
+    ['manage-now', `/m/${m}/now`, 'מה עכשיו'], ['manage-file', `/m/${m}/file`, 'התיק והמסמכים'], ['manage-assistant', `/m/${m}/assistant`, 'העוזר'], ['manage-help', `/m/${m}/help`, 'עזרה מהקרובים'], ['supplier', `/s/${c}`, 'הספק: בקשת חיוב'],
     ['fund', `/f/${t}`, 'עמוד הקופה (קרובים)'], ['give', `/f/${t}/give`, 'הפקדה'], ['paid', `/f/${t}?paid=1`, 'אחרי תשלום'],
     ['landing', '/', 'נחיתה'], ['new', '/new', 'פתיחת קופה'], ['admin', '/admin', 'ניהול (מתן)'], ['admin-fund', `/admin/${id}`, 'קופה בניהול'],
   ];
@@ -89,6 +92,7 @@ try {
     .replace(new RegExp(`href="/f/${t}"`, 'g'), 'href="fund.html"')
     .replace(new RegExp(`href="/m/${m}/card[^"]*"`, 'g'), 'href="manage-card.html"')
     .replace(new RegExp(`href="/m/${m}/suppliers"`, 'g'), 'href="manage-suppliers.html"')
+    .replace(new RegExp(`href="/m/${m}/now"`, 'g'), 'href="manage-now.html"')
     .replace(new RegExp(`href="/m/${m}/assistant"`, 'g'), 'href="manage-assistant.html"')
     .replace(new RegExp(`href="/m/${m}/file"`, 'g'), 'href="manage-file.html"')
     .replace(new RegExp(`href="/m/${m}/help"`, 'g'), 'href="manage-help.html"')

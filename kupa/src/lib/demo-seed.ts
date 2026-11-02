@@ -35,6 +35,9 @@ export async function seedDemo(db: Db) {
        VALUES ($1,$2,$3,$4,$5,$6,$7,'paid', now() - interval '1 day')`,
       [id, name, msg, amount, Math.round(amount * 6) / 100, Math.round(amount * 106) / 100, hide]);
   }
+  await db.query(`UPDATE funds SET situation = 'home' WHERE id = $1`, [id]);
+  for (const k of ['g-notice', 'g-id', 'g-contact', 'h1', 'h2']) await db.query(`INSERT INTO tasks_done (fund_id, task_key) VALUES ($1, $2) ON CONFLICT DO NOTHING`, [id, k]);
+  await db.query(`INSERT INTO documents (fund_id, kind, name, mime, size, data, note) VALUES ($1,'death-notice','הודעת פטירה','application/pdf',52,$2,'הדגמה')`, [id, Buffer.from('%PDF-1.4\n%demo\n%%EOF')]);
   await db.query(`INSERT INTO payouts (fund_id, payee, purpose, amount, note) VALUES ($1,'חברה קדישא ירושלים','הלוויה',1200,'הדגמה')`, [id]);
   await db.query(`INSERT INTO payout_requests (fund_id, payee, purpose, amount, contact) VALUES ($1,'קייטרינג "שולחן ערוך"','ארוחות לשבעה',600,'אבי 052-0000000')`, [id]);
 }
