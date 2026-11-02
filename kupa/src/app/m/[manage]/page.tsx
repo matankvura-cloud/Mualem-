@@ -8,7 +8,8 @@ import { SUPPLIERS } from '@/data/suppliers';
 import FamilyShell from '@/components/FamilyShell';
 import FamilyCard from '@/components/FamilyCard';
 import CopyButton from '@/components/CopyButton';
-import { IcCoins, IcList, IcPlus, IcPeople, IcHeadset, IcFolder, IcShop, IcCheck, IcUser, IcPhone, SUP_ICON } from '@/components/icons';
+import { IcCoins, IcList, IcPlus, IcPeople, IcHeadset, IcFolder, IcShop, IcCheck, IcUser, IcPhone, IcChat, SUP_ICON } from '@/components/icons';
+import { FAMILY_BRAND } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'הבית שלי', robots: { index: false, follow: false } };
@@ -41,6 +42,14 @@ export default async function FamilyHome({ params, searchParams }: Props) {
         <div><h1>אנחנו כאן בשבילכם</h1><p>צעד אחד בכל פעם, בקצב שלכם. {memOf(fund.gender)} {fund.display_name}.</p></div>
         {CONTACT_PHONE ? <a className="btn-outline" href={`tel:${CONTACT_PHONE}`} style={{ width: 'auto' }}><IcPhone />בקשת שיחה</a> : null}
       </header>
+
+      <section className="panel" style={{ marginBottom: 18 }}>
+        <h2><IcChat />העוזר של {FAMILY_BRAND}</h2>
+        <form className="chat-strip" action={`${base}/assistant`} method="get">
+          <input id="home-q" name="q" type="text" placeholder="שאלו כל דבר: מה עושים היום, כמה נשאר, איך מזמינים…" maxLength={500} />
+          <button className="btn-copper" type="submit" style={{ width: 'auto' }}>לשאול</button>
+        </form>
+      </section>
 
       <section className="fam-grid">
         <Link href={`${base}/card`} style={{ textDecoration: 'none' }}><FamilyCard familyName={family} last4={last4} /></Link>

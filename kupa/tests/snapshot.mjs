@@ -5,6 +5,7 @@ import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync, readdirSync, readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { startMockMorning } from './mock-morning.mjs';
+import { startMockAnthropic } from './mock-anthropic.mjs';
 const { chromium } = createRequire(import.meta.url)(process.env.PLAYWRIGHT_PATH || 'playwright');
 
 const OUT = process.argv[2];
@@ -14,11 +15,12 @@ const PORT = 3102, MOCK = 4546, SITE = `http://localhost:${PORT}`, PUBLIC = 'htt
 const BRAND = process.env.NEXT_PUBLIC_BRAND || 'לזכרם';
 
 const mock = await startMockMorning(MOCK);
+const ai = await startMockAnthropic(4548);
 const app = spawn('npx', ['next', 'start', '-p', String(PORT)], {
   env: { ...process.env, KUPA_LOCAL_DB: 'memory', KUPA_DEMO_SEED: '0', DATABASE_URL: '', POSTGRES_URL: '',
     MORNING_AUTH_URL: `http://localhost:${MOCK}/idp/v1/oauth/token`, MORNING_API_BASE: `http://localhost:${MOCK}/api/v1`,
     MORNING_ID: 'test-id', MORNING_SECRET: 'test-secret', MORNING_HOOK: 'hook-secret-123', ADMIN_PASSWORD: 'admin-pass',
-    NEXT_PUBLIC_SITE_URL: SITE, FEE_PCT: '6', NEXT_PUBLIC_BRAND: BRAND },
+    NEXT_PUBLIC_SITE_URL: SITE, FEE_PCT: '6', NEXT_PUBLIC_BRAND: BRAND, ANTHROPIC_API_KEY: 'test-key', ANTHROPIC_BASE_URL: 'http://localhost:4548' },
   stdio: ['ignore', 'ignore', 'inherit'], detached: true,
 });
 for (let i = 0; i < 60; i++) { try { if ((await fetch(`${SITE}/api/health`)).ok) break; } catch { /* */ } await new Promise((r) => setTimeout(r, 500)); }
@@ -72,7 +74,7 @@ try {
   // הדמו נפתח על הבית של המשפחה; עמוד הנחיתה הציבורי הוא מסך משני.
   const screens = [
     ['index', `/m/${m}`, 'המשפחה: הבית'], ['manage-card', `/m/${m}/card`, 'כרטיס ותשלומים'], ['manage-suppliers', `/m/${m}/suppliers`, 'הטבות וספקים'],
-    ['manage-file', `/m/${m}/file`, 'התיק המשפחתי'], ['manage-help', `/m/${m}/help`, 'עזרה מהקרובים'], ['supplier', `/s/${c}`, 'הספק: בקשת חיוב'],
+    ['manage-assistant', `/m/${m}/assistant`, 'העוזר'], ['manage-file', `/m/${m}/file`, 'התיק המשפחתי'], ['manage-help', `/m/${m}/help`, 'עזרה מהקרובים'], ['supplier', `/s/${c}`, 'הספק: בקשת חיוב'],
     ['fund', `/f/${t}`, 'עמוד הקופה (קרובים)'], ['give', `/f/${t}/give`, 'הפקדה'], ['paid', `/f/${t}?paid=1`, 'אחרי תשלום'],
     ['landing', '/', 'נחיתה'], ['new', '/new', 'פתיחת קופה'], ['admin', '/admin', 'ניהול (מתן)'], ['admin-fund', `/admin/${id}`, 'קופה בניהול'],
   ];
@@ -87,6 +89,7 @@ try {
     .replace(new RegExp(`href="/f/${t}"`, 'g'), 'href="fund.html"')
     .replace(new RegExp(`href="/m/${m}/card[^"]*"`, 'g'), 'href="manage-card.html"')
     .replace(new RegExp(`href="/m/${m}/suppliers"`, 'g'), 'href="manage-suppliers.html"')
+    .replace(new RegExp(`href="/m/${m}/assistant"`, 'g'), 'href="manage-assistant.html"')
     .replace(new RegExp(`href="/m/${m}/file"`, 'g'), 'href="manage-file.html"')
     .replace(new RegExp(`href="/m/${m}/help"`, 'g'), 'href="manage-help.html"')
     .replace(new RegExp(`href="/m/${m}/support"`, 'g'), 'href="index.html#support"')
@@ -110,5 +113,5 @@ try {
     console.log('saved', file, '←', path);
   }
 } finally {
-  await browser.close(); try { process.kill(-app.pid, 'SIGTERM'); } catch { app.kill('SIGTERM'); } mock.close();
+  await browser.close(); try { process.kill(-app.pid, 'SIGTERM'); } catch { app.kill('SIGTERM'); } mock.close(); ai.close();
 }

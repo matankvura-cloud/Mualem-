@@ -46,7 +46,7 @@ export function EditFundForm({ manage, fund }: { manage: string; fund: Fund }) {
   );
 }
 
-export function RequestPayoutForm({ manage, available, defaultPayee = '' }: { manage: string; available: number; defaultPayee?: string }) {
+export function RequestPayoutForm({ manage, available, defaultPayee = '', defaultAmount = '', defaultPurpose = '' }: { manage: string; available: number; defaultPayee?: string; defaultAmount?: string; defaultPurpose?: string }) {
   const [state, action, pending] = useActionState<ActState, FormData>(requestPayout.bind(null, manage), undefined);
   const v = state?.values ?? {};
   return (
@@ -55,10 +55,10 @@ export function RequestPayoutForm({ manage, available, defaultPayee = '' }: { ma
       <p className="muted">כותבים למי ועל מה, אנחנו מאשרים ומשלמים לספק ישירות מהקופה. היתרה הזמינה: <b>{ils(available)}</b>.</p>
       <div className="grid2">
         <div className="field"><label className="l" htmlFor="payee">למי לשלם</label><input id="payee" name="payee" defaultValue={v.payee ?? defaultPayee} type="text" required maxLength={120} placeholder="חברה קדישא, קייטרינג, מצבות…" /></div>
-        <div className="field"><label className="l" htmlFor="amount">סכום בש״ח</label><input id="amount" name="amount" defaultValue={v.amount ?? ''} type="text" inputMode="decimal" required /></div>
+        <div className="field"><label className="l" htmlFor="amount">סכום בש״ח</label><input id="amount" name="amount" defaultValue={v.amount ?? defaultAmount} type="text" inputMode="decimal" required /></div>
       </div>
       <div className="grid2">
-        <div className="field"><label className="l" htmlFor="purpose">עבור</label><input id="purpose" name="purpose" defaultValue={v.purpose ?? ''} type="text" maxLength={200} placeholder="הלוויה / שבעה / מצבה" /></div>
+        <div className="field"><label className="l" htmlFor="purpose">עבור</label><input id="purpose" name="purpose" defaultValue={v.purpose ?? defaultPurpose} type="text" maxLength={200} placeholder="הלוויה / שבעה / מצבה" /></div>
         <div className="field"><label className="l" htmlFor="contact">איש קשר אצל הספק</label><input id="contact" name="contact" defaultValue={v.contact ?? ''} type="text" maxLength={200} placeholder="שם וטלפון" /></div>
       </div>
       <div className="field"><label className="l" htmlFor="req_note">הערה</label><input id="req_note" name="note" defaultValue={v.note ?? ''} type="text" maxLength={400} placeholder="מספר הצעת מחיר, מועד תשלום…" /></div>

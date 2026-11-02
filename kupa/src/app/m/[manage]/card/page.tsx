@@ -12,12 +12,12 @@ import { IcCoins, IcList, IcCard } from '@/components/icons';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'כרטיס ותשלומים', robots: { index: false, follow: false } };
-type Props = { params: Promise<{ manage: string }>; searchParams: Promise<{ payee?: string }> };
+type Props = { params: Promise<{ manage: string }>; searchParams: Promise<{ payee?: string; amount?: string; purpose?: string }> };
 const REQ: Record<string, [string, string]> = { pending: ['ממתין לאישור', 'pill-warn'], paid: ['שולם', 'pill-ok'], rejected: ['לא אושר', 'pill-err'] };
 
 export default async function CardPage({ params, searchParams }: Props) {
   const { manage } = await params;
-  const { payee } = await searchParams;
+  const { payee, amount, purpose } = await searchParams;
   const { fund, tot, family, last4, cardLink } = await loadFamily(manage);
   const [pays, reqs] = await Promise.all([payoutsOf(fund.id), requestsOf(fund.id)]);
   const visiblePays = pays.filter((p) => p.visible);
@@ -43,7 +43,7 @@ export default async function CardPage({ params, searchParams }: Props) {
       </section>
 
       <section className="fam-grid2">
-        <RequestPayoutForm manage={manage} available={tot.available} defaultPayee={payee || ''} />
+        <RequestPayoutForm manage={manage} available={tot.available} defaultPayee={payee || ''} defaultAmount={amount || ''} defaultPurpose={purpose || ''} />
         <div className="panel">
           <h2><IcList />בקשות ותשלומים</h2>
           {reqs.length ? (

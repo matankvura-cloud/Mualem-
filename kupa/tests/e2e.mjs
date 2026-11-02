@@ -6,6 +6,7 @@ import { mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 const { chromium } = createRequire(import.meta.url)(process.env.PLAYWRIGHT_PATH || 'playwright');
 import { startMockMorning } from './mock-morning.mjs';
+import { startMockAnthropic } from './mock-anthropic.mjs';
 
 const PORT = 3100, MOCK = 4545;
 const SITE = `http://localhost:${PORT}`;
@@ -16,11 +17,13 @@ let fails = 0;
 const check = (cond, msg) => { if (cond) console.log('  ✓', msg); else { fails++; console.log('  ✗', msg); } };
 
 const mock = await startMockMorning(MOCK);
+const ai = await startMockAnthropic(4547);
 const app = spawn('npx', ['next', 'start', '-p', String(PORT)], {
   env: { ...process.env, KUPA_LOCAL_DB: 'memory', KUPA_DEMO_SEED: '0', DATABASE_URL: '', POSTGRES_URL: '',
     MORNING_AUTH_URL: `http://localhost:${MOCK}/idp/v1/oauth/token`, MORNING_API_BASE: `http://localhost:${MOCK}/api/v1`,
     MORNING_ID: 'test-id', MORNING_SECRET: 'test-secret', MORNING_HOOK: 'hook-secret-123', MORNING_PLUGIN_ID: '',
-    ADMIN_PASSWORD: 'admin-pass', NEXT_PUBLIC_SITE_URL: SITE, FEE_PCT: '6', FEE_MODE: 'required', NEXT_PUBLIC_BRAND: 'לזכרם' },
+    ADMIN_PASSWORD: 'admin-pass', NEXT_PUBLIC_SITE_URL: SITE, FEE_PCT: '6', FEE_MODE: 'required', NEXT_PUBLIC_BRAND: 'לזכרם',
+    ANTHROPIC_API_KEY: 'test-key', ANTHROPIC_BASE_URL: 'http://localhost:4547', AI_MODEL: 'claude-opus-5-5' },
   stdio: ['ignore', 'pipe', 'pipe'], detached: true,
 });
 app.stdout.on('data', (d) => process.env.E2E_VERBOSE && process.stdout.write('[app] ' + d));
@@ -258,6 +261,37 @@ try {
   check(st.includes('בקשה מהספק דרך הכרטיס') && (await page.textContent('.stats')).includes('₪80'), 'המשפחה רואה את בקשת הספק, יתרה זמינה ₪80');
   await page.goto(`${SITE}/admin`); await page.click('table.tbl a'); await page.waitForSelector('#payee');
   check((await page.textContent('body')).includes('הספק ביקש דרך הכרטיס'), 'מתן רואה שהבקשה הגיעה מהספק');
+
+  // 11. העוזר
+  console.log('העוזר');
+  await page.goto(manageUrl + '/assistant');
+  check((await page.locator('.chat-quick button').count()) === 4, 'ארבע שאלות מהירות');
+  await page.fill('#chat-input', 'כמה נשאר בקופה?');
+  await page.click('.chat-form button[type=submit]');
+  await page.waitForSelector('.bubble.assistant:has-text("עוזר דמה")');
+  const b1 = await page.textContent('.bubble.assistant');
+  check(b1.includes('כמה נשאר בקופה?') && b1.includes('היתרה בהקשר'), 'העוזר ענה (זרימה) וקיבל את ההקשר של הקופה');
+  const call = ai.calls[0];
+  const sysText = call.body.system.map((s) => s.text).join('\n');
+  check(call.body.model === 'claude-opus-5-5' && call.body.tools?.[0]?.name === 'suggest_payment_request' && call.body.tools[0].strict === true, 'בקשה: הדגם, הכלי strict');
+  check(sysText.includes('משפחת לוי') && sysText.includes('₪80') && sysText.includes('חברה קדישא') && !sysText.includes(manageUrl), 'ההקשר: משפחה, יתרה זמינה ₪80, תשלומים, בלי קישור הניהול');
+  check(call.body.fallbacks === 'default' && String(call.headers['anthropic-beta'] || '').includes('server-side-fallback-2026-07-01') && call.body.output_config?.effort === 'low', 'fallbacks ברירת מחדל ומאמץ נמוך');
+  await page.fill('#chat-input', 'תזמין קייטרינג לשבעה');
+  await page.click('.chat-form button[type=submit]');
+  await page.waitForSelector('.chat-actions a');
+  const act = await page.textContent('.chat-actions a');
+  check(act.includes('קייטרינג שולחן ערוך') && act.includes('₪50'), 'העוזר מציע בקשת תשלום ככפתור');
+  check(ai.calls[1].body.messages.length === 3 && ai.calls[1].body.messages[1].role === 'assistant', 'ההיסטוריה נשלחת (3 הודעות)');
+  await page.click('.chat-actions a');
+  await page.waitForSelector('#req_note');
+  check((await page.inputValue('form:has(#req_note) #payee')) === 'קייטרינג שולחן ערוך' && (await page.inputValue('form:has(#req_note) #amount')) === '50', 'הכפתור ממלא מראש את בקשת התשלום');
+  // הבית: שורת השאלה מובילה לעוזר עם השאלה
+  await page.goto(manageUrl);
+  await page.fill('#home-q', 'מה עושים היום?');
+  await page.click('form.chat-strip button');
+  await page.waitForURL(/\/assistant\?q=/);
+  await page.waitForSelector('.bubble.assistant:has-text("מה עושים היום?")');
+  check(true, 'שאלה מהבית נשלחת אוטומטית לעוזר');
   // 9. קופה לזכרה
   console.log('לזכרה');
   await page.setViewportSize({ width: 420, height: 860 });
@@ -282,7 +316,7 @@ try {
 } finally {
   await browser.close();
   try { process.kill(-app.pid, 'SIGTERM'); } catch { app.kill('SIGTERM'); }
-  mock.close();
+  mock.close(); ai.close();
 }
 console.log(fails ? `\n${fails} בדיקות נכשלו` : '\nכל הבדיקות עברו');
 process.exit(fails ? 1 : 0);

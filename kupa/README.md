@@ -17,7 +17,9 @@ Next.js 16 + React 19, בלי Tailwind. מסד: Postgres (Neon דרך Vercel Sto
 | `/new` | משפחה | פתיחת קופה → מפנה לקישור הניהול |
 | `/f/<token>` | כולם | עמוד הקופה: מי, מתי ואיפה, כמה נאסף, ספר הניחומים. `?paid=1/0` אחרי התשלום |
 | `/f/<token>/give` | כולם | הפקדה: 180/360/540/אחר, שם, מילה, מייל לקבלה, "בלי להציג סכום", תוספת תפעול |
-| `/m/<manage_token>` | משפחה | ניהול: קישורים ושיתוף בוואטסאפ, הפקדות, אירועים, עריכה, סגירה/פתיחה |
+| `/m/<manage_token>` | משפחה | הבית של המשפחה: כרטיס, יתרה, תשלומים, ספקים, קרובים, ליווי. תתי-מסכים: `/card`, `/file`, `/suppliers`, `/help`, `/support`, `/assistant` |
+| `/m/<manage_token>/assistant` | משפחה | העוזר: שיחה עם Claude שמכיר את הקופה (`ANTHROPIC_API_KEY`); מציע בקשות תשלום ככפתור |
+| `/s/<card_token>` | ספק | כרטיס המשפחה הסגור: יתרה זמינה ובקשת חיוב (מתן מאשר) |
 | `/admin` | מתן | סיסמה. כל הקופות, הפקדות, רישום תשלומים לספקים |
 | `/api/f/<token>/deposits` | POST | יוצר הפקדה + קישור תשלום של מורנינג |
 | `/api/morning/hook?k=…` | מורנינג | ההודעה-חזרה (notifyUrl). `custom` = מזהה ההפקדה |
@@ -59,7 +61,7 @@ PLAYWRIGHT_PATH=/path/to/node_modules/playwright npm run test:e2e   # או npm i
 4. **משתני סביבה** (Settings → Environment Variables), לפי `.env.example`:
    `MORNING_ID`, `MORNING_SECRET` (מורנינג ← הגדרות ← חיבורים ← API),
    `MORNING_HOOK` (אקראי: `openssl rand -hex 24`), `ADMIN_PASSWORD`,
-   `NEXT_PUBLIC_SITE_URL=https://kupa.avlut.org.il`, `NEXT_PUBLIC_BRAND=לזכרם`. `MORNING_PLUGIN_ID` לא חובה:
+   `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_BRAND=לזכרם`, `NEXT_PUBLIC_FAMILY_BRAND=אבלות ישראל`, ולעוזר `ANTHROPIC_API_KEY`. `MORNING_PLUGIN_ID` לא חובה:
    נשלף פעם אחת מ-`/plugins` ונשמר בטבלת `settings`.
 5. **דומיין**: Settings → Domains → `kupa.avlut.org.il`. הדומיין `avlut.org.il`
    כבר מאומת ב-Vercel אבל ה-DNS חיצוני, ולכן צריך להוסיף אצל ספק ה-DNS רשומת

@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { loadFamily } from '../_shared';
 import { CONTACT_PHONE, FAMILY_BRAND as BRAND } from '@/lib/site';
+import Link from 'next/link';
 import FamilyShell from '@/components/FamilyShell';
 import { IcHeadset, IcUser, IcPhone } from '@/components/icons';
 
@@ -28,7 +29,10 @@ export default async function SupportPage({ params }: Props) {
           ) : <p className="notice notice-warn" style={{ marginTop: 12 }}>הטלפון של הליווי עדיין לא הוגדר (NEXT_PUBLIC_CONTACT_PHONE).</p>}
         </div>
         <div className="panel">
-          <h2>מה אפשר לבקש</h2>
+          <h2>לשאול את העוזר</h2>
+          <p className="muted" style={{ marginBottom: 10 }}>לשאלות מיידיות, בכל שעה: העוזר מכיר את הקופה והאירועים שלכם, ועל מה שדורש אדם הוא מפנה אלינו.</p>
+          <Link className="btn-copper" href={`/m/${manage}/assistant`}>לפתוח שיחה עם העוזר</Link>
+          <h2 style={{ marginTop: 18 }}>מה אפשר לבקש</h2>
           <ul className="checks">
             <li><i /> לתאם עם ספק ולשלם לו מהקופה</li>
             <li><i /> לעדכן את עמוד הקופה אם קשה לכם</li>
