@@ -1,5 +1,6 @@
 /* עיצוב לפי הדמו המאושר (Heebo + Frank Ruhl Libre). */
-:root{--bg:#FBFAF7;--ink:#1F2A33;--soft:#5B6472;--line:#E6E2D8;--navy:#1E3A4A;--blue:#2F5D74;--blue-soft:#EAF1F4;--ok:#3E7C5A;--ok-soft:#EAF5EF;--warn:#C98A2C;--warn-soft:#FBF3E4;--err:#9B2C2C;--err-soft:#FBEAEA;color-scheme:light}
+/* צבעי המותג של אבלות ישראל: כחול לילה, זהב-נחושת, נייר. */
+:root{--bg:#FBF9F4;--ink:#1C2733;--soft:#5B6472;--line:#E6E1D6;--navy:#16304D;--blue:#244B70;--blue-soft:#E8EEF5;--ok:#3E7C5A;--ok-soft:#EAF5EF;--warn:#C98A2C;--warn-soft:#FBF3E4;--err:#9B2C2C;--err-soft:#FBEAEA;color-scheme:light}
 *{box-sizing:border-box} html{background:var(--bg);-webkit-text-size-adjust:100%}
 body{margin:0;font-family:Heebo,Arial,sans-serif;color:var(--ink);direction:rtl;background:var(--bg);line-height:1.5}
 h1,h2,h3{font-family:'Frank Ruhl Libre',Georgia,serif;margin:0;font-weight:700}
@@ -18,9 +19,9 @@ p{margin:0}
 .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px}
 .fd-row{display:flex;align-items:baseline;justify-content:space-between;font-size:13px;color:var(--soft)}
 .fd-raised{font-size:34px;font-weight:700;font-family:'Frank Ruhl Libre',Georgia,serif;margin-top:2px}
-.fd-bar{height:8px;border-radius:999px;background:#EEEAE0;margin:10px 0 8px;overflow:hidden}.fd-bar i{display:block;height:100%;background:var(--blue);border-radius:999px}
+.fd-bar{height:8px;border-radius:999px;background:#EEEAE0;margin:10px 0 8px;overflow:hidden}.fd-bar i{display:block;height:100%;background:var(--copper);border-radius:999px}
 .fd-purpose{margin:0;font-size:13px;color:var(--soft);line-height:1.5}
-.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;border-radius:999px;border:0;background:var(--blue);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer;width:100%;text-decoration:none;padding:0 20px}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;border-radius:999px;border:0;background:var(--copper);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer;width:100%;text-decoration:none;padding:0 20px}
 .btn:disabled{opacity:.6;cursor:wait}
 .btn-inline{display:inline-flex;width:auto;min-height:44px;font-size:15px}
 .btn-ghost{display:flex;align-items:center;justify-content:center;min-height:42px;border-radius:999px;border:1px solid #E1E4E9;background:#fff;color:var(--ink);font:inherit;font-size:14px;font-weight:600;cursor:pointer;flex:1;text-decoration:none;padding:0 14px}
@@ -49,7 +50,7 @@ fieldset{border:0;margin:0;padding:0;min-width:0}legend,label.l{font-size:13px;f
 @media(max-width:480px){.grid2{grid-template-columns:1fr}}
 .fd-amts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .fd-amts button{min-height:52px;border-radius:12px;border:1.5px solid #E1E4E9;background:#fff;font:inherit;font-size:17px;font-weight:700;color:var(--ink);cursor:pointer}
-.fd-amts button[aria-pressed=true]{border:2px solid var(--blue);background:var(--blue-soft);color:#1E4356}
+.fd-amts button[aria-pressed=true]{border:2px solid var(--copper);background:var(--copper-soft);color:#16304D}
 input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],input[type=time],input[type=url],input[type=password],textarea,select{width:100%;min-height:48px;border-radius:12px;border:1.5px solid #E1E4E9;background:#fff;padding:10px 14px;font:inherit;font-size:16px;color:var(--ink)}
 textarea{resize:vertical;min-height:84px}
 .fd-check{display:flex;align-items:center;gap:10px;font-size:14px}.fd-check input{width:20px;height:20px;accent-color:var(--blue);flex:0 0 auto}
@@ -93,7 +94,7 @@ table.tbl{width:100%;border-collapse:collapse;background:#fff;border:1px solid v
 .topbar .links{display:flex;gap:14px;font-size:14px}
 @media(min-width:600px){.fd{border-inline:1px solid var(--line)}}
 /* ===== צד המשפחה: לפי ההמחשה (סרגל צד, כרטיס, הטבות, ליווי) ===== */
-:root{--copper:#B8744A;--copper-soft:#F3E4D8;--sage:#8FA58B;--sage-soft:#E6EDE3}
+:root{--copper:#B58B4C;--copper-soft:#F4EADA;--sage:#8FA58B;--sage-soft:#E6EDE3}
 .fam{display:flex;min-height:100vh;background:var(--bg)}
 .fam-side{width:232px;flex:0 0 auto;background:var(--navy);color:#fff;padding:22px 16px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
 .fam-side .brand{font-family:'Frank Ruhl Libre',Georgia,serif;font-size:26px;font-weight:700;line-height:1.1;margin:0 0 18px;color:#fff;text-decoration:none}
@@ -117,14 +118,14 @@ table.tbl{width:100%;border-collapse:collapse;background:#fff;border:1px solid v
 .panel h2 svg{width:20px;height:20px;color:var(--copper)}
 .panel .more{display:inline-block;margin-top:10px;font-size:13px;font-weight:600;color:var(--blue);text-decoration:none}
 /* הכרטיס */
-.fcard{position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(135deg,#1E3A4A 0%,#27485A 60%,#2F5D74 100%);color:#fff;padding:18px 20px;min-height:168px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 10px 26px rgba(30,58,74,.22)}
+.fcard{position:relative;overflow:hidden;border-radius:18px;background:linear-gradient(135deg,#102640 0%,#16304D 60%,#244B70 100%);color:#fff;padding:18px 20px;min-height:168px;display:flex;flex-direction:column;justify-content:space-between;box-shadow:0 10px 26px rgba(22,48,77,.25)}
 .fcard::before{content:"";position:absolute;inset:auto -40px -70px auto;width:220px;height:160px;background:var(--sage);opacity:.85;border-radius:50% 50% 0 0;transform:rotate(-12deg)}
 .fcard::after{content:"";position:absolute;inset:auto -60px -90px auto;width:260px;height:150px;background:var(--copper);opacity:.9;border-radius:50% 50% 0 0;transform:rotate(-12deg) translateY(28px)}
 .fcard>*{position:relative;z-index:1}
 .fcard .top{display:flex;justify-content:space-between;align-items:center}
 .fcard .top b{font-size:17px;font-family:'Frank Ruhl Libre',Georgia,serif}
 .fcard .chip{display:flex;gap:10px;align-items:center}
-.fcard .chip i{display:block;width:34px;height:26px;border-radius:6px;background:linear-gradient(135deg,#E8C27A,#C9953F);border:1px solid rgba(0,0,0,.15)}
+.fcard .chip i{display:block;width:34px;height:26px;border-radius:6px;background:linear-gradient(135deg,#EBD19A,#B58B4C);border:1px solid rgba(0,0,0,.15)}
 .fcard .chip svg{width:22px;height:22px;opacity:.9}
 .fcard .name{font-size:15px;font-weight:600}
 .fcard .num{font-size:14px;letter-spacing:.14em;opacity:.9;direction:ltr;text-align:right}

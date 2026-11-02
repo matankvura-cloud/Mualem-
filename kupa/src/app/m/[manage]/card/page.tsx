@@ -21,7 +21,7 @@ export default async function CardPage({ params, searchParams }: Props) {
   const { fund, tot, family, last4, cardLink } = await loadFamily(manage);
   const [pays, reqs] = await Promise.all([payoutsOf(fund.id), requestsOf(fund.id)]);
   const visiblePays = pays.filter((p) => p.visible);
-  const qr = await QRCode.toDataURL(cardLink, { margin: 1, width: 300, color: { dark: '#1E3A4A', light: '#FFFFFF' } });
+  const qr = await QRCode.toDataURL(cardLink, { margin: 1, width: 300, color: { dark: '#16304D', light: '#FFFFFF' } });
 
   return (
     <FamilyShell manage={manage} active="card">

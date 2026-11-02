@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: { default: `${BRAND} · ${SLOGAN}`, template: `%s · ${BRAND}` },
   description: `${TAGLINE}. מי שרוצה לעזור מפקיד לקופה של המשפחה במקום לשלוח פרחים.`,
 };
-export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#1E3A4A' };
+export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#16304D' };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
