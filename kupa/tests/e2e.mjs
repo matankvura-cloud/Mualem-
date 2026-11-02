@@ -178,20 +178,56 @@ try {
   await page.waitForSelector('table.tbl');
   const at = await page.textContent('body');
   check(at.includes('קובי') && at.includes('₪680') && at.includes('₪41'), 'רשימת קופות: נאסף ₪680, תפעול ₪41 (10.8 + 30)');
+  // 8א. המשפחה מבקשת תשלום לספק (הקופה סגורה להפקדות, אבל הכסף שבה עדיין זמין)
+  console.log('בקשת תשלום לספק');
+  await page.goto(manageUrl);
+  check((await page.textContent('.stats')).includes('יתרה זמינה') && (await page.textContent('.stats')).includes('₪680'), 'המשפחה רואה יתרה זמינה ₪680');
+  await page.fill('form:has(#req_note) #payee', 'חברה קדישא');
+  await page.fill('form:has(#req_note) #amount', '900');
+  await page.click('form:has(#req_note) button[type=submit]');
+  await page.waitForSelector('.fd-err:has-text("היתרה הזמינה")');
+  check(true, 'בקשה מעל היתרה נדחית עם הסבר');
+  await page.fill('form:has(#req_note) #amount', '450');
+  await page.fill('form:has(#req_note) #purpose', 'הלוויה');
+  await page.fill('form:has(#req_note) #contact', 'משה 050-0000000');
+  await page.click('form:has(#req_note) button[type=submit]');
+  await page.waitForSelector('.notice-ok:has-text("הבקשה נשלחה")');
+  let st = await page.textContent('.stats');
+  check(st.includes('₪230') && st.includes('₪450 בבקשות שממתינות'), 'אחרי הבקשה: יתרה זמינה ₪230, ₪450 ממתינים');
+  check((await page.locator('.pill:has-text("ממתין לאישור")').count()) === 1, 'הבקשה מוצגת למשפחה כממתינה');
+  // בקשה שנייה שתידחה
+  await page.fill('form:has(#req_note) #payee', 'פרחים בע״מ');
+  await page.fill('form:has(#req_note) #amount', '100');
+  await page.click('form:has(#req_note) button[type=submit]');
+  await page.waitForSelector('.notice-ok:has-text("הבקשה נשלחה")');
+
+  // 8ב. מתן רואה ומאשר
+  await page.goto(`${SITE}/admin`);
+  check((await page.textContent('table.tbl')).includes('2 ממתינות'), 'רשימת הקופות מראה 2 בקשות ממתינות');
   await page.click('table.tbl a');
   await page.waitForSelector('#payee');
-  await page.fill('#payee', 'חברה קדישא');
-  await page.fill('#amount', '450');
-  await page.fill('#purpose', 'הלוויה');
+  check(await page.locator('.card:has-text("חברה קדישא")').count() === 1, 'הבקשה מוצגת למתן');
+  await page.click('.card:has-text("חברה קדישא") button:has-text("שולם, לרשום")');
+  await page.waitForSelector('.card:has-text("חברה קדישא")', { state: 'detached' });
+  check(true, 'אחרי האישור הבקשה יורדת מהפתוחות');
+  await page.fill('.card:has-text("פרחים בע״מ") input[name=reason]', 'במקום פרחים, זוכרים?');
+  await page.click('.card:has-text("פרחים בע״מ") button:has-text("לדחות")');
+  await page.waitForSelector('.card:has-text("פרחים בע״מ")', { state: 'detached' });
+  const ft = await page.textContent('.stats');
+  check(ft.includes('₪450') && ft.includes('₪230'), 'אחרי האישור: שולם ₪450, יתרה ₪230');
+  check((await page.locator('table.tbl:has-text("חברה קדישא") .pill:has-text("שולם")').count()) >= 1, 'התשלום נרשם ברשימת התשלומים לספקים');
+  // רישום ידני עדיין עובד
+  await page.fill('#payee', 'קייטרינג לשבעה');
+  await page.fill('#amount', '100');
   await page.click('form:has(#payee) button[type=submit]');
   await page.waitForSelector('.notice-ok:has-text("נרשם")');
-  const ft = await page.textContent('.stats');
-  check(ft.includes('₪450') && ft.includes('₪230'), 'אחרי תשלום לספק: שולם ₪450, יתרה ₪230');
-  check((await page.locator('.pill:has-text("בוטל")').count()) === 1 && (await page.locator('.pill:has-text("שולם")').count()) === 2, 'הפקדות: 2 שולמו, 1 בוטלה');
+  check((await page.locator('.pill:has-text("בוטל")').count()) === 1 && (await page.locator('table.tbl:has-text("נגבה") .pill:has-text("שולם")').count()) === 2, 'הפקדות: 2 שולמו, 1 בוטלה');
   await page.setViewportSize({ width: 1100, height: 900 });
   await page.screenshot({ path: OUT + '08-admin-fund.png', fullPage: true });
   await page.goto(manageUrl);
-  check((await page.textContent('.stats')).includes('₪450'), 'המשפחה רואה את התשלום לספק');
+  st = await page.textContent('body');
+  check(st.includes('₪550') && (await page.locator('.pill:has-text("לא אושר")').count()) === 1 && st.includes('במקום פרחים, זוכרים?'), 'המשפחה רואה: שולם ₪550, הבקשה השנייה לא אושרה עם ההסבר');
+  check((await page.textContent('.stats')).includes('₪130'), 'יתרה זמינה למשפחה ₪130');
   // 9. קופה לזכרה
   console.log('לזכרה');
   await page.setViewportSize({ width: 420, height: 860 });

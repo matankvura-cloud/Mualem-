@@ -1,6 +1,7 @@
 'use client';
 import { useActionState } from 'react';
-import { updateFund, addEvent, type ActState } from './actions';
+import { updateFund, addEvent, requestPayout, type ActState } from './actions';
+import { ils } from '@/lib/format';
 import type { Fund } from '@/lib/funds';
 import { EVENT_KINDS } from '@/lib/format';
 
@@ -41,6 +42,28 @@ export function EditFundForm({ manage, fund }: { manage: string; fund: Fund }) {
       <div className="field"><label className="l" htmlFor="manager_email">מייל</label><input id="manager_email" name="manager_email" type="email" maxLength={160} dir="ltr" defaultValue={fund.manager_email ?? ''} /></div>
       <Status s={state} />
       <button className="btn" type="submit" disabled={pending}>{pending ? 'שומרים…' : 'לשמור'}</button>
+    </form>
+  );
+}
+
+export function RequestPayoutForm({ manage, available }: { manage: string; available: number }) {
+  const [state, action, pending] = useActionState<ActState, FormData>(requestPayout.bind(null, manage), undefined);
+  const v = state?.values ?? {};
+  return (
+    <form action={action} className="stack card" noValidate>
+      <h3 style={{ fontSize: 15 }}>לבקש תשלום לספק מהקופה</h3>
+      <p className="muted">כותבים למי ועל מה, אנחנו מאשרים ומשלמים לספק ישירות מהקופה. היתרה הזמינה: <b>{ils(available)}</b>.</p>
+      <div className="grid2">
+        <div className="field"><label className="l" htmlFor="payee">למי לשלם</label><input id="payee" name="payee" defaultValue={v.payee ?? ''} type="text" required maxLength={120} placeholder="חברה קדישא, קייטרינג, מצבות…" /></div>
+        <div className="field"><label className="l" htmlFor="amount">סכום בש״ח</label><input id="amount" name="amount" defaultValue={v.amount ?? ''} type="text" inputMode="decimal" required /></div>
+      </div>
+      <div className="grid2">
+        <div className="field"><label className="l" htmlFor="purpose">עבור</label><input id="purpose" name="purpose" defaultValue={v.purpose ?? ''} type="text" maxLength={200} placeholder="הלוויה / שבעה / מצבה" /></div>
+        <div className="field"><label className="l" htmlFor="contact">איש קשר אצל הספק</label><input id="contact" name="contact" defaultValue={v.contact ?? ''} type="text" maxLength={200} placeholder="שם וטלפון" /></div>
+      </div>
+      <div className="field"><label className="l" htmlFor="req_note">הערה</label><input id="req_note" name="note" defaultValue={v.note ?? ''} type="text" maxLength={400} placeholder="מספר הצעת מחיר, מועד תשלום…" /></div>
+      <Status s={state} />
+      <button className="btn" type="submit" disabled={pending || available <= 0}>{pending ? 'שולחים…' : 'לשלוח בקשה'}</button>
     </form>
   );
 }

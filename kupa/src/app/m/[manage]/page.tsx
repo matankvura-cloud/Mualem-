@@ -1,15 +1,17 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { fundByManage, totals, depositsOf, payoutsOf } from '@/lib/funds';
+import { fundByManage, totals, depositsOf, payoutsOf, requestsOf } from '@/lib/funds';
 import { TOKEN_RE } from '@/lib/tokens';
 import { siteUrl, BRAND, SLOGAN } from '@/lib/site';
 import { ils, fmtDate, fmtDateTime, eventDay, eventTitle, memOf } from '@/lib/format';
 import { num } from '@/lib/db';
 import CopyButton from '@/components/CopyButton';
 import Footer from '@/components/Footer';
-import { EditFundForm, AddEventForm } from './ManageForms';
-import { removeEvent, setStatus } from './actions';
+import { EditFundForm, AddEventForm, RequestPayoutForm } from './ManageForms';
+import { removeEvent, setStatus, cancelRequest } from './actions';
+
+const REQ: Record<string, [string, string]> = { pending: ['ממתין לאישור', 'pill-warn'], paid: ['שולם', 'pill-ok'], rejected: ['לא אושר', 'pill-err'] };
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'ניהול הקופה', robots: { index: false, follow: false } };
@@ -21,7 +23,7 @@ export default async function ManagePage({ params, searchParams }: Props) {
   if (!TOKEN_RE.test(manage)) notFound();
   const fund = await fundByManage(manage);
   if (!fund) notFound();
-  const [tot, deps, pays, site] = await Promise.all([totals(fund.id), depositsOf(fund.id), payoutsOf(fund.id), siteUrl()]);
+  const [tot, deps, pays, reqs, site] = await Promise.all([totals(fund.id), depositsOf(fund.id), payoutsOf(fund.id), requestsOf(fund.id), siteUrl()]);
   const visiblePays = pays.filter((p) => p.visible);
   const publicLink = `${site}/f/${fund.token}`;
   const manageLink = `${site}/m/${manage}`;
@@ -60,7 +62,24 @@ export default async function ManagePage({ params, searchParams }: Props) {
           <div className="stat"><small>נאסף</small><b>{ils(tot.raised)}</b></div>
           <div className="stat"><small>מפקידים</small><b>{tot.donors}</b></div>
           <div className="stat"><small>שולם מהקופה</small><b>{ils(tot.paid_out)}</b></div>
-          <div className="stat"><small>יתרה</small><b>{ils(tot.raised - tot.paid_out)}</b></div>
+          <div className="stat"><small>יתרה זמינה</small><b>{ils(tot.available)}</b>{tot.requested ? <small>{ils(tot.requested)} בבקשות שממתינות</small> : null}</div>
+        </section>
+
+        <section className="stack">
+          <h2 style={{ fontSize: 18 }}>תשלומים לספקים</h2>
+          {reqs.length ? (
+            <div className="tbl-wrap"><table className="tbl">
+              <thead><tr><th>למי</th><th>סכום</th><th>מצב</th><th></th></tr></thead>
+              <tbody>{reqs.map((r) => { const [label, cls] = REQ[r.status] || [r.status, '']; return (
+                <tr key={r.id}>
+                  <td><b>{r.payee}</b>{r.purpose ? <><br /><small className="muted">{r.purpose}</small></> : null}{r.admin_note ? <><br /><small>{r.admin_note}</small></> : null}</td>
+                  <td className="num">{ils(r.amount)}</td>
+                  <td><span className={`pill ${cls}`}>{label}</span><br /><small className="muted">{fmtDate(r.updated_at)}</small></td>
+                  <td>{r.status === 'pending' ? <form action={cancelRequest.bind(null, manage, r.id)}><button className="btn-ghost" type="submit" style={{ minHeight: 32, fontSize: 12 }}>לבטל</button></form> : null}</td>
+                </tr>); })}</tbody>
+            </table></div>
+          ) : null}
+          <RequestPayoutForm manage={manage} available={tot.available} />
         </section>
 
         <section className="stack">

@@ -24,7 +24,13 @@ export type Payout = {
   paid_on: unknown; note: string | null; visible: boolean; created_at: unknown;
 };
 
-export type Totals = { raised: number; fees: number; donors: number; paid_out: number; pending: number };
+export type PayoutRequest = {
+  id: string; fund_id: string; payee: string; purpose: string | null; amount: unknown; contact: string | null; note: string | null;
+  status: 'pending' | 'paid' | 'rejected'; admin_note: string | null; payout_id: string | null; created_at: unknown; updated_at: unknown;
+};
+
+/** requested: סכום הבקשות הממתינות. available: מה שאפשר לבקש עכשיו. */
+export type Totals = { raised: number; fees: number; donors: number; paid_out: number; pending: number; requested: number; available: number };
 
 const normalize = (f: Fund | null): Fund | null => {
   if (!f) return null;
@@ -43,9 +49,11 @@ export async function totals(fundId: string): Promise<Totals> {
        COALESCE(SUM(fee_amount) FILTER (WHERE status = 'paid'), 0) AS fees,
        COUNT(*) FILTER (WHERE status = 'paid') AS donors,
        COUNT(*) FILTER (WHERE status = 'pending') AS pending,
-       (SELECT COALESCE(SUM(amount), 0) FROM payouts p WHERE p.fund_id = $1) AS paid_out
+       (SELECT COALESCE(SUM(amount), 0) FROM payouts p WHERE p.fund_id = $1) AS paid_out,
+       (SELECT COALESCE(SUM(amount), 0) FROM payout_requests q WHERE q.fund_id = $1 AND q.status = 'pending') AS requested
      FROM deposits d WHERE d.fund_id = $1`, [fundId]);
-  return { raised: num(r?.raised), fees: num(r?.fees), donors: num(r?.donors), pending: num(r?.pending), paid_out: num(r?.paid_out) };
+  const t = { raised: num(r?.raised), fees: num(r?.fees), donors: num(r?.donors), pending: num(r?.pending), paid_out: num(r?.paid_out), requested: num(r?.requested) };
+  return { ...t, available: Math.max(0, Math.round((t.raised - t.paid_out - t.requested) * 100) / 100) };
 }
 
 /** ספר הניחומים: רק הפקדות ששולמו. סכום רק אם הקופה מציגה והמפקיד לא ביקש להסתיר. */
@@ -64,17 +72,21 @@ export const depositsOf = (fundId: string) =>
 export const payoutsOf = (fundId: string) =>
   many<Payout>(`SELECT * FROM payouts WHERE fund_id = $1 ORDER BY paid_on DESC, created_at DESC`, [fundId]);
 
+export const requestsOf = (fundId: string) =>
+  many<PayoutRequest>(`SELECT * FROM payout_requests WHERE fund_id = $1 ORDER BY created_at DESC`, [fundId]);
+
 export function bumpViews(fundId: string) {
   many(`UPDATE funds SET view_count = view_count + 1 WHERE id = $1`, [fundId]).catch(() => {});
 }
 
-export type FundSummary = Fund & { raised: unknown; fees: unknown; donors: unknown; paid_out: unknown };
+export type FundSummary = Fund & { raised: unknown; fees: unknown; donors: unknown; paid_out: unknown; open_requests: unknown };
 export const allFunds = () => many<FundSummary>(
   `SELECT f.*,
      COALESCE((SELECT SUM(amount) FROM deposits d WHERE d.fund_id = f.id AND d.status = 'paid'), 0) AS raised,
      COALESCE((SELECT SUM(fee_amount) FROM deposits d WHERE d.fund_id = f.id AND d.status = 'paid'), 0) AS fees,
      (SELECT COUNT(*) FROM deposits d WHERE d.fund_id = f.id AND d.status = 'paid') AS donors,
-     COALESCE((SELECT SUM(amount) FROM payouts p WHERE p.fund_id = f.id), 0) AS paid_out
+     COALESCE((SELECT SUM(amount) FROM payouts p WHERE p.fund_id = f.id), 0) AS paid_out,
+     (SELECT COUNT(*) FROM payout_requests q WHERE q.fund_id = f.id AND q.status = 'pending') AS open_requests
    FROM funds f ORDER BY f.created_at DESC`);
 
 /* ---------- ניקוי קלט ---------- */

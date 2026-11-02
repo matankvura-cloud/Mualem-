@@ -43,6 +43,38 @@ export async function deletePayout(fundId: string, id: string) {
   revalidatePath(`/admin/${fundId}`); revalidatePath('/admin');
 }
 
+export type ReqState = { error?: string; ok?: string } | undefined;
+
+/** אישור: רושם תשלום לספק מתוך הבקשה ומסמן אותה "שולם". */
+export async function approveRequest(fundId: string, id: string, _prev: ReqState, fd: FormData): Promise<ReqState> {
+  if (!(await isAdmin())) return { error: 'לא מחובר' };
+  if (!UUID_RE.test(fundId) || !UUID_RE.test(id)) return { error: 'בקשה לא תקינה' };
+  const req = await one<{ payee: string; purpose: string | null; amount: unknown; note: string | null }>(
+    `SELECT payee, purpose, amount, note FROM payout_requests WHERE id = $1 AND fund_id = $2 AND status = 'pending'`, [id, fundId]);
+  if (!req) return { error: 'הבקשה כבר טופלה' };
+  const amount = round2(Number(String(fd.get('amount') || '').replace(/[^\d.]/g, '')) || Number(req.amount));
+  if (!(amount > 0)) return { error: 'סכום לא תקין' };
+  const paidOn = String(fd.get('paid_on') || '').slice(0, 10) || null;
+  const adminNote = String(fd.get('admin_note') || '').trim().slice(0, 300) || null;
+  const pay = await one<{ id: string }>(
+    `INSERT INTO payouts (fund_id, payee, purpose, amount, paid_on, note, visible) VALUES ($1,$2,$3,$4,COALESCE($5::date, CURRENT_DATE),$6,true) RETURNING id`,
+    [fundId, req.payee, req.purpose, amount, paidOn, req.note]);
+  await many(`UPDATE payout_requests SET status = 'paid', amount = $3, admin_note = $4, payout_id = $5, updated_at = now() WHERE id = $1 AND fund_id = $2`,
+    [id, fundId, amount, adminNote, pay?.id ?? null]);
+  revalidatePath(`/admin/${fundId}`); revalidatePath('/admin');
+  return { ok: 'אושר ונרשם כתשלום.' };
+}
+
+export async function rejectRequest(fundId: string, id: string, _prev: ReqState, fd: FormData): Promise<ReqState> {
+  if (!(await isAdmin())) return { error: 'לא מחובר' };
+  if (!UUID_RE.test(fundId) || !UUID_RE.test(id)) return { error: 'בקשה לא תקינה' };
+  const adminNote = String(fd.get('reason') || '').trim().slice(0, 300);
+  if (adminNote.length < 2) return { error: 'כתבו למשפחה למה לא אושר.' };
+  await many(`UPDATE payout_requests SET status = 'rejected', admin_note = $3, updated_at = now() WHERE id = $1 AND fund_id = $2 AND status = 'pending'`, [id, fundId, adminNote]);
+  revalidatePath(`/admin/${fundId}`); revalidatePath('/admin');
+  return { ok: 'הבקשה נדחתה והמשפחה תראה את ההסבר.' };
+}
+
 export async function adminSetStatus(fundId: string, status: 'open' | 'closed') {
   if (!(await isAdmin())) return;
   if (!UUID_RE.test(fundId)) return;

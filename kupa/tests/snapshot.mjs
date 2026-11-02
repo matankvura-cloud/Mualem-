@@ -58,6 +58,10 @@ try {
   await page.fill('#payee', 'חברה קדישא ירושלים'); await page.fill('#amount', '1200'); await page.fill('#purpose', 'הלוויה');
   await page.click('form:has(#payee) button[type=submit]'); await page.waitForSelector('.notice-ok');
   const adminFund = page.url();
+  await page.goto(manage);
+  await page.fill('form:has(#req_note) #payee', 'קייטרינג "שולחן ערוך"'); await page.fill('form:has(#req_note) #amount', '600');
+  await page.fill('form:has(#req_note) #purpose', 'ארוחות לשבעה'); await page.fill('form:has(#req_note) #contact', 'אבי 052-0000000');
+  await page.click('form:has(#req_note) button[type=submit]'); await page.waitForSelector('.notice-ok');
 
   const cssDir = ['.next/static/css', '.next/static/chunks'].find((d) => { try { return readdirSync(d).some((f) => f.endsWith('.css')); } catch { return false; } });
   const css = readdirSync(cssDir).filter((f) => f.endsWith('.css')).map((f) => readFileSync(`${cssDir}/${f}`, 'utf8')).join('\n');

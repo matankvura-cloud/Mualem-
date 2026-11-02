@@ -1,11 +1,13 @@
 'use server';
 import { revalidatePath } from 'next/cache';
 import { many } from '@/lib/db';
-import { fundByManage, cleanFundInput } from '@/lib/funds';
+import { fundByManage, cleanFundInput, totals } from '@/lib/funds';
+import { round2 } from '@/lib/format';
+import { ils } from '@/lib/format';
 import { TOKEN_RE, token } from '@/lib/tokens';
 import type { FundEvent } from '@/lib/format';
 
-export type ActState = { error?: string; ok?: string } | undefined;
+export type ActState = { error?: string; ok?: string; values?: Record<string, string> } | undefined;
 
 async function own(manage: string) {
   if (!TOKEN_RE.test(manage)) return null;
@@ -40,6 +42,31 @@ export async function addEvent(manage: string, _prev: ActState, fd: FormData): P
   await many(`UPDATE funds SET events = $2, updated_at = now() WHERE id = $1`, [fund.id, JSON.stringify(events)]);
   revalidatePath(`/m/${manage}`); revalidatePath(`/f/${fund.token}`);
   return { ok: 'האירוע נוסף.' };
+}
+
+export async function requestPayout(manage: string, _prev: ActState, fd: FormData): Promise<ActState> {
+  const fund = await own(manage);
+  if (!fund) return { error: 'הקישור לא תקין' };
+  const payee = String(fd.get('payee') || '').trim().slice(0, 120);
+  const amount = round2(Number(String(fd.get('amount') || '').replace(/[^\d.]/g, '')));
+  const values = Object.fromEntries([...fd.entries()].filter(([k, v]) => typeof v === 'string' && !k.startsWith('$')) as [string, string][]);
+  if (payee.length < 2) return { error: 'למי לשלם? כתבו את שם הספק.', values };
+  if (!(amount > 0)) return { error: 'צריך סכום.', values };
+  const t = await totals(fund.id);
+  if (amount > t.available) return { error: `היתרה הזמינה היא ${ils(t.available)}${t.requested ? ` (אחרי ${ils(t.requested)} בבקשות שממתינות)` : ''}.`, values };
+  await many(
+    `INSERT INTO payout_requests (fund_id, payee, purpose, amount, contact, note) VALUES ($1,$2,$3,$4,$5,$6)`,
+    [fund.id, payee, String(fd.get('purpose') || '').trim().slice(0, 200) || null, amount,
+      String(fd.get('contact') || '').trim().slice(0, 200) || null, String(fd.get('note') || '').trim().slice(0, 400) || null]);
+  revalidatePath(`/m/${manage}`);
+  return { ok: 'הבקשה נשלחה. נאשר ונשלם, ותראו את זה כאן.' };
+}
+
+export async function cancelRequest(manage: string, id: string) {
+  const fund = await own(manage);
+  if (!fund) return;
+  await many(`DELETE FROM payout_requests WHERE id = $1 AND fund_id = $2 AND status = 'pending'`, [id, fund.id]);
+  revalidatePath(`/m/${manage}`);
 }
 
 export async function removeEvent(manage: string, id: string) {

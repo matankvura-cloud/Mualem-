@@ -2,12 +2,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { isAdmin } from '@/lib/admin';
-import { fundById, totals, depositsOf, payoutsOf } from '@/lib/funds';
+import { fundById, totals, depositsOf, payoutsOf, requestsOf } from '@/lib/funds';
 import { UUID_RE } from '@/lib/tokens';
 import { num } from '@/lib/db';
 import { siteUrl } from '@/lib/site';
 import { ils, fmtDate, fmtDateTime } from '@/lib/format';
-import { LoginForm, PayoutForm } from '../AdminForms';
+import { LoginForm, PayoutForm, RequestDecision } from '../AdminForms';
 import { deletePayout, adminSetStatus } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -22,7 +22,9 @@ export default async function AdminFund({ params }: Props) {
   if (!UUID_RE.test(id)) notFound();
   const fund = await fundById(id);
   if (!fund) notFound();
-  const [tot, deps, pays, site] = await Promise.all([totals(id), depositsOf(id), payoutsOf(id), siteUrl()]);
+  const [tot, deps, pays, reqs, site] = await Promise.all([totals(id), depositsOf(id), payoutsOf(id), requestsOf(id), siteUrl()]);
+  const openReqs = reqs.filter((r) => r.status === 'pending');
+  const doneReqs = reqs.filter((r) => r.status !== 'pending');
   const closed = fund.status === 'closed';
   return (
     <div className="fd fd-wide">
@@ -42,7 +44,24 @@ export default async function AdminFund({ params }: Props) {
           <div className="stat"><small>מפקידים</small><b>{tot.donors}</b></div>
           <div className="stat"><small>תוספות תפעול</small><b>{ils(tot.fees)}</b></div>
           <div className="stat"><small>שולם לספקים</small><b>{ils(tot.paid_out)}</b></div>
-          <div className="stat"><small>יתרה</small><b>{ils(tot.raised - tot.paid_out)}</b></div>
+          <div className="stat"><small>יתרה</small><b>{ils(tot.raised - tot.paid_out)}</b>{tot.requested ? <small>{ils(tot.requested)} בבקשות פתוחות</small> : null}</div>
+        </section>
+
+        <section className="stack">
+          <h2 style={{ fontSize: 18 }}>בקשות תשלום מהמשפחה <small className="muted">({openReqs.length} פתוחות)</small></h2>
+          {openReqs.length ? openReqs.map((r) => (
+            <div className="card stack" key={r.id} style={{ borderColor: '#F0DDB8' }}>
+              <div className="fd-row" style={{ fontSize: 15, color: 'var(--ink)' }}><b>{r.payee}</b><b className="num">{ils(r.amount)}</b></div>
+              <p className="muted">{[r.purpose, r.contact, r.note].filter(Boolean).join(' · ') || '—'} · התקבלה {fmtDate(r.created_at)}</p>
+              <RequestDecision fundId={id} id={r.id} amount={num(r.amount)} />
+            </div>)) : <div className="fd-note">אין בקשות פתוחות.</div>}
+          {doneReqs.length ? (
+            <div className="tbl-wrap"><table className="tbl">
+              <thead><tr><th>למי</th><th>סכום</th><th>מצב</th><th>הערה</th></tr></thead>
+              <tbody>{doneReqs.map((r) => (
+                <tr key={r.id}><td><b>{r.payee}</b>{r.purpose ? <><br /><small className="muted">{r.purpose}</small></> : null}</td><td className="num">{ils(r.amount)}</td>
+                  <td><span className={`pill ${r.status === 'paid' ? 'pill-ok' : 'pill-err'}`}>{r.status === 'paid' ? 'שולם' : 'נדחה'}</span></td><td className="muted">{r.admin_note}</td></tr>))}</tbody>
+            </table></div>) : null}
         </section>
 
         <section className="stack">

@@ -6,13 +6,14 @@ import { cleanFundInput } from '@/lib/funds';
 import { FEE_PCT } from '@/lib/site';
 import type { FundEvent } from '@/lib/format';
 
-export type NewState = { error?: string } | undefined;
+export type NewState = { error?: string; values?: Record<string, string> } | undefined;
 
 export async function createFund(_prev: NewState, fd: FormData): Promise<NewState> {
   const f = cleanFundInput(fd);
-  if (!f.display_name || f.display_name.length < 2) return { error: 'צריך את שם הנפטר/ת.' };
-  if (!f.manager_name) return { error: 'צריך שם של מי שמנהל את הקופה, כדי שנדע למי לפנות.' };
-  if (!f.manager_phone || f.manager_phone.replace(/\D/g, '').length < 9) return { error: 'צריך טלפון של מנהל/ת הקופה.' };
+  const values = Object.fromEntries([...fd.entries()].filter(([k, v]) => typeof v === 'string' && !k.startsWith('$')) as [string, string][]);
+  if (!f.display_name || f.display_name.length < 2) return { error: 'צריך את שם הנפטר/ת.', values };
+  if (!f.manager_name) return { error: 'צריך שם של מי שמנהל את הקופה, כדי שנדע למי לפנות.', values };
+  if (!f.manager_phone || f.manager_phone.replace(/\D/g, '').length < 9) return { error: 'צריך טלפון של מנהל/ת הקופה.', values };
 
   const events: FundEvent[] = [];
   const funeralDate = String(fd.get('funeral_date') || '');

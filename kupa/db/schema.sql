@@ -83,3 +83,20 @@ CREATE TABLE IF NOT EXISTS payouts (
   created_at timestamptz NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS payouts_fund_idx ON payouts(fund_id, paid_on DESC);
+
+-- בקשת תשלום לספק מצד המשפחה. מתן מאשר (ואז נרשם payout) או דוחה עם הסבר.
+CREATE TABLE IF NOT EXISTS payout_requests (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  fund_id uuid NOT NULL REFERENCES funds(id) ON DELETE CASCADE,
+  payee text NOT NULL,
+  purpose text,
+  amount numeric(12,2) NOT NULL CHECK (amount > 0),
+  contact text,
+  note text,
+  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','paid','rejected')),
+  admin_note text,
+  payout_id uuid REFERENCES payouts(id) ON DELETE SET NULL,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS payout_requests_fund_idx ON payout_requests(fund_id, status, created_at DESC);

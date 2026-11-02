@@ -1,6 +1,6 @@
 'use client';
 import { useActionState } from 'react';
-import { adminLogin, addPayout, type LoginState, type PayoutState } from './actions';
+import { adminLogin, addPayout, approveRequest, rejectRequest, type LoginState, type PayoutState, type ReqState } from './actions';
 
 export function LoginForm() {
   const [state, action, pending] = useActionState<LoginState, FormData>(adminLogin, undefined);
@@ -11,6 +11,30 @@ export function LoginForm() {
       {state?.error ? <p className="fd-err" role="alert">{state.error}</p> : null}
       <button className="btn" type="submit" disabled={pending}>{pending ? 'רגע…' : 'להיכנס'}</button>
     </form>
+  );
+}
+
+export function RequestDecision({ fundId, id, amount }: { fundId: string; id: string; amount: number }) {
+  const [a, approve, ap] = useActionState<ReqState, FormData>(approveRequest.bind(null, fundId, id), undefined);
+  const [r, reject, rp] = useActionState<ReqState, FormData>(rejectRequest.bind(null, fundId, id), undefined);
+  const today = new Date().toISOString().slice(0, 10);
+  return (
+    <div className="stack" style={{ gap: 8 }}>
+      <form action={approve} className="stack" style={{ gap: 6 }} noValidate>
+        <div className="grid2">
+          <div className="field"><label className="l" htmlFor={`amt-${id}`}>סכום ששולם</label><input id={`amt-${id}`} name="amount" type="text" inputMode="decimal" defaultValue={String(amount)} /></div>
+          <div className="field"><label className="l" htmlFor={`on-${id}`}>תאריך</label><input id={`on-${id}`} name="paid_on" type="date" defaultValue={today} /></div>
+        </div>
+        <input name="admin_note" type="text" maxLength={300} placeholder="הערה למשפחה (לא חובה)" />
+        {a?.error ? <p className="fd-err">{a.error}</p> : a?.ok ? <p className="notice notice-ok">{a.ok}</p> : null}
+        <button className="btn btn-inline" type="submit" disabled={ap}>{ap ? 'רושמים…' : 'שולם, לרשום'}</button>
+      </form>
+      <form action={reject} className="stack" style={{ gap: 6 }} noValidate>
+        <input name="reason" type="text" maxLength={300} placeholder="למה לא אושר (המשפחה תראה)" required />
+        {r?.error ? <p className="fd-err">{r.error}</p> : r?.ok ? <p className="notice notice-ok">{r.ok}</p> : null}
+        <button className="btn-ghost btn-danger" type="submit" disabled={rp} style={{ width: '100%' }}>{rp ? 'רגע…' : 'לדחות'}</button>
+      </form>
+    </div>
   );
 }
 
