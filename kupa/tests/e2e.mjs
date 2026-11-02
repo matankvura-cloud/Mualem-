@@ -132,9 +132,14 @@ try {
 
   // 6. ניהול משפחתי: הפקדות, אירוע, עריכה, סגירה
   console.log('ניהול משפחתי');
-  await page.goto(manageUrl);
+  await page.goto(manageUrl + '/help');
   const mt = await page.textContent('body');
   check(mt.includes('ruti@example.com') && mt.includes('לא מוצג בעמוד'), 'המשפחה רואה מייל וסכום מוסתר');
+  await page.goto(manageUrl);
+  const home = await page.textContent('body');
+  check(home.includes('אנחנו כאן בשבילכם') && home.includes('כרטיס המשפחה') && home.includes('משפחת לוי') && home.includes('₪680'), 'הבית: כותרת, כרטיס המשפחה, יתרה ₪680');
+  check((await page.locator('.avatars span').count()) === 2, 'עזרה מהקרובים: 2 אווטארים');
+  await page.goto(manageUrl + '/file');
   await page.selectOption('#kind', 'shloshim');
   await page.fill('#date', '2026-12-02');
   await page.fill('#place', 'הפרטים יישלחו לכל מי שהפקיד');
@@ -148,7 +153,7 @@ try {
   await page.goto(publicUrl);
   check((await page.textContent('h1')).includes('קובי'), 'השם המעודכן בעמוד הציבורי');
   check(await page.locator('.fd-ev').count() === 3, 'האירוע החדש מוצג');
-  await page.goto(manageUrl);
+  await page.goto(manageUrl + '/file');
   await page.click('button:has-text("לסגור את הקופה")');
   await page.waitForSelector('.pill:has-text("הקופה סגורה")');
   await page.goto(publicUrl);
@@ -180,8 +185,9 @@ try {
   check(at.includes('קובי') && at.includes('₪680') && at.includes('₪41'), 'רשימת קופות: נאסף ₪680, תפעול ₪41 (10.8 + 30)');
   // 8א. המשפחה מבקשת תשלום לספק (הקופה סגורה להפקדות, אבל הכסף שבה עדיין זמין)
   console.log('בקשת תשלום לספק');
-  await page.goto(manageUrl);
+  await page.goto(manageUrl + '/card');
   check((await page.textContent('.stats')).includes('יתרה זמינה') && (await page.textContent('.stats')).includes('₪680'), 'המשפחה רואה יתרה זמינה ₪680');
+  check((await page.locator('.qr img').count()) === 1, 'QR של הכרטיס מוצג');
   await page.fill('form:has(#req_note) #payee', 'חברה קדישא');
   await page.fill('form:has(#req_note) #amount', '900');
   await page.click('form:has(#req_note) button[type=submit]');
@@ -224,10 +230,34 @@ try {
   check((await page.locator('.pill:has-text("בוטל")').count()) === 1 && (await page.locator('table.tbl:has-text("נגבה") .pill:has-text("שולם")').count()) === 2, 'הפקדות: 2 שולמו, 1 בוטלה');
   await page.setViewportSize({ width: 1100, height: 900 });
   await page.screenshot({ path: OUT + '08-admin-fund.png', fullPage: true });
-  await page.goto(manageUrl);
+  await page.goto(manageUrl + '/card');
   st = await page.textContent('body');
   check(st.includes('₪550') && (await page.locator('.pill:has-text("לא אושר")').count()) === 1 && st.includes('במקום פרחים, זוכרים?'), 'המשפחה רואה: שולם ₪550, הבקשה השנייה לא אושרה עם ההסבר');
   check((await page.textContent('.stats')).includes('₪130'), 'יתרה זמינה למשפחה ₪130');
+
+  // 10. הכרטיס הסגור: הספק סורק ומבקש חיוב
+  console.log('כרטיס סגור');
+  await page.goto(`${SITE}/admin`);
+  await page.click('table.tbl a');
+  const cardLink = (await page.locator('.linkbox').nth(2).textContent()).trim();
+  check(/\/s\/[A-Za-z0-9_-]{16}$/.test(cardLink), `קישור כרטיס לספק: ${cardLink}`);
+  await page.goto(cardLink);
+  const sp = await page.textContent('body');
+  check(sp.includes('משפחת לוי') && sp.includes('₪130') && !sp.includes('ruti@example.com') && !sp.includes('רונית'), 'הספק רואה יתרה ושם משפחה בלבד, בלי פרטים');
+  await page.fill('#payee', 'קייטרינג שולחן ערוך');
+  await page.fill('#contact', '0541234567');
+  await page.fill('#amount', '500');
+  await page.click('button[type=submit]');
+  await page.waitForSelector('.fd-err:has-text("היתרה הזמינה בכרטיס")');
+  check(true, 'חיוב מעל היתרה נחסם');
+  await page.fill('#amount', '50');
+  await page.click('button[type=submit]');
+  await page.waitForSelector('.notice-ok');
+  await page.goto(manageUrl + '/card');
+  st = await page.textContent('body');
+  check(st.includes('בקשה מהספק דרך הכרטיס') && (await page.textContent('.stats')).includes('₪80'), 'המשפחה רואה את בקשת הספק, יתרה זמינה ₪80');
+  await page.goto(`${SITE}/admin`); await page.click('table.tbl a'); await page.waitForSelector('#payee');
+  check((await page.textContent('body')).includes('הספק ביקש דרך הכרטיס'), 'מתן רואה שהבקשה הגיעה מהספק');
   // 9. קופה לזכרה
   console.log('לזכרה');
   await page.setViewportSize({ width: 420, height: 860 });

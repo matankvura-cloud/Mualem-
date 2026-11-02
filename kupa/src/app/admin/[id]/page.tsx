@@ -37,6 +37,7 @@ export default async function AdminFund({ params }: Props) {
         <section className="card stack" style={{ gap: 8 }}>
           <div><small className="muted">קישור ציבורי</small><span className="linkbox">{site}/f/{fund.token}</span></div>
           <div><small className="muted">קישור ניהול של המשפחה (סודי)</small><span className="linkbox">{site}/m/{fund.manage_token}</span></div>
+          {fund.card_token ? <div><small className="muted">כרטיס המשפחה (לספק)</small><span className="linkbox">{site}/s/{fund.card_token}</span></div> : null}
           <small className="muted">נפתחה {fmtDate(fund.created_at)} · {fund.view_count} צפיות · תוספת תפעול {num(fund.fee_pct)}%</small>
         </section>
         <section className="stats">
@@ -52,7 +53,7 @@ export default async function AdminFund({ params }: Props) {
           {openReqs.length ? openReqs.map((r) => (
             <div className="card stack" key={r.id} style={{ borderColor: '#F0DDB8' }}>
               <div className="fd-row" style={{ fontSize: 15, color: 'var(--ink)' }}><b>{r.payee}</b><b className="num">{ils(r.amount)}</b></div>
-              <p className="muted">{[r.purpose, r.contact, r.note].filter(Boolean).join(' · ') || '—'} · התקבלה {fmtDate(r.created_at)}</p>
+              <p className="muted">{[r.purpose, r.contact, r.note].filter(Boolean).join(' · ') || '—'} · התקבלה {fmtDate(r.created_at)}{r.source === 'supplier' ? ' · הספק ביקש דרך הכרטיס' : ' · המשפחה ביקשה'}</p>
               <RequestDecision fundId={id} id={r.id} amount={num(r.amount)} />
             </div>)) : <div className="fd-note">אין בקשות פתוחות.</div>}
           {doneReqs.length ? (

@@ -14,8 +14,8 @@ export function EditFundForm({ manage, fund }: { manage: string; fund: Fund }) {
   const [state, action, pending] = useActionState<ActState, FormData>(updateFund.bind(null, manage), undefined);
   const target = fund.target_ils ? String(Math.round(Number(fund.target_ils))) : '';
   return (
-    <form action={action} className="stack card" noValidate>
-      <h2 style={{ fontSize: 18 }}>פרטי העמוד</h2>
+    <form action={action} className="stack panel" noValidate>
+      <h2>פרטי העמוד</h2>
       <div className="field"><label className="l" htmlFor="display_name">שם הנפטר/ת</label><input id="display_name" name="display_name" type="text" required maxLength={120} defaultValue={fund.display_name} /></div>
       <div role="radiogroup" aria-label="לזכרו או לזכרה" style={{ display: 'flex', gap: 18 }}>
         <label className="fd-check"><input type="radio" name="gender" value="m" defaultChecked={fund.gender !== 'f'} />לזכרו</label>
@@ -46,15 +46,15 @@ export function EditFundForm({ manage, fund }: { manage: string; fund: Fund }) {
   );
 }
 
-export function RequestPayoutForm({ manage, available }: { manage: string; available: number }) {
+export function RequestPayoutForm({ manage, available, defaultPayee = '' }: { manage: string; available: number; defaultPayee?: string }) {
   const [state, action, pending] = useActionState<ActState, FormData>(requestPayout.bind(null, manage), undefined);
   const v = state?.values ?? {};
   return (
-    <form action={action} className="stack card" noValidate>
-      <h3 style={{ fontSize: 15 }}>לבקש תשלום לספק מהקופה</h3>
+    <form action={action} className="stack panel" noValidate>
+      <h2>לבקש תשלום לספק מהקופה</h2>
       <p className="muted">כותבים למי ועל מה, אנחנו מאשרים ומשלמים לספק ישירות מהקופה. היתרה הזמינה: <b>{ils(available)}</b>.</p>
       <div className="grid2">
-        <div className="field"><label className="l" htmlFor="payee">למי לשלם</label><input id="payee" name="payee" defaultValue={v.payee ?? ''} type="text" required maxLength={120} placeholder="חברה קדישא, קייטרינג, מצבות…" /></div>
+        <div className="field"><label className="l" htmlFor="payee">למי לשלם</label><input id="payee" name="payee" defaultValue={v.payee ?? defaultPayee} type="text" required maxLength={120} placeholder="חברה קדישא, קייטרינג, מצבות…" /></div>
         <div className="field"><label className="l" htmlFor="amount">סכום בש״ח</label><input id="amount" name="amount" defaultValue={v.amount ?? ''} type="text" inputMode="decimal" required /></div>
       </div>
       <div className="grid2">
@@ -63,7 +63,7 @@ export function RequestPayoutForm({ manage, available }: { manage: string; avail
       </div>
       <div className="field"><label className="l" htmlFor="req_note">הערה</label><input id="req_note" name="note" defaultValue={v.note ?? ''} type="text" maxLength={400} placeholder="מספר הצעת מחיר, מועד תשלום…" /></div>
       <Status s={state} />
-      <button className="btn" type="submit" disabled={pending || available <= 0}>{pending ? 'שולחים…' : 'לשלוח בקשה'}</button>
+      <button className="btn-copper" type="submit" disabled={pending || available <= 0}>{pending ? 'שולחים…' : 'לשלוח בקשה'}</button>
     </form>
   );
 }
@@ -71,8 +71,8 @@ export function RequestPayoutForm({ manage, available }: { manage: string; avail
 export function AddEventForm({ manage }: { manage: string }) {
   const [state, action, pending] = useActionState<ActState, FormData>(addEvent.bind(null, manage), undefined);
   return (
-    <form action={action} className="stack card" noValidate>
-      <h3 style={{ fontSize: 15 }}>להוסיף אירוע</h3>
+    <form action={action} className="stack panel" noValidate>
+      <h2>להוסיף אירוע</h2>
       <div className="grid2">
         <div className="field"><label className="l" htmlFor="kind">סוג</label>
           <select id="kind" name="kind" defaultValue="shiva">{Object.entries(EVENT_KINDS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></div>

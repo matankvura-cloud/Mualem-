@@ -13,6 +13,8 @@ CREATE TABLE IF NOT EXISTS funds (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   token text NOT NULL UNIQUE,
   manage_token text NOT NULL UNIQUE,
+  -- כרטיס המשפחה (סגור): הספק סורק QR ומגיע ל-/s/<card_token> לבקשת חיוב
+  card_token text UNIQUE,
   status text NOT NULL DEFAULT 'open' CHECK (status IN ('open','closed')),
   display_name text NOT NULL,
   -- m = לזכרו, f = לזכרה
@@ -41,6 +43,8 @@ CREATE TABLE IF NOT EXISTS funds (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 ALTER TABLE funds ADD COLUMN IF NOT EXISTS gender text NOT NULL DEFAULT 'm';
+ALTER TABLE funds ADD COLUMN IF NOT EXISTS card_token text UNIQUE;
+CREATE INDEX IF NOT EXISTS funds_card_idx ON funds(card_token);
 CREATE INDEX IF NOT EXISTS funds_token_idx ON funds(token);
 CREATE INDEX IF NOT EXISTS funds_manage_idx ON funds(manage_token);
 
@@ -94,9 +98,12 @@ CREATE TABLE IF NOT EXISTS payout_requests (
   contact text,
   note text,
   status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','paid','rejected')),
+  -- family: המשפחה ביקשה. supplier: הספק ביקש חיוב דרך הכרטיס
+  source text NOT NULL DEFAULT 'family' CHECK (source IN ('family','supplier')),
   admin_note text,
   payout_id uuid REFERENCES payouts(id) ON DELETE SET NULL,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+ALTER TABLE payout_requests ADD COLUMN IF NOT EXISTS source text NOT NULL DEFAULT 'family';
 CREATE INDEX IF NOT EXISTS payout_requests_fund_idx ON payout_requests(fund_id, status, created_at DESC);

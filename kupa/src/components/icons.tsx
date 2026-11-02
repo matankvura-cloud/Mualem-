@@ -1,0 +1,23 @@
+// אייקונים קוויים קטנים (בלי ספרייה). כולם 24x24, stroke currentColor.
+const P = { fill: 'none', stroke: 'currentColor', strokeWidth: 1.8, strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const };
+export const IcHome = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M3 11.5 12 4l9 7.5" /><path d="M5 10v10h14V10" /><path d="M10 20v-6h4v6" /></svg>;
+export const IcFolder = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" /></svg>;
+export const IcCard = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><rect x="3" y="6" width="18" height="12" rx="2" /><path d="M3 10h18" /><path d="M7 15h4" /></svg>;
+export const IcShop = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M4 9l1-4h14l1 4" /><path d="M4 9v11h16V9" /><path d="M4 9a2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0" /><path d="M10 20v-6h4v6" /></svg>;
+export const IcPeople = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><circle cx="9" cy="8" r="3.2" /><path d="M3 20a6 6 0 0 1 12 0" /><circle cx="17" cy="9" r="2.5" /><path d="M15.5 14.5A5 5 0 0 1 21 19.5" /></svg>;
+export const IcHeadset = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M4 13a8 8 0 0 1 16 0" /><rect x="3" y="12" width="4" height="6" rx="1.5" /><rect x="17" y="12" width="4" height="6" rx="1.5" /><path d="M19 18a3 3 0 0 1-3 3h-3" /></svg>;
+export const IcCoins = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><ellipse cx="12" cy="6" rx="7" ry="3" /><path d="M5 6v6c0 1.7 3.1 3 7 3s7-1.3 7-3V6" /><path d="M5 12v6c0 1.7 3.1 3 7 3s7-1.3 7-3v-6" /></svg>;
+export const IcList = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M8 6h12M8 12h12M8 18h12" /><circle cx="4" cy="6" r="1" /><circle cx="4" cy="12" r="1" /><circle cx="4" cy="18" r="1" /></svg>;
+export const IcPhone = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2" /></svg>;
+export const IcPlus = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M12 5v14M5 12h14" /></svg>;
+export const IcCheck = () => <svg viewBox="0 0 24 24" {...P} strokeWidth={3} aria-hidden><path d="M5 12.5 10 17l9-10" /></svg>;
+export const IcNfc = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M6 8.5a8 8 0 0 1 0 7" /><path d="M9.5 6.5a11 11 0 0 1 0 11" /><path d="M13 4.5a14.5 14.5 0 0 1 0 15" /><path d="M16.5 2.5a18 18 0 0 1 0 19" /></svg>;
+export const IcLeaf = () => <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden><path d="M20 4c-7 0-13 3-14 10 0 3 1 5 1 5s3-7 9-9c-4 3-6 7-7 9 1 0 3 1 5 0 5-2 7-8 6-15z" /></svg>;
+export const IcUser = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0" /></svg>;
+export const IcMeal = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M3 14h18" /><path d="M5 14a7 7 0 0 1 14 0" /><path d="M4 18h16" /><path d="M12 5v2" /></svg>;
+export const IcChairs = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M4 10h16v3H4z" /><path d="M6 13v7M18 13v7" /><path d="M8 10V5h8v5" /></svg>;
+export const IcStone = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M6 20V9a6 6 0 0 1 12 0v11" /><path d="M4 20h16" /><path d="M10 11h4M10 14h4" /></svg>;
+export const IcHouse = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M4 11l8-6 8 6v9H4z" /><path d="M9 20v-5h6v5" /></svg>;
+export const IcTruck = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M3 7h11v9H3z" /><path d="M14 10h4l3 3v3h-7" /><circle cx="7" cy="17" r="2" /><circle cx="17" cy="17" r="2" /></svg>;
+export const IcFlowers = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><circle cx="12" cy="8" r="3" /><path d="M12 11v9" /><path d="M12 15c-3 0-5-2-5-4M12 17c3 0 5-2 5-4" /></svg>;
+export const SUP_ICON = { meal: IcMeal, chairs: IcChairs, stone: IcStone, home: IcHouse, flowers: IcFlowers, transport: IcTruck };

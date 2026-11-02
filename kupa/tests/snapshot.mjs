@@ -46,6 +46,7 @@ try {
   await page.click('button[type=submit]'); await page.waitForURL(/\/m\//);
   const manage = page.url().replace('?welcome=1', '');
   const pub = (await page.locator('.linkbox').first().textContent()).trim();
+  await page.goto(manage + '/file');
   await page.selectOption('#kind', 'shloshim'); await page.fill('#date', '2026-12-02'); await page.fill('#place', 'הפרטים יישלחו לכל מי שהפקיד');
   await page.click('form:has(#kind) button[type=submit]'); await page.waitForSelector('.notice-ok');
   await deposit(pub, 'רותי ואבי שמעוני', 'יעקב היה השכן שכולם היו רוצים. משתתפים בצערכם מכל הלב.', 360);
@@ -58,7 +59,8 @@ try {
   await page.fill('#payee', 'חברה קדישא ירושלים'); await page.fill('#amount', '1200'); await page.fill('#purpose', 'הלוויה');
   await page.click('form:has(#payee) button[type=submit]'); await page.waitForSelector('.notice-ok');
   const adminFund = page.url();
-  await page.goto(manage);
+  const cardLink0 = (await page.locator('.linkbox').nth(2).textContent()).trim();
+  await page.goto(manage + '/card');
   await page.fill('form:has(#req_note) #payee', 'קייטרינג "שולחן ערוך"'); await page.fill('form:has(#req_note) #amount', '600');
   await page.fill('form:has(#req_note) #purpose', 'ארוחות לשבעה'); await page.fill('form:has(#req_note) #contact', 'אבי 052-0000000');
   await page.click('form:has(#req_note) button[type=submit]'); await page.waitForSelector('.notice-ok');
@@ -66,9 +68,11 @@ try {
   const cssDir = ['.next/static/css', '.next/static/chunks'].find((d) => { try { return readdirSync(d).some((f) => f.endsWith('.css')); } catch { return false; } });
   const css = readdirSync(cssDir).filter((f) => f.endsWith('.css')).map((f) => readFileSync(`${cssDir}/${f}`, 'utf8')).join('\n');
   const t = pub.split('/f/')[1], m = manage.split('/m/')[1], id = adminFund.split('/admin/')[1];
+  const c = cardLink0.split('/s/')[1];
   const screens = [
     ['index', '/', 'נחיתה'], ['new', '/new', 'פתיחת קופה'], ['fund', `/f/${t}`, 'עמוד הקופה'], ['give', `/f/${t}/give`, 'הפקדה'],
-    ['paid', `/f/${t}?paid=1`, 'אחרי תשלום'], ['manage', `/m/${m}`, 'ניהול משפחתי'], ['admin', '/admin', 'ניהול (מתן)'], ['admin-fund', `/admin/${id}`, 'קופה בניהול'],
+    ['paid', `/f/${t}?paid=1`, 'אחרי תשלום'], ['manage', `/m/${m}`, 'המשפחה: הבית'], ['manage-card', `/m/${m}/card`, 'כרטיס ותשלומים'], ['manage-suppliers', `/m/${m}/suppliers`, 'הטבות וספקים'],
+    ['manage-file', `/m/${m}/file`, 'התיק המשפחתי'], ['manage-help', `/m/${m}/help`, 'עזרה מהקרובים'], ['supplier', `/s/${c}`, 'הספק: בקשת חיוב'], ['admin', '/admin', 'ניהול (מתן)'], ['admin-fund', `/admin/${id}`, 'קופה בניהול'],
   ];
   const nav = `<nav class="demo-nav" aria-label="מסכי הדמו"><span class="demo-tag">דמו · נתונים מומצאים</span>${screens.map(([f, , l]) => `<a href="${f}.html">${l}</a>`).join('')}</nav>`;
   const extra = `<style>.demo-nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));background:#1F2A33;font:600 12.5px Heebo,Arial,sans-serif}.demo-nav a{color:#fff;text-decoration:none;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.12)}.demo-nav a:hover,.demo-nav a:focus-visible{background:rgba(255,255,255,.24);outline:none}.demo-tag{background:#C98A2C;color:#fff;padding:4px 9px;border-radius:999px;letter-spacing:.04em;font-size:11px}.demo-toast{position:fixed;bottom:max(16px,env(safe-area-inset-bottom,0px));inset-inline:16px;margin:0 auto;max-width:420px;background:#1F2A33;color:#fff;padding:12px 16px;border-radius:12px;font:14px Heebo,Arial,sans-serif;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25)}.fd{border-inline:0}body{padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}</style>`;
@@ -79,7 +83,13 @@ try {
     .replace(/<link rel="preload"[^>]*>/g, '')
     .replace(new RegExp(`href="/f/${t}/give"`, 'g'), 'href="give.html"')
     .replace(new RegExp(`href="/f/${t}"`, 'g'), 'href="fund.html"')
+    .replace(new RegExp(`href="/m/${m}/card[^"]*"`, 'g'), 'href="manage-card.html"')
+    .replace(new RegExp(`href="/m/${m}/suppliers"`, 'g'), 'href="manage-suppliers.html"')
+    .replace(new RegExp(`href="/m/${m}/file"`, 'g'), 'href="manage-file.html"')
+    .replace(new RegExp(`href="/m/${m}/help"`, 'g'), 'href="manage-help.html"')
+    .replace(new RegExp(`href="/m/${m}/support"`, 'g'), 'href="manage.html#support"')
     .replace(new RegExp(`href="/m/${m}"`, 'g'), 'href="manage.html"')
+    .replace(new RegExp(`href="/s/${c}"`, 'g'), 'href="supplier.html"')
     .replace(new RegExp(`href="/admin/${id}"`, 'g'), 'href="admin-fund.html"')
     .replace(/href="\/admin"/g, 'href="admin.html"').replace(/href="\/new"/g, 'href="new.html"').replace(/href="\/"/g, 'href="index.html"')
     .replace(new RegExp(SITE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), PUBLIC)

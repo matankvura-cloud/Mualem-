@@ -32,3 +32,11 @@ export function fmtDateTime(v: unknown): string {
   const d = new Date(v as string);
   return Number.isNaN(d.getTime()) ? '' : d.toLocaleString('he-IL', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Jerusalem' });
 }
+
+/** "משפחת לוי" מתוך "יעקב לוי ז״ל". */
+export function familyName(displayName: string): string {
+  const words = displayName.replace(/ז["״׳']ל/g, '').replace(/\(.*?\)/g, '').trim().split(/\s+/).filter(Boolean);
+  const last = words.length > 1 ? words[words.length - 1] : words[0] || '';
+  return last ? `משפחת ${last}` : 'המשפחה';
+}
+export const initials = (name: string) => name.trim().split(/\s+/).slice(0, 2).map((w) => w.charAt(0)).join('');

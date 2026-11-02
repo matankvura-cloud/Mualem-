@@ -4,7 +4,7 @@ import { one, many, num } from './db';
 import type { FundEvent } from './format';
 
 export type Fund = {
-  id: string; token: string; manage_token: string; status: 'open' | 'closed';
+  id: string; token: string; manage_token: string; card_token: string | null; status: 'open' | 'closed';
   display_name: string; gender: 'm' | 'f'; years: string | null; city: string | null; quote: string | null; quote_by: string | null;
   photo_initial: string | null; purpose: string | null; target_ils: unknown; surplus_to: string | null;
   events: FundEvent[]; manager_name: string | null; manager_phone: string | null; manager_email: string | null;
@@ -26,7 +26,7 @@ export type Payout = {
 
 export type PayoutRequest = {
   id: string; fund_id: string; payee: string; purpose: string | null; amount: unknown; contact: string | null; note: string | null;
-  status: 'pending' | 'paid' | 'rejected'; admin_note: string | null; payout_id: string | null; created_at: unknown; updated_at: unknown;
+  status: 'pending' | 'paid' | 'rejected'; source: 'family' | 'supplier'; admin_note: string | null; payout_id: string | null; created_at: unknown; updated_at: unknown;
 };
 
 /** requested: סכום הבקשות הממתינות. available: מה שאפשר לבקש עכשיו. */
@@ -38,8 +38,25 @@ const normalize = (f: Fund | null): Fund | null => {
   return f;
 };
 
+/** מספר כרטיס לתצוגה: 4 ספרות אחרונות נגזרות מהמזהה, יציבות לכל קופה. */
+export function cardLast4(fund: Fund): string {
+  let h = 0;
+  for (const c of fund.id) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+  return String(1000 + (h % 9000));
+}
+
+/** מוודא שלקופה יש אסימון כרטיס (קופות ישנות). */
+export async function ensureCardToken(fund: Fund): Promise<string> {
+  if (fund.card_token) return fund.card_token;
+  const { token } = await import('./tokens');
+  const t = token(12);
+  await many(`UPDATE funds SET card_token = $2 WHERE id = $1 AND card_token IS NULL`, [fund.id, t]);
+  return (await fundById(fund.id))?.card_token ?? t;
+}
+
 export const fundByToken = async (t: string) => normalize(await one<Fund>(`SELECT * FROM funds WHERE token = $1`, [t]));
 export const fundByManage = async (t: string) => normalize(await one<Fund>(`SELECT * FROM funds WHERE manage_token = $1`, [t]));
+export const fundByCard = async (t: string) => normalize(await one<Fund>(`SELECT * FROM funds WHERE card_token = $1`, [t]));
 export const fundById = async (id: string) => normalize(await one<Fund>(`SELECT * FROM funds WHERE id = $1`, [id]));
 
 export async function totals(fundId: string): Promise<Totals> {
