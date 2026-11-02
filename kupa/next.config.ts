@@ -3,6 +3,8 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   serverExternalPackages: ['@neondatabase/serverless', '@electric-sql/pglite'],
+  // pglite טוען wasm מהדיסק; בסביבת ניסיון (KUPA_LOCAL_DB=memory) הקבצים חייבים להיכלל בפונקציה.
+  outputFileTracingIncludes: { '/**': ['./node_modules/@electric-sql/pglite/dist/**', './db/schema.sql'] },
   async headers() {
     return [
       {
