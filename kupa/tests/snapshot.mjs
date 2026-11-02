@@ -69,13 +69,15 @@ try {
   const css = readdirSync(cssDir).filter((f) => f.endsWith('.css')).map((f) => readFileSync(`${cssDir}/${f}`, 'utf8')).join('\n');
   const t = pub.split('/f/')[1], m = manage.split('/m/')[1], id = adminFund.split('/admin/')[1];
   const c = cardLink0.split('/s/')[1];
+  // הדמו נפתח על הבית של המשפחה; עמוד הנחיתה הציבורי הוא מסך משני.
   const screens = [
-    ['index', '/', 'נחיתה'], ['new', '/new', 'פתיחת קופה'], ['fund', `/f/${t}`, 'עמוד הקופה'], ['give', `/f/${t}/give`, 'הפקדה'],
-    ['paid', `/f/${t}?paid=1`, 'אחרי תשלום'], ['manage', `/m/${m}`, 'המשפחה: הבית'], ['manage-card', `/m/${m}/card`, 'כרטיס ותשלומים'], ['manage-suppliers', `/m/${m}/suppliers`, 'הטבות וספקים'],
-    ['manage-file', `/m/${m}/file`, 'התיק המשפחתי'], ['manage-help', `/m/${m}/help`, 'עזרה מהקרובים'], ['supplier', `/s/${c}`, 'הספק: בקשת חיוב'], ['admin', '/admin', 'ניהול (מתן)'], ['admin-fund', `/admin/${id}`, 'קופה בניהול'],
+    ['index', `/m/${m}`, 'המשפחה: הבית'], ['manage-card', `/m/${m}/card`, 'כרטיס ותשלומים'], ['manage-suppliers', `/m/${m}/suppliers`, 'הטבות וספקים'],
+    ['manage-file', `/m/${m}/file`, 'התיק המשפחתי'], ['manage-help', `/m/${m}/help`, 'עזרה מהקרובים'], ['supplier', `/s/${c}`, 'הספק: בקשת חיוב'],
+    ['fund', `/f/${t}`, 'עמוד הקופה (קרובים)'], ['give', `/f/${t}/give`, 'הפקדה'], ['paid', `/f/${t}?paid=1`, 'אחרי תשלום'],
+    ['landing', '/', 'נחיתה'], ['new', '/new', 'פתיחת קופה'], ['admin', '/admin', 'ניהול (מתן)'], ['admin-fund', `/admin/${id}`, 'קופה בניהול'],
   ];
   const nav = `<nav class="demo-nav" aria-label="מסכי הדמו"><span class="demo-tag">דמו · נתונים מומצאים</span>${screens.map(([f, , l]) => `<a href="${f}.html">${l}</a>`).join('')}</nav>`;
-  const extra = `<style>.demo-nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;gap:6px;flex-wrap:wrap;align-items:center;padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));background:#1F2A33;font:600 12.5px Heebo,Arial,sans-serif}.demo-nav a{color:#fff;text-decoration:none;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.12)}.demo-nav a:hover,.demo-nav a:focus-visible{background:rgba(255,255,255,.24);outline:none}.demo-tag{background:#C98A2C;color:#fff;padding:4px 9px;border-radius:999px;letter-spacing:.04em;font-size:11px}.demo-toast{position:fixed;bottom:max(16px,env(safe-area-inset-bottom,0px));inset-inline:16px;margin:0 auto;max-width:420px;background:#1F2A33;color:#fff;padding:12px 16px;border-radius:12px;font:14px Heebo,Arial,sans-serif;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25)}.fd{border-inline:0}body{padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}</style>`;
+  const extra = `<style>.demo-nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;align-items:center;padding:8px max(16px,env(safe-area-inset-right,0px)) 8px max(16px,env(safe-area-inset-left,0px));background:#1F2A33;font:600 12.5px Heebo,Arial,sans-serif;white-space:nowrap}.demo-nav::-webkit-scrollbar{display:none}.demo-nav a,.demo-tag{flex:0 0 auto}.demo-nav a{color:#fff;text-decoration:none;padding:5px 10px;border-radius:999px;background:rgba(255,255,255,.12)}.demo-nav a:hover,.demo-nav a:focus-visible{background:rgba(255,255,255,.24);outline:none}.demo-tag{background:#C98A2C;color:#fff;padding:4px 9px;border-radius:999px;letter-spacing:.04em;font-size:11px}.demo-toast{position:fixed;bottom:max(16px,env(safe-area-inset-bottom,0px));inset-inline:16px;margin:0 auto;max-width:420px;background:#1F2A33;color:#fff;padding:12px 16px;border-radius:12px;font:14px Heebo,Arial,sans-serif;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.25)}.fd{border-inline:0}body{padding-left:max(0px,env(safe-area-inset-left,0px));padding-right:max(0px,env(safe-area-inset-right,0px))}</style>`;
   const script = `<script>document.addEventListener('submit',function(e){e.preventDefault();var t=document.createElement('div');t.className='demo-toast';t.textContent='זה דמו לצפייה בלבד. באתר האמיתי הטופס עובד.';document.body.appendChild(t);setTimeout(function(){t.remove()},2600)});document.addEventListener('click',function(e){var a=e.target.closest('a[href="#demo"]');if(a){e.preventDefault()}});</script>`;
   const rewrite = (html) => html
     .replace(/<script\b[^>]*>[\s\S]*?<\/script>/g, '')
@@ -87,17 +89,17 @@ try {
     .replace(new RegExp(`href="/m/${m}/suppliers"`, 'g'), 'href="manage-suppliers.html"')
     .replace(new RegExp(`href="/m/${m}/file"`, 'g'), 'href="manage-file.html"')
     .replace(new RegExp(`href="/m/${m}/help"`, 'g'), 'href="manage-help.html"')
-    .replace(new RegExp(`href="/m/${m}/support"`, 'g'), 'href="manage.html#support"')
-    .replace(new RegExp(`href="/m/${m}"`, 'g'), 'href="manage.html"')
+    .replace(new RegExp(`href="/m/${m}/support"`, 'g'), 'href="index.html#support"')
+    .replace(new RegExp(`href="/m/${m}"`, 'g'), 'href="index.html"')
     .replace(new RegExp(`href="/s/${c}"`, 'g'), 'href="supplier.html"')
     .replace(new RegExp(`href="/admin/${id}"`, 'g'), 'href="admin-fund.html"')
-    .replace(/href="\/admin"/g, 'href="admin.html"').replace(/href="\/new"/g, 'href="new.html"').replace(/href="\/"/g, 'href="index.html"')
+    .replace(/href="\/admin"/g, 'href="admin.html"').replace(/href="\/new"/g, 'href="new.html"').replace(/href="\/"/g, 'href="landing.html"')
     .replace(new RegExp(SITE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), PUBLIC)
     .replace(new RegExp(encodeURIComponent(SITE).replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), encodeURIComponent(PUBLIC))
     .replace(/<a ([^>]*)href="#"/g, '<a $1href="#demo"');
   for (const [file, path] of screens) {
     await page.goto(SITE + path, { waitUntil: 'networkidle' });
-    const title = await page.title();
+    const title = file === 'index' ? `${BRAND} · במקום פרחים` : await page.title();
     const bodyInner = rewrite(await page.evaluate(() => document.body.innerHTML));
     const fonts = '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@500;700&display=swap" rel="stylesheet">';
     const head = `<title>${title}</title><meta name="claude:viewport-fit-sides" content="cover">${fonts}<style>${css}</style>${extra}`;
