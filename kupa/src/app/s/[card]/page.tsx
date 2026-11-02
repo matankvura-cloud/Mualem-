@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { fundByCard, totals, cardLast4 } from '@/lib/funds';
 import { TOKEN_RE } from '@/lib/tokens';
 import { ils, familyName } from '@/lib/format';
-import { BRAND, SLOGAN } from '@/lib/site';
+import { FAMILY_BRAND as BRAND, SLOGAN } from '@/lib/site';
 import FamilyCard from '@/components/FamilyCard';
 import ChargeForm from './ChargeForm';
 

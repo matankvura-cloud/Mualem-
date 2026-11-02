@@ -1,7 +1,7 @@
 // המעטפת של צד המשפחה: סרגל צד במחשב, ניווט תחתון בנייד. לפי ההמחשה.
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { BRAND, SLOGAN } from '@/lib/site';
+import { FAMILY_BRAND, SLOGAN, HOME_URL } from '@/lib/site';
 import { IcHome, IcFolder, IcCard, IcShop, IcPeople, IcHeadset } from './icons';
 
 export const FAM_NAV = [
@@ -19,14 +19,14 @@ export default function FamilyShell({ manage, active, children }: { manage: stri
   return (
     <div className="fam">
       <aside className="fam-side">
-        <Link href="/" className="brand">{BRAND}<small>{SLOGAN}</small></Link>
+        <a href={HOME_URL} className="brand">{FAMILY_BRAND}<small>{SLOGAN}</small></a>
         {FAM_NAV.map((n) => (
           <Link key={n.key} href={base + n.path} className="nav" aria-current={n.key === active ? 'page' : undefined}><n.Icon />{n.label}</Link>
         ))}
         <p className="side-foot">הקישור הזה הוא של המשפחה. לא מעבירים הלאה.</p>
       </aside>
       <main className="fam-main">
-        <div className="fam-mobile-brand"><Link href="/" className="brand">{BRAND}</Link><span className="muted">{SLOGAN}</span></div>
+        <div className="fam-mobile-brand"><a href={HOME_URL} className="brand">{FAMILY_BRAND}</a><span className="muted">{SLOGAN}</span></div>
         {children}
       </main>
       <nav className="fam-tabs" aria-label="ניווט">

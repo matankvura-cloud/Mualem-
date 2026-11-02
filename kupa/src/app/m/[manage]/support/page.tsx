@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { loadFamily } from '../_shared';
-import { CONTACT_PHONE, BRAND } from '@/lib/site';
+import { CONTACT_PHONE, FAMILY_BRAND as BRAND } from '@/lib/site';
 import FamilyShell from '@/components/FamilyShell';
 import { IcHeadset, IcUser, IcPhone } from '@/components/icons';
 
