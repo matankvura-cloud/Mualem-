@@ -15,7 +15,7 @@ const BRAND = process.env.NEXT_PUBLIC_BRAND || 'לזכרם';
 
 const mock = await startMockMorning(MOCK);
 const app = spawn('npx', ['next', 'start', '-p', String(PORT)], {
-  env: { ...process.env, KUPA_LOCAL_DB: 'memory', DATABASE_URL: '', POSTGRES_URL: '',
+  env: { ...process.env, KUPA_LOCAL_DB: 'memory', KUPA_DEMO_SEED: '0', DATABASE_URL: '', POSTGRES_URL: '',
     MORNING_AUTH_URL: `http://localhost:${MOCK}/idp/v1/oauth/token`, MORNING_API_BASE: `http://localhost:${MOCK}/api/v1`,
     MORNING_ID: 'test-id', MORNING_SECRET: 'test-secret', MORNING_HOOK: 'hook-secret-123', ADMIN_PASSWORD: 'admin-pass',
     NEXT_PUBLIC_SITE_URL: SITE, FEE_PCT: '6', NEXT_PUBLIC_BRAND: BRAND },
