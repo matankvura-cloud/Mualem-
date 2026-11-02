@@ -1,0 +1,27 @@
+{
+  "name": "kupa",
+  "version": "0.1.0",
+  "private": true,
+  "description": "קופת לזכרו · במקום פרחים — קופה דיגיטלית לכל נפטר",
+  "scripts": {
+    "dev": "next dev",
+    "build": "node scripts/migrate.mjs --if-configured && next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "migrate": "node scripts/migrate.mjs",
+    "test:e2e": "node tests/e2e.mjs"
+  },
+  "dependencies": {
+    "@neondatabase/serverless": "^1.2.0",
+    "next": "16.4.4",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.5.14",
+    "@types/node": "^22",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "typescript": "^5"
+  }
+}

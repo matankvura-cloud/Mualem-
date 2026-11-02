@@ -1,0 +1,14 @@
+import { headers } from 'next/headers';
+
+/** כתובת האתר: מההגדרה, ואם אין — מהבקשה. בלי / בסוף. */
+export async function siteUrl(): Promise<string> {
+  const env = (process.env.NEXT_PUBLIC_SITE_URL || '').replace(/\/+$/, '');
+  if (env) return env;
+  const h = await headers();
+  const host = h.get('x-forwarded-host') || h.get('host') || 'localhost:3000';
+  const proto = h.get('x-forwarded-proto') || (host.startsWith('localhost') ? 'http' : 'https');
+  return `${proto}://${host}`;
+}
+
+export const CONTACT_PHONE = process.env.NEXT_PUBLIC_CONTACT_PHONE || '';
+export const FEE_PCT = Math.max(0, Math.min(30, Number(process.env.FEE_PCT ?? 6) || 0));

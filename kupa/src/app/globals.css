@@ -1,0 +1,94 @@
+/* קופת לזכרו · במקום פרחים — עיצוב לפי הדמו המאושר (Heebo + Frank Ruhl Libre). */
+:root{--bg:#FBFAF7;--ink:#1F2A33;--soft:#5B6472;--line:#E6E2D8;--navy:#1E3A4A;--blue:#2F5D74;--blue-soft:#EAF1F4;--ok:#3E7C5A;--ok-soft:#EAF5EF;--warn:#C98A2C;--warn-soft:#FBF3E4;--err:#9B2C2C;--err-soft:#FBEAEA;color-scheme:light}
+*{box-sizing:border-box} html{background:var(--bg);-webkit-text-size-adjust:100%}
+body{margin:0;font-family:Heebo,Arial,sans-serif;color:var(--ink);direction:rtl;background:var(--bg);line-height:1.5}
+h1,h2,h3{font-family:'Frank Ruhl Libre',Georgia,serif;margin:0;font-weight:700}
+a{color:var(--blue)}
+p{margin:0}
+.fd{max-width:560px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+.fd-wide{max-width:980px}
+.fd-hero{background:var(--navy);color:#fff;padding:36px 22px 30px;text-align:center}
+.fd-avatar{width:88px;height:88px;border-radius:999px;margin:0 auto 14px;background:#E9E3D6;border:3px solid rgba(255,255,255,.35);display:grid;place-items:center;color:var(--navy);font-family:'Frank Ruhl Libre',Georgia,serif;font-size:36px;font-weight:700}
+.fd-eyebrow{margin:0;font-size:13px;letter-spacing:.06em;opacity:.75}
+.fd-hero h1{font-size:30px;font-weight:700;line-height:1.2;margin:4px 0 2px}
+.fd-hero .fd-years{margin:0;font-size:14px;opacity:.8}
+.fd-quote{margin:16px auto 0;max-width:420px;font-size:15px;line-height:1.6;color:rgba(255,255,255,.92)}
+.fd-quote small{display:block;font-size:13px;opacity:.75;margin-top:4px}
+.fd-card{margin:-18px 16px 0;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;box-shadow:0 8px 24px rgba(31,42,51,.08)}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px}
+.fd-row{display:flex;align-items:baseline;justify-content:space-between;font-size:13px;color:var(--soft)}
+.fd-raised{font-size:34px;font-weight:700;font-family:'Frank Ruhl Libre',Georgia,serif;margin-top:2px}
+.fd-bar{height:8px;border-radius:999px;background:#EEEAE0;margin:10px 0 8px;overflow:hidden}.fd-bar i{display:block;height:100%;background:var(--blue);border-radius:999px}
+.fd-purpose{margin:0;font-size:13px;color:var(--soft);line-height:1.5}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;min-height:50px;border-radius:999px;border:0;background:var(--blue);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer;width:100%;text-decoration:none;padding:0 20px}
+.btn:disabled{opacity:.6;cursor:wait}
+.btn-inline{display:inline-flex;width:auto;min-height:44px;font-size:15px}
+.btn-ghost{display:flex;align-items:center;justify-content:center;min-height:42px;border-radius:999px;border:1px solid #E1E4E9;background:#fff;color:var(--ink);font:inherit;font-size:14px;font-weight:600;cursor:pointer;flex:1;text-decoration:none;padding:0 14px}
+.btn-danger{border-color:#E7C4C4;color:var(--err)}
+.fd-actions{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+section.fd-sec{padding:22px 16px 0}
+.fd-sec h2{font-size:18px;font-weight:700;margin-bottom:10px;display:flex;align-items:baseline;justify-content:space-between}.fd-sec h2 small{font-size:13px;color:var(--soft);font-family:Heebo,Arial,sans-serif;font-weight:400}
+.fd-list{list-style:none;margin:0;padding:0;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.fd-ev{display:flex;gap:12px;padding:12px 14px;border-bottom:1px solid #EEEAE0;align-items:center}.fd-ev:last-child{border-bottom:0}
+.fd-ev .d{width:48px;text-align:center;flex:0 0 auto}.fd-ev .d b{display:block;font-size:17px;line-height:1.1}.fd-ev .d small{font-size:11.5px;color:var(--soft)}
+.fd-ev .t{flex:1}.fd-ev .t b{display:block;font-size:15px}.fd-ev .t span{font-size:13px;color:var(--soft)}
+.fd-ev a{align-self:center;font-size:13px;color:var(--blue);font-weight:600;text-decoration:none}
+.fd-book{display:flex;flex-direction:column;gap:8px}
+.fd-msg{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px}.fd-msg b{font-size:14px}.fd-msg small{font-size:12.5px;color:var(--soft)}.fd-msg p{margin:4px 0 0;font-size:14px;line-height:1.5}
+.fd-foot{margin-top:auto;background:#fff;border-top:1px solid var(--line);padding:14px 16px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.fd-foot span{font-size:12px;color:var(--soft);flex:1}
+.fd-foot a{display:inline-flex;align-items:center;min-height:42px;padding:0 16px;border-radius:999px;border:1.5px solid var(--blue);color:var(--blue);font-size:14px;font-weight:700;text-decoration:none}
+/* טפסים */
+.fd-pay{padding:8px 20px 30px;display:flex;flex-direction:column;gap:18px}
+.fd-pay h1,.page-title{font-size:26px;font-weight:700;line-height:1.25;font-family:'Frank Ruhl Libre',Georgia,serif}
+p.lead{margin:6px 0 0;font-size:14.5px;line-height:1.55;color:var(--soft)}
+.fd-back{display:inline-flex;align-items:center;gap:6px;min-height:44px;color:var(--soft);font-size:14px;text-decoration:none;padding:0 4px}
+fieldset{border:0;margin:0;padding:0;min-width:0}legend,label.l{font-size:13px;font-weight:600;color:var(--soft);display:block;margin-bottom:6px}
+.field{display:flex;flex-direction:column;gap:4px}.field small{font-size:12px;color:#8B93A0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.grid2{grid-template-columns:1fr}}
+.fd-amts{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.fd-amts button{min-height:52px;border-radius:12px;border:1.5px solid #E1E4E9;background:#fff;font:inherit;font-size:17px;font-weight:700;color:var(--ink);cursor:pointer}
+.fd-amts button[aria-pressed=true]{border:2px solid var(--blue);background:var(--blue-soft);color:#1E4356}
+input[type=text],input[type=email],input[type=tel],input[type=number],input[type=date],input[type=time],input[type=url],input[type=password],textarea,select{width:100%;min-height:48px;border-radius:12px;border:1.5px solid #E1E4E9;background:#fff;padding:10px 14px;font:inherit;font-size:16px;color:var(--ink)}
+textarea{resize:vertical;min-height:84px}
+.fd-check{display:flex;align-items:center;gap:10px;font-size:14px}.fd-check input{width:20px;height:20px;accent-color:var(--blue);flex:0 0 auto}
+.fd-note{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;font-size:13.5px;line-height:1.6;color:var(--soft)}.fd-note b{color:var(--ink)}
+.fd-err{color:var(--err);font-size:14px;margin:0}
+.fd-small{text-align:center;font-size:12px;color:#8B93A0;margin:0}
+.fd-paid{text-align:center;padding:60px 24px}.fd-paid .big{font-size:46px;line-height:1}
+.notice{border-radius:12px;padding:12px 14px;font-size:14px;line-height:1.6}
+.notice-ok{background:var(--ok-soft);color:#2B5A41;border:1px solid #CFE6D8}
+.notice-warn{background:var(--warn-soft);color:#7A4F0C;border:1px solid #F0DDB8}
+.notice-err{background:var(--err-soft);color:var(--err);border:1px solid #EBC7C7}
+.linkbox{display:block;direction:ltr;text-align:left;font-family:ui-monospace,Menlo,monospace;font-size:13px;background:#F4F1EA;border:1px solid var(--line);border-radius:10px;padding:10px 12px;word-break:break-all;color:var(--ink)}
+.stack{display:flex;flex-direction:column;gap:12px}
+.pad{padding:16px}
+.muted{color:var(--soft);font-size:13px}
+.pill{display:inline-block;border-radius:999px;padding:2px 10px;font-size:12px;font-weight:600;background:var(--blue-soft);color:var(--blue)}
+.pill-ok{background:var(--ok-soft);color:var(--ok)}.pill-warn{background:var(--warn-soft);color:#7A4F0C}.pill-err{background:var(--err-soft);color:var(--err)}.pill-muted{background:#EEEAE0;color:var(--soft)}
+/* טבלאות ניהול */
+table.tbl{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;font-size:14px}
+.tbl th,.tbl td{padding:10px 12px;text-align:right;border-bottom:1px solid #EEEAE0;vertical-align:top}
+.tbl th{font-size:12.5px;color:var(--soft);font-weight:600;background:#FAF8F3}
+.tbl tr:last-child td{border-bottom:0}
+.tbl-wrap{overflow-x:auto;border-radius:14px}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.stat small{display:block;font-size:12px;color:var(--soft)}.stat b{font-size:22px;font-family:'Frank Ruhl Libre',Georgia,serif}
+/* נחיתה */
+.land-hero{background:var(--navy);color:#fff;padding:56px 22px 48px;text-align:center}
+.land-hero h1{font-size:34px;line-height:1.2;margin:0 0 10px}
+.land-hero p{max-width:480px;margin:0 auto;font-size:16px;line-height:1.6;color:rgba(255,255,255,.9)}
+.land-hero .btn{max-width:320px;margin:26px auto 0;background:#fff;color:var(--navy)}
+.land-hero .sub{display:block;margin-top:14px;font-size:13px;opacity:.75}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.step{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px}
+.step b{display:block;font-size:16px;margin-bottom:4px;font-family:'Frank Ruhl Libre',Georgia,serif}
+.step span{font-size:14px;color:var(--soft);line-height:1.55}
+.step .n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:999px;background:var(--blue-soft);color:var(--blue);font-weight:700;font-size:14px;margin-bottom:10px;font-family:Heebo,Arial,sans-serif}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;gap:10px}
+.topbar a.brand{font-family:'Frank Ruhl Libre',Georgia,serif;font-weight:700;color:var(--navy);text-decoration:none;font-size:17px}
+.topbar .links{display:flex;gap:14px;font-size:14px}
+@media(min-width:600px){.fd{border-inline:1px solid var(--line)}}

@@ -1,0 +1,43 @@
+import Link from 'next/link';
+import Footer from '@/components/Footer';
+import { FEE_PCT } from '@/lib/site';
+
+export default function Landing() {
+  return (
+    <div className="fd">
+      <section className="land-hero">
+        <p className="fd-eyebrow">קופת לזכרו</p>
+        <h1>במקום פרחים</h1>
+        <p>
+          קופה דיגיטלית לזכר מי שהלך. המשפחה פותחת אותה בדקה, שולחת קישור אחד,
+          וכל מי שרוצה לעזור מפקיד ישירות לקופה במקום לשלוח זר.
+        </p>
+        <Link className="btn" href="/new">לפתוח קופה לזכרו</Link>
+        <span className="sub">בלי הרשמה · בלי עלות למשפחה · הקישור מוכן מיד</span>
+      </section>
+
+      <section className="fd-sec">
+        <h2>איך זה עובד</h2>
+        <div className="steps">
+          <div className="step"><span className="n">1</span><b>פותחים קופה</b><span>שם, כמה מילים, ומתי ואיפה הלוויה והשבעה. לא צריך חשבון.</span></div>
+          <div className="step"><span className="n">2</span><b>שולחים קישור</b><span>בוואטסאפ, במייל, בקבוצה. כל מי שמקבל אותו יכול להפקיד ולכתוב מילה למשפחה.</span></div>
+          <div className="step"><span className="n">3</span><b>הכסף בקופה</b><span>כל הפקדה נסלקת באשראי עם קבלה. המשפחה רואה מי הפקיד ומה נכתב, ומשלמת מהקופה להלוויה, לשבעה ולמצבה.</span></div>
+        </div>
+      </section>
+
+      <section className="fd-sec">
+        <h2>שקוף עד הסוף</h2>
+        <div className="stack">
+          <div className="fd-note"><b>למשפחה זה חינם.</b> אין דמי פתיחה ואין מנוי.</div>
+          <div className="fd-note"><b>מי שמפקיד בוחר.</b> כל הפקדה מגיעה במלואה לקופה. מי שרוצה יכול להוסיף {FEE_PCT}% לתפעול המערכת, וזה מה שמחזיק אותה. אפשר לבטל בלחיצה.</div>
+          <div className="fd-note"><b>ספר ניחומים.</b> כל מי שמפקיד יכול לכתוב מילה למשפחה, ולבחור אם להציג את הסכום.</div>
+        </div>
+      </section>
+
+      <section className="fd-sec" style={{ paddingBottom: 28 }}>
+        <Link className="btn" href="/new">לפתוח קופה</Link>
+      </section>
+      <Footer brandLink={false} />
+    </div>
+  );
+}
