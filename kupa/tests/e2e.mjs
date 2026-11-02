@@ -20,7 +20,7 @@ const app = spawn('npx', ['next', 'start', '-p', String(PORT)], {
   env: { ...process.env, KUPA_LOCAL_DB: 'memory', DATABASE_URL: '', POSTGRES_URL: '',
     MORNING_AUTH_URL: `http://localhost:${MOCK}/idp/v1/oauth/token`, MORNING_API_BASE: `http://localhost:${MOCK}/api/v1`,
     MORNING_ID: 'test-id', MORNING_SECRET: 'test-secret', MORNING_HOOK: 'hook-secret-123', MORNING_PLUGIN_ID: '',
-    ADMIN_PASSWORD: 'admin-pass', NEXT_PUBLIC_SITE_URL: SITE, FEE_PCT: '6', NEXT_PUBLIC_BRAND: 'במקום פרחים' },
+    ADMIN_PASSWORD: 'admin-pass', NEXT_PUBLIC_SITE_URL: SITE, FEE_PCT: '6', FEE_MODE: 'required', NEXT_PUBLIC_BRAND: 'לזכרם' },
   stdio: ['ignore', 'pipe', 'pipe'], detached: true,
 });
 app.stdout.on('data', (d) => process.env.E2E_VERBOSE && process.stdout.write('[app] ' + d));
@@ -82,6 +82,7 @@ try {
   await page.waitForURL(/\/give$/);
   await page.click('.fd-amts button:has-text("180")');
   check((await page.textContent('button[type=submit]')).includes('₪191'), 'כפתור מציג 180 + 6% = ₪191');
+  check(await page.locator('.fd-check:has-text("לתפעול")').count() === 0 && (await page.textContent('.fd-note')).includes('₪11'), 'תוספת חובה: אין תיבת ביטול, השורה מציגה ₪11');
   await page.fill('#fdName', 'רותי ואבי שמעוני');
   await page.fill('#fdMsg', 'יעקב היה השכן שכולם היו רוצים. משתתפים בצערכם.');
   await page.fill('#fdMail', 'ruti@example.com');
@@ -99,11 +100,10 @@ try {
   check(notify?.status === 200 && notify.body.includes('"ok":true') && !notify.body.includes('ignored'), 'ההודעה-חזרה התקבלה וסומנה');
   await page.screenshot({ path: OUT + '05-paid.png', fullPage: true });
 
-  // 4. הפקדה שנייה: בלי תוספת, בלי להציג סכום, ובהמשך הפקדה שבוטלה
+  // 4. הפקדה שנייה: סכום אחר, בלי להציג סכום, ובהמשך הפקדה שבוטלה
   await page.goto(publicUrl + '/give');
   await page.fill('#fdAmt', '500');
-  await page.click('.fd-check:has-text("לתפעול") input');
-  check((await page.textContent('button[type=submit]')).includes('₪500'), 'בלי תוספת: ₪500');
+  check((await page.textContent('button[type=submit]')).includes('₪530'), 'סכום אחר 500 + 6% = ₪530');
   await page.fill('#fdName', 'דני כץ');
   await page.fill('#fdMsg', 'לא אוכל להגיע, אבל אני איתכם.');
   await page.check('input[name=hide]');
@@ -177,7 +177,7 @@ try {
   await page.click('button[type=submit]');
   await page.waitForSelector('table.tbl');
   const at = await page.textContent('body');
-  check(at.includes('קובי') && at.includes('₪680') && at.includes('₪11'), 'רשימת קופות: נאסף ₪680, תפעול ₪11');
+  check(at.includes('קובי') && at.includes('₪680') && at.includes('₪41'), 'רשימת קופות: נאסף ₪680, תפעול ₪41 (10.8 + 30)');
   await page.click('table.tbl a');
   await page.waitForSelector('#payee');
   await page.fill('#payee', 'חברה קדישא');

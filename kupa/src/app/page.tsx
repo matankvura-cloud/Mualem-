@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import Footer from '@/components/Footer';
-import { FEE_PCT, BRAND, TAGLINE } from '@/lib/site';
+import { FEE_PCT, FEE_MODE, BRAND, SLOGAN } from '@/lib/site';
 
 export default function Landing() {
   return (
     <div className="fd">
       <section className="land-hero">
-        <p className="fd-eyebrow">{TAGLINE}</p>
-        <h1>{BRAND}</h1>
+        <p className="fd-eyebrow">{BRAND}</p>
+        <h1>{SLOGAN}</h1>
         <p>
           קופה דיגיטלית לזכר מי שהלך. המשפחה פותחת אותה בדקה, שולחת קישור אחד,
           וכל מי שרוצה לעזור מפקיד ישירות לקופה במקום לשלוח זר.
@@ -29,7 +29,9 @@ export default function Landing() {
         <h2>שקוף עד הסוף</h2>
         <div className="stack">
           <div className="fd-note"><b>למשפחה זה חינם.</b> אין דמי פתיחה ואין מנוי.</div>
-          <div className="fd-note"><b>מי שמפקיד בוחר.</b> כל הפקדה מגיעה במלואה לקופה. מי שרוצה יכול להוסיף {FEE_PCT}% לתפעול המערכת, וזה מה שמחזיק אותה. אפשר לבטל בלחיצה.</div>
+          {FEE_MODE === 'required'
+            ? <div className="fd-note"><b>כל הפקדה מגיעה במלואה לקופה.</b> על כל הפקדה נוספים {FEE_PCT}% לתפעול המערכת, והם מוצגים למפקיד לפני התשלום. זה מה שמחזיק את השירות.</div>
+            : <div className="fd-note"><b>מי שמפקיד בוחר.</b> כל הפקדה מגיעה במלואה לקופה. מי שרוצה יכול להוסיף {FEE_PCT}% לתפעול המערכת. אפשר לבטל בלחיצה.</div>}
           <div className="fd-note"><b>ספר ניחומים.</b> כל מי שמפקיד יכול לכתוב מילה למשפחה, ולבחור אם להציג את הסכום.</div>
         </div>
       </section>

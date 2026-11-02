@@ -1,9 +1,9 @@
 import type { Metadata, Viewport } from 'next';
 import './globals.css';
-import { BRAND, TAGLINE } from '@/lib/site';
+import { BRAND, SLOGAN, TAGLINE } from '@/lib/site';
 
 export const metadata: Metadata = {
-  title: { default: BRAND, template: `%s · ${BRAND}` },
+  title: { default: `${BRAND} · ${SLOGAN}`, template: `%s · ${BRAND}` },
   description: `${TAGLINE}. מי שרוצה לעזור מפקיד לקופה של המשפחה במקום לשלוח פרחים.`,
 };
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, themeColor: '#1E3A4A' };

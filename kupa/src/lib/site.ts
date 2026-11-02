@@ -11,7 +11,10 @@ export async function siteUrl(): Promise<string> {
 }
 
 /** שם המותג. מוגדר במקום אחד כדי שאפשר יהיה להחליף בלי לגעת בקוד. */
-export const BRAND = process.env.NEXT_PUBLIC_BRAND || 'במקום פרחים';
+export const BRAND = process.env.NEXT_PUBLIC_BRAND || 'לזכרם';
+export const SLOGAN = 'במקום פרחים';
 export const TAGLINE = 'קופה דיגיטלית לזכר יקיריכם';
 export const CONTACT_PHONE = process.env.NEXT_PUBLIC_CONTACT_PHONE || '';
+/** required: תוספת התפעול נוספת לכל הפקדה. optional: המפקיד יכול לבטל אותה. */
+export const FEE_MODE: 'required' | 'optional' = process.env.FEE_MODE === 'optional' ? 'optional' : 'required';
 export const FEE_PCT = Math.max(0, Math.min(30, Number(process.env.FEE_PCT ?? 6) || 0));

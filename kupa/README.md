@@ -1,9 +1,12 @@
-# קופת לזכרו · במקום פרחים
+# לזכרם · במקום פרחים
 
 קופה דיגיטלית לכל נפטר. המשפחה פותחת בעצמה (בלי חשבון), מקבלת קישור ציבורי
 להפקדות "במקום פרחים" וקישור ניהול סודי. כל הפקדה היא קישור תשלום של מורנינג
-(מסמך 320) עם הודעה-חזרה; "שולם" מסומן רק מההודעה-חזרה. ההכנסה: תוספת תפעול
-אופציונלית (ברירת מחדל 6%) שהמפקיד בוחר להוסיף.
+(מסמך 320) עם הודעה-חזרה; "שולם" מסומן רק מההודעה-חזרה.
+
+**הכנסה:** על כל הפקדה נוספת תוספת תפעול (`FEE_PCT`, ברירת מחדל 6%) שהמפקיד
+רואה לפני התשלום. הקופה מקבלת את הסכום המלא, התוספת היא ההכנסה של השירות.
+`FEE_MODE=optional` הופך אותה לתיבת סימון שהמפקיד יכול לבטל.
 
 Next.js 16 + React 19, בלי Tailwind. מסד: Postgres (Neon דרך Vercel Storage).
 
@@ -48,7 +51,7 @@ PLAYWRIGHT_PATH=/path/to/node_modules/playwright npm run test:e2e   # או npm i
 4. **משתני סביבה** (Settings → Environment Variables), לפי `.env.example`:
    `MORNING_ID`, `MORNING_SECRET` (מורנינג ← הגדרות ← חיבורים ← API),
    `MORNING_HOOK` (אקראי: `openssl rand -hex 24`), `ADMIN_PASSWORD`,
-   `NEXT_PUBLIC_SITE_URL=https://kupa.avlut.org.il`. `MORNING_PLUGIN_ID` לא חובה:
+   `NEXT_PUBLIC_SITE_URL=https://kupa.avlut.org.il`, `NEXT_PUBLIC_BRAND=לזכרם`. `MORNING_PLUGIN_ID` לא חובה:
    נשלף פעם אחת מ-`/plugins` ונשמר בטבלת `settings`.
 5. **דומיין**: Settings → Domains → `kupa.avlut.org.il`. הדומיין `avlut.org.il`
    כבר מאומת ב-Vercel אבל ה-DNS חיצוני, ולכן צריך להוסיף אצל ספק ה-DNS רשומת

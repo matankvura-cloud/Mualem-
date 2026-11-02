@@ -6,7 +6,7 @@ import { one, many, num } from '@/lib/db';
 import { TOKEN_RE, ipHash } from '@/lib/tokens';
 import { round2, memOf } from '@/lib/format';
 import { createPaymentForm, hookToken } from '@/lib/morning';
-import { siteUrl, BRAND } from '@/lib/site';
+import { siteUrl, BRAND, FEE_MODE } from '@/lib/site';
 
 export const runtime = 'nodejs';
 const MIN = 10, MAX = 100000;
@@ -29,7 +29,7 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
   if (email && !EMAIL_RE.test(email)) return json({ error: 'כתובת המייל לא תקינה' }, 400);
   const hideAmount = body.hideAmount === true;
   const feePct = num(fund.fee_pct);
-  const fee = body.coverFee === true && feePct > 0 ? round2(amount * feePct / 100) : 0;
+  const fee = feePct > 0 && (FEE_MODE === 'required' || body.coverFee === true) ? round2(amount * feePct / 100) : 0;
   const charged = round2(amount + fee);
 
   // הגנה פשוטה מהצפה: עד 10 הפקדות ממתינות בשעה מאותה כתובת לאותה קופה.

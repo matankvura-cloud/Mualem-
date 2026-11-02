@@ -11,7 +11,7 @@ const OUT = process.argv[2];
 if (!OUT) { console.error('usage: node tests/snapshot.mjs <out-dir>'); process.exit(1); }
 mkdirSync(OUT, { recursive: true });
 const PORT = 3102, MOCK = 4546, SITE = `http://localhost:${PORT}`, PUBLIC = 'https://kupa.avlut.org.il';
-const BRAND = process.env.NEXT_PUBLIC_BRAND || 'במקום פרחים';
+const BRAND = process.env.NEXT_PUBLIC_BRAND || 'לזכרם';
 
 const mock = await startMockMorning(MOCK);
 const app = spawn('npx', ['next', 'start', '-p', String(PORT)], {
@@ -28,7 +28,7 @@ const page = await browser.newPage({ viewport: { width: 420, height: 860 }, loca
 const deposit = async (pub, name, msg, amount, { hide = false, fee = true, ok = true } = {}) => {
   await page.goto(pub + '/give');
   if ([180, 360, 540].includes(amount)) await page.click(`.fd-amts button:has-text("${amount}")`); else await page.fill('#fdAmt', String(amount));
-  if (!fee) await page.click('.fd-check:has-text("לתפעול") input');
+  if (!fee && await page.locator('.fd-check:has-text("לתפעול") input').count()) await page.click('.fd-check:has-text("לתפעול") input');
   await page.fill('#fdName', name); if (msg) await page.fill('#fdMsg', msg);
   if (hide) await page.check('input[name=hide]');
   await page.click('button[type=submit]'); await page.waitForURL(/\/pay\//);
@@ -49,7 +49,7 @@ try {
   await page.selectOption('#kind', 'shloshim'); await page.fill('#date', '2026-12-02'); await page.fill('#place', 'הפרטים יישלחו לכל מי שהפקיד');
   await page.click('form:has(#kind) button[type=submit]'); await page.waitForSelector('.notice-ok');
   await deposit(pub, 'רותי ואבי שמעוני', 'יעקב היה השכן שכולם היו רוצים. משתתפים בצערכם מכל הלב.', 360);
-  await deposit(pub, 'דני כץ, ניו ג׳רזי', 'לא אוכל להגיע, אבל אני איתכם. עם אבא שלכם עבדתי 20 שנה.', 1000, { hide: true, fee: false });
+  await deposit(pub, 'דני כץ, ניו ג׳רזי', 'לא אוכל להגיע, אבל אני איתכם. עם אבא שלכם עבדתי 20 שנה.', 1000, { hide: true });
   await deposit(pub, 'משפחת פרץ', 'יהי זכרו ברוך.', 180);
   await deposit(pub, 'הצוות של יעקב ממשרד', '', 540);
   await deposit(pub, 'ניסיון שבוטל', '', 100, { ok: false });

@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { fundByManage, totals, depositsOf, payoutsOf } from '@/lib/funds';
 import { TOKEN_RE } from '@/lib/tokens';
-import { siteUrl, BRAND } from '@/lib/site';
+import { siteUrl, BRAND, SLOGAN } from '@/lib/site';
 import { ils, fmtDate, fmtDateTime, eventDay, eventTitle, memOf } from '@/lib/format';
 import { num } from '@/lib/db';
 import CopyButton from '@/components/CopyButton';
@@ -25,7 +25,7 @@ export default async function ManagePage({ params, searchParams }: Props) {
   const visiblePays = pays.filter((p) => p.visible);
   const publicLink = `${site}/f/${fund.token}`;
   const manageLink = `${site}/m/${manage}`;
-  const shareText = encodeURIComponent(`${memOf(fund.gender)} ${fund.display_name}. ${BRAND}: אפשר להפקיד לקופה של המשפחה: ${publicLink}`);
+  const shareText = encodeURIComponent(`${memOf(fund.gender)} ${fund.display_name}. ${SLOGAN}, אפשר להפקיד לקופה של המשפחה: ${publicLink}`);
   const paid = deps.filter((d) => d.status === 'paid');
   const closed = fund.status === 'closed';
 
@@ -114,7 +114,7 @@ export default async function ManagePage({ params, searchParams }: Props) {
             <button className={`btn-ghost ${closed ? '' : 'btn-danger'}`} type="submit" style={{ width: '100%' }}>{closed ? 'לפתוח מחדש' : 'לסגור את הקופה'}</button>
           </form>
         </section>
-        {num(fund.fee_pct) > 0 ? <p className="fd-small">למפקידים מוצעת תוספת תפעול של {num(fund.fee_pct)}% שאינה נגרעת מהקופה.</p> : null}
+        {num(fund.fee_pct) > 0 ? <p className="fd-small">על כל הפקדה נוספים {num(fund.fee_pct)}% לתפעול המערכת. הם לא נגרעים מהקופה.</p> : null}
       </div>
       <Footer />
     </div>

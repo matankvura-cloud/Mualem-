@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import type { Fund, Totals } from '@/lib/funds';
 import { ils, eventDay, eventTitle, memOf } from '@/lib/format';
-import { BRAND } from '@/lib/site';
+import { SLOGAN } from '@/lib/site';
 import CopyButton from './CopyButton';
 
 type Book = { name: string; message: string | null; amount: number | null }[];
@@ -13,7 +13,7 @@ export default function FundPublic({ fund, t, totals: tot, book, site }: { fund:
   const target = Number(fund.target_ils || 0);
   const pct = raised !== null && target > 0 ? Math.min(100, Math.round((raised / target) * 100)) : null;
   const link = `${site}/f/${t}`;
-  const shareText = encodeURIComponent(`${memOf(fund.gender)} ${fund.display_name}. ${BRAND}: אפשר להפקיד לקופה של המשפחה: ${link}`);
+  const shareText = encodeURIComponent(`${memOf(fund.gender)} ${fund.display_name}. ${SLOGAN}, אפשר להפקיד לקופה של המשפחה: ${link}`);
   const closed = fund.status === 'closed';
   const messages = book.filter((b) => b.message);
 

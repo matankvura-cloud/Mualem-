@@ -5,16 +5,17 @@ import { ils, round2 } from '@/lib/format';
 const PRESETS = [180, 360, 540];
 const MIN = 10;
 
-type Props = { token: string; displayName: string; wasWord: string; showAmounts: boolean; allowMessages: boolean; feePct: number };
+type Props = { token: string; displayName: string; wasWord: string; showAmounts: boolean; allowMessages: boolean; feePct: number; feeMode: 'required' | 'optional' };
 
-export default function GiveForm({ token, displayName, wasWord, showAmounts, allowMessages, feePct }: Props) {
+export default function GiveForm({ token, displayName, wasWord, showAmounts, allowMessages, feePct, feeMode }: Props) {
   const [amount, setAmount] = useState<number>(PRESETS[1]);
   const [custom, setCustom] = useState('');
   const [coverFee, setCoverFee] = useState(feePct > 0);
+  const feeOn = feePct > 0 && (feeMode === 'required' || coverFee);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
 
-  const fee = coverFee && feePct > 0 ? round2(amount * feePct / 100) : 0;
+  const fee = feeOn ? round2(amount * feePct / 100) : 0;
   const total = round2(amount + fee);
 
   async function submit(ev: React.FormEvent<HTMLFormElement>) {
@@ -68,7 +69,10 @@ export default function GiveForm({ token, displayName, wasWord, showAmounts, all
         <label className="l" htmlFor="fdMail" style={{ marginTop: 4 }}>מייל לקבלה (לא חובה)</label>
         <input id="fdMail" name="email" type="email" autoComplete="email" dir="ltr" maxLength={160} />
         {showAmounts ? <label className="fd-check" style={{ marginTop: 4 }}><input name="hide" type="checkbox" />להציג את שמי בלי הסכום</label> : null}
-        {feePct > 0 ? (
+        {feePct > 0 && feeMode === 'required' ? (
+          <div className="fd-note" style={{ marginTop: 4 }}><b>{ils(amount)} לקופה</b> + {ils(fee)} תפעול ({feePct}%) = <b>{ils(total)}</b>. הקופה מקבלת את הסכום במלואו.</div>
+        ) : null}
+        {feePct > 0 && feeMode === 'optional' ? (
           <label className="fd-check" style={{ marginTop: 4 }}>
             <input type="checkbox" checked={coverFee} onChange={(e) => setCoverFee(e.target.checked)} />
             <span>להוסיף {feePct}% ({ils(fee || round2(amount * feePct / 100))}) לתפעול המערכת, כדי שהקופה תקבל את {ils(amount)} במלואם</span>
