@@ -134,6 +134,73 @@ CREATE TABLE IF NOT EXISTS kupa_documents (
 );
 CREATE INDEX IF NOT EXISTS kupa_documents_fund_idx ON kupa_documents(fund_id, created_at DESC);
 
+-- ---------- שלב 1: כרטיס ההטבות ----------
+-- הכרטיס של המשפחה: תוקף, מצב (פעיל/חסום) וסיבת חסימה.
+ALTER TABLE kupa_funds ADD COLUMN IF NOT EXISTS card_status text NOT NULL DEFAULT 'active';
+ALTER TABLE kupa_funds ADD COLUMN IF NOT EXISTS card_valid_until date;
+ALTER TABLE kupa_funds ADD COLUMN IF NOT EXISTS card_block_reason text;
+UPDATE kupa_funds SET card_valid_until = (created_at + interval '12 months')::date WHERE card_valid_until IS NULL;
+
+-- ספקים משתתפים. status: pending = נרשם ולא אושר, active = מוצג למשפחות, inactive = הוסר.
+CREATE TABLE IF NOT EXISTS kupa_suppliers (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  slug text NOT NULL UNIQUE,
+  name text NOT NULL,
+  category text NOT NULL,
+  icon text NOT NULL DEFAULT 'meal',
+  description text,
+  city text,
+  phone text,
+  email text,
+  website text,
+  status text NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','active','inactive')),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+-- הטבה של ספק. kind: percent (אחוז הנחה), fixed (סכום קבוע), gift (מתנה/שירות).
+CREATE TABLE IF NOT EXISTS kupa_benefits (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  supplier_id uuid NOT NULL REFERENCES kupa_suppliers(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  kind text NOT NULL DEFAULT 'percent' CHECK (kind IN ('percent','fixed','gift')),
+  value numeric(10,2),
+  terms text,
+  max_per_family integer NOT NULL DEFAULT 1,
+  valid_from date,
+  valid_until date,
+  active boolean NOT NULL DEFAULT true,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS kupa_benefits_supplier_idx ON kupa_benefits(supplier_id, active);
+
+-- מימוש הטבה: נרשם רק אחרי שהשרת אימת כרטיס חתום וטרי. nonce מונע שימוש חוזר באותה סריקה.
+CREATE TABLE IF NOT EXISTS kupa_redemptions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  fund_id uuid NOT NULL REFERENCES kupa_funds(id) ON DELETE CASCADE,
+  supplier_id uuid REFERENCES kupa_suppliers(id) ON DELETE SET NULL,
+  benefit_id uuid REFERENCES kupa_benefits(id) ON DELETE SET NULL,
+  supplier_name text NOT NULL,
+  benefit_title text NOT NULL,
+  amount_saved numeric(12,2),
+  note text,
+  redeemed_by text,
+  nonce text UNIQUE,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS kupa_redemptions_fund_idx ON kupa_redemptions(fund_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS kupa_redemptions_supplier_idx ON kupa_redemptions(supplier_id, created_at DESC);
+
+-- קישורי כניסה לספקים (הניהול מנפיק, הספק פותח פעם אחת בטלפון שלו).
+CREATE TABLE IF NOT EXISTS kupa_supplier_logins (
+  token_hash text PRIMARY KEY,
+  supplier_id uuid NOT NULL REFERENCES kupa_suppliers(id) ON DELETE CASCADE,
+  expires_at timestamptz NOT NULL,
+  used_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+
 -- RLS: גישה רק דרך חיבור ישיר כ-kupa_app (DATABASE_URL), לא דרך PostgREST.
 ALTER TABLE kupa_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kupa_funds ENABLE ROW LEVEL SECURITY;
@@ -142,3 +209,8 @@ ALTER TABLE kupa_payouts ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kupa_payout_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kupa_tasks_done ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kupa_documents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kupa_suppliers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kupa_benefits ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kupa_redemptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kupa_supplier_logins ENABLE ROW LEVEL SECURITY;
+-- הטבלאות נוצרות על ידי kupa_app (בעל הטבלאות), ולכן ה-RLS לא חוסם אותו; anon לא רואה אותן.

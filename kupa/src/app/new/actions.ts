@@ -4,6 +4,7 @@ import { many } from '@/lib/db';
 import { token } from '@/lib/tokens';
 import { cleanFundInput } from '@/lib/funds';
 import { FEE_PCT } from '@/lib/site';
+import { defaultValidUntil } from '@/lib/card';
 import type { FundEvent } from '@/lib/format';
 
 export type NewState = { error?: string; values?: Record<string, string> } | undefined;
@@ -30,9 +31,9 @@ export async function createFund(_prev: NewState, fd: FormData): Promise<NewStat
   const pub = token(12), manage = token(24), card = token(12);
   await many(
     `INSERT INTO kupa_funds (token, manage_token, card_token, display_name, gender, years, city, quote, quote_by, photo_initial, purpose, target_ils,
-       surplus_to, events, manager_name, manager_phone, manager_email, show_amounts, allow_messages, fee_pct)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20)`,
+       surplus_to, events, manager_name, manager_phone, manager_email, show_amounts, allow_messages, fee_pct, card_valid_until)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18,$19,$20,$21)`,
     [pub, manage, card, f.display_name, f.gender, f.years, f.city, f.quote, f.quote_by, f.display_name.trim().charAt(0), f.purpose, f.target_ils,
-      f.surplus_to, JSON.stringify(events), f.manager_name, f.manager_phone, f.manager_email, f.show_amounts, f.allow_messages, FEE_PCT]);
+      f.surplus_to, JSON.stringify(events), f.manager_name, f.manager_phone, f.manager_email, f.show_amounts, f.allow_messages, FEE_PCT, defaultValidUntil()]);
   redirect(`/m/${manage}?welcome=1`);
 }

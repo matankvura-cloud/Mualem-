@@ -17,7 +17,7 @@ export default async function AdminPage() {
   const sum = (k: 'raised' | 'fees' | 'paid_out') => funds.reduce((a, f) => a + num(f[k]), 0);
   return (
     <div className="fd fd-wide">
-      <div className="topbar"><Link className="brand" href="/">{BRAND} · ניהול</Link>
+      <div className="topbar"><Link className="brand" href="/">{BRAND} · ניהול</Link><Link href="/admin/suppliers" className="btn-ghost" style={{ minHeight: 36, fontSize: 13 }}>ספקים והטבות</Link>
         <form action={adminLogout}><button className="btn-ghost" type="submit" style={{ minHeight: 36, fontSize: 13 }}>לצאת</button></form></div>
       <div className="pad stack" style={{ gap: 16 }}>
         <section className="stats">

@@ -1,6 +1,6 @@
 'use client';
 import { useActionState } from 'react';
-import { adminLogin, addPayout, approveRequest, rejectRequest, type LoginState, type PayoutState, type ReqState } from './actions';
+import { adminLogin, addPayout, approveRequest, rejectRequest, addSupplier, makeSupplierLogin, adminSetCard, type LoginState, type PayoutState, type ReqState, type SupplierState, type CardState2 } from './actions';
 
 export function LoginForm() {
   const [state, action, pending] = useActionState<LoginState, FormData>(adminLogin, undefined);
@@ -57,5 +57,60 @@ export function PayoutForm({ fundId }: { fundId: string }) {
       {state?.error ? <p className="fd-err" role="alert">{state.error}</p> : state?.ok ? <p className="notice notice-ok">{state.ok}</p> : null}
       <button className="btn" type="submit" disabled={pending}>{pending ? 'רושמים…' : 'לרשום תשלום'}</button>
     </form>
+  );
+}
+
+export function SupplierForm() {
+  const [state, action, pending] = useActionState<SupplierState, FormData>(addSupplier, undefined);
+  return (
+    <form action={action} className="stack card" noValidate>
+      <h3 style={{ fontSize: 15 }}>להוסיף ספק</h3>
+      <div className="grid2">
+        <div className="field"><label className="l" htmlFor="s-name">שם העסק</label><input id="s-name" name="name" type="text" required maxLength={120} /></div>
+        <div className="field"><label className="l" htmlFor="s-cat">קטגוריה</label><input id="s-cat" name="category" type="text" required maxLength={60} placeholder="קייטרינג לשבעה, מצבות, ציוד…" /></div>
+      </div>
+      <div className="grid2">
+        <div className="field"><label className="l" htmlFor="s-icon">אייקון</label>
+          <select id="s-icon" name="icon" defaultValue="meal"><option value="meal">ארוחות</option><option value="chairs">ציוד</option><option value="stone">מצבות</option><option value="home">בית</option><option value="flowers">פרחים</option><option value="transport">הסעות</option></select></div>
+        <div className="field"><label className="l" htmlFor="s-city">עיר / אזור</label><input id="s-city" name="city" type="text" maxLength={80} /></div>
+      </div>
+      <div className="grid2">
+        <div className="field"><label className="l" htmlFor="s-phone">טלפון</label><input id="s-phone" name="phone" type="tel" maxLength={30} dir="ltr" /></div>
+        <div className="field"><label className="l" htmlFor="s-email">מייל</label><input id="s-email" name="email" type="email" maxLength={160} dir="ltr" /></div>
+      </div>
+      <div className="field"><label className="l" htmlFor="s-desc">תיאור קצר (מוצג למשפחות)</label><input id="s-desc" name="description" type="text" maxLength={400} /></div>
+      <label className="fd-check"><input type="checkbox" name="activate" />להציג למשפחות מיד (ספק פעיל)</label>
+      {state?.error ? <p className="fd-err" role="alert">{state.error}</p> : state?.ok ? <p className="notice notice-ok">{state.ok}</p> : null}
+      <button className="btn btn-inline" type="submit" disabled={pending}>{pending ? 'מוסיפים…' : 'להוסיף ספק'}</button>
+    </form>
+  );
+}
+
+export function LoginLinkButton({ supplierId }: { supplierId: string }) {
+  const [state, action, pending] = useActionState<SupplierState, FormData>(makeSupplierLogin.bind(null, supplierId), undefined);
+  return (
+    <form action={action} className="stack" style={{ gap: 8 }}>
+      <button className="btn btn-inline" type="submit" disabled={pending}>{pending ? 'מנפיקים…' : 'קישור כניסה לספק'}</button>
+      {state?.link ? <><span className="linkbox">{state.link}</span><small className="muted">{state.ok} שלחו לספק בוואטסאפ; הוא פותח בטלפון ומחובר ל-90 יום.</small></> : state?.error ? <p className="fd-err">{state.error}</p> : null}
+    </form>
+  );
+}
+
+export function CardControls({ fundId, blocked, validUntil }: { fundId: string; blocked: boolean; validUntil: string }) {
+  const [state, action, pending] = useActionState<CardState2, FormData>(adminSetCard.bind(null, fundId), undefined);
+  return (
+    <div className="stack" style={{ gap: 8 }}>
+      <form action={action} className="fd-actions" noValidate>
+        <input type="hidden" name="act" value="valid" />
+        <div className="field" style={{ flex: 1 }}><label className="l" htmlFor={`vu-${fundId}`}>בתוקף עד</label><input id={`vu-${fundId}`} name="valid_until" type="date" defaultValue={validUntil} /></div>
+        <button className="btn-outline" type="submit" disabled={pending} style={{ alignSelf: 'flex-end' }}>לעדכן תוקף</button>
+      </form>
+      <form action={action} className="fd-actions" noValidate>
+        <input type="hidden" name="act" value={blocked ? 'unblock' : 'block'} />
+        {!blocked ? <input name="reason" type="text" maxLength={200} placeholder="סיבת החסימה (המשפחה תראה)" style={{ flex: 1 }} /> : null}
+        <button className={`btn-ghost ${blocked ? '' : 'btn-danger'}`} type="submit" disabled={pending}>{blocked ? 'לשחרר את החסימה' : 'לחסום את הכרטיס'}</button>
+      </form>
+      {state?.error ? <p className="fd-err">{state.error}</p> : state?.ok ? <p className="notice notice-ok">{state.ok}</p> : null}
+    </div>
   );
 }

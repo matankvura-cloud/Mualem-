@@ -81,3 +81,64 @@ export async function adminSetStatus(fundId: string, status: 'open' | 'closed') 
   await many(`UPDATE kupa_funds SET status = $2, closed_at = CASE WHEN $2 = 'closed' THEN now() ELSE NULL END, updated_at = now() WHERE id = $1`, [fundId, status]);
   revalidatePath(`/admin/${fundId}`); revalidatePath('/admin');
 }
+
+/* ---------- שלב 1: ספקים וכרטיס ---------- */
+export type SupplierState = { error?: string; ok?: string; link?: string } | undefined;
+const ICONS = new Set(['meal', 'chairs', 'stone', 'home', 'flowers', 'transport']);
+const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9֐-׿]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'supplier';
+
+export async function addSupplier(_prev: SupplierState, fd: FormData): Promise<SupplierState> {
+  if (!(await isAdmin())) return { error: 'לא מחובר' };
+  const name = String(fd.get('name') || '').trim().slice(0, 120);
+  const category = String(fd.get('category') || '').trim().slice(0, 60);
+  const icon = String(fd.get('icon') || 'meal');
+  if (name.length < 2) return { error: 'צריך שם ספק.' };
+  if (category.length < 2) return { error: 'צריך קטגוריה.' };
+  const { token } = await import('@/lib/tokens');
+  const slug = `${slugify(name)}-${token(3)}`;
+  const row = await one<{ id: string }>(
+    `INSERT INTO kupa_suppliers (slug, name, category, icon, description, city, phone, email, status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
+    [slug, name, category, ICONS.has(icon) ? icon : 'meal', String(fd.get('description') || '').trim().slice(0, 400) || null,
+      String(fd.get('city') || '').trim().slice(0, 80) || null, String(fd.get('phone') || '').trim().slice(0, 30) || null,
+      String(fd.get('email') || '').trim().slice(0, 160) || null, fd.get('activate') === 'on' ? 'active' : 'pending']);
+  revalidatePath('/admin/suppliers');
+  if (row) redirect(`/admin/suppliers/${row.id}`);
+  return { ok: 'הספק נוסף.' };
+}
+
+export async function setSupplierStatus(id: string, status: 'active' | 'pending' | 'inactive') {
+  if (!(await isAdmin())) return;
+  if (!UUID_RE.test(id)) return;
+  await many(`UPDATE kupa_suppliers SET status = $2, updated_at = now() WHERE id = $1`, [id, status]);
+  revalidatePath('/admin/suppliers'); revalidatePath(`/admin/suppliers/${id}`);
+}
+
+/** קישור כניסה לספק, ל-7 ימים. מוצג פעם אחת; מתן שולח לספק בוואטסאפ. */
+export async function makeSupplierLogin(id: string, _prev: SupplierState): Promise<SupplierState> {
+  if (!(await isAdmin())) return { error: 'לא מחובר' };
+  if (!UUID_RE.test(id)) return { error: 'ספק לא תקין' };
+  const { issueSupplierLogin } = await import('@/lib/supplier-auth');
+  const { siteUrl } = await import('@/lib/site');
+  const t = await issueSupplierLogin(id, 7);
+  return { ok: 'הקישור תקף 7 ימים ולפתיחה אחת.', link: `${await siteUrl()}/p/login/${t}` };
+}
+
+export type CardState2 = { error?: string; ok?: string } | undefined;
+
+export async function adminSetCard(fundId: string, _prev: CardState2, fd: FormData): Promise<CardState2> {
+  if (!(await isAdmin())) return { error: 'לא מחובר' };
+  if (!UUID_RE.test(fundId)) return { error: 'קופה לא תקינה' };
+  const act = String(fd.get('act') || '');
+  if (act === 'block') {
+    const reason = String(fd.get('reason') || '').trim().slice(0, 200) || null;
+    await many(`UPDATE kupa_funds SET card_status = 'blocked', card_block_reason = $2, updated_at = now() WHERE id = $1`, [fundId, reason]);
+  } else if (act === 'unblock') {
+    await many(`UPDATE kupa_funds SET card_status = 'active', card_block_reason = NULL, updated_at = now() WHERE id = $1`, [fundId]);
+  } else if (act === 'valid') {
+    const until = String(fd.get('valid_until') || '').slice(0, 10);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(until)) return { error: 'תאריך לא תקין' };
+    await many(`UPDATE kupa_funds SET card_valid_until = $2::date, updated_at = now() WHERE id = $1`, [fundId, until]);
+  } else return { error: 'פעולה לא מוכרת' };
+  revalidatePath(`/admin/${fundId}`); revalidatePath('/admin');
+  return { ok: 'הכרטיס עודכן.' };
+}

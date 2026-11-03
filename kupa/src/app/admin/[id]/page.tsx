@@ -2,12 +2,13 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { isAdmin } from '@/lib/admin';
-import { fundById, totals, depositsOf, payoutsOf, requestsOf } from '@/lib/funds';
+import { fundById, totals, depositsOf, payoutsOf, requestsOf, redemptionsOf } from '@/lib/funds';
+import { cardState, CARD_STATE_LABEL } from '@/lib/card';
 import { UUID_RE } from '@/lib/tokens';
 import { num } from '@/lib/db';
 import { siteUrl } from '@/lib/site';
 import { ils, fmtDate, fmtDateTime } from '@/lib/format';
-import { LoginForm, PayoutForm, RequestDecision } from '../AdminForms';
+import { LoginForm, PayoutForm, RequestDecision, CardControls } from '../AdminForms';
 import { deletePayout, adminSetStatus } from '../actions';
 
 export const dynamic = 'force-dynamic';
@@ -22,7 +23,8 @@ export default async function AdminFund({ params }: Props) {
   if (!UUID_RE.test(id)) notFound();
   const fund = await fundById(id);
   if (!fund) notFound();
-  const [tot, deps, pays, reqs, site] = await Promise.all([totals(id), depositsOf(id), payoutsOf(id), requestsOf(id), siteUrl()]);
+  const [tot, deps, pays, reqs, site, reds] = await Promise.all([totals(id), depositsOf(id), payoutsOf(id), requestsOf(id), siteUrl(), redemptionsOf(id)]);
+  const cst = cardState(fund); const [cstLabel, cstCls] = CARD_STATE_LABEL[cst];
   const openReqs = reqs.filter((r) => r.status === 'pending');
   const doneReqs = reqs.filter((r) => r.status !== 'pending');
   const closed = fund.status === 'closed';
@@ -46,6 +48,14 @@ export default async function AdminFund({ params }: Props) {
           <div className="stat"><small>תוספות תפעול</small><b>{ils(tot.fees)}</b></div>
           <div className="stat"><small>שולם לספקים</small><b>{ils(tot.paid_out)}</b></div>
           <div className="stat"><small>יתרה</small><b>{ils(tot.raised - tot.paid_out)}</b>{tot.requested ? <small>{ils(tot.requested)} בבקשות פתוחות</small> : null}</div>
+        </section>
+
+        <section className="card stack">
+          <h2 style={{ fontSize: 18 }}>כרטיס ההטבות <span className={`pill ${cstCls}`}>{cstLabel}</span></h2>
+          {fund.card_block_reason && fund.card_status === 'blocked' ? <p className="muted">סיבת החסימה: {fund.card_block_reason}</p> : null}
+          <CardControls fundId={id} blocked={fund.card_status === 'blocked'} validUntil={String(fund.card_valid_until || '').slice(0, 10)} />
+          <h3 style={{ fontSize: 15, marginTop: 8 }}>מימושי הטבות ({reds.length})</h3>
+          {reds.length ? <ul className="pay-list">{reds.map((r) => <li key={r.id}><div className="t"><b>{r.supplier_name}</b><small>{r.benefit_title} · {fmtDateTime(r.created_at)}{r.note ? ` · ${r.note}` : ''}</small></div>{Number(r.amount_saved) ? <span className="a">{ils(r.amount_saved)}</span> : null}</li>)}</ul> : <p className="muted">עדיין לא מומשו הטבות.</p>}
         </section>
 
         <section className="stack">

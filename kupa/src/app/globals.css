@@ -243,3 +243,7 @@ input[type=file]{width:100%;font:inherit;font-size:14px;padding:10px;border:1.5p
 .tiles a{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;text-decoration:none;color:var(--navy);background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 8px;font-size:13.5px;font-weight:600;min-height:88px;justify-content:center}
 .tiles a small{display:block;font-weight:400;color:var(--soft);font-size:12px}
 .tiles a svg{width:22px;height:22px}
+
+/* כרטיס ההטבות */
+.card-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.qr img{border-radius:12px;border:1px solid var(--line);background:#fff}

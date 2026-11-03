@@ -1,11 +1,10 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { loadFamily } from './_shared';
-import { payoutsOf, requestsOf, depositsOf, tasksDone, documentsOf } from '@/lib/funds';
+import { payoutsOf, requestsOf, depositsOf, tasksDone, documentsOf, activeSuppliers, redemptionsOf } from '@/lib/funds';
 import { GENERAL, planByKey } from '@/data/now';
 import { ils, fmtDate, initials, memOf } from '@/lib/format';
 import { CONTACT_PHONE } from '@/lib/site';
-import { SUPPLIERS } from '@/data/suppliers';
 import FamilyShell from '@/components/FamilyShell';
 import FamilyCard from '@/components/FamilyCard';
 import CopyButton from '@/components/CopyButton';
@@ -20,7 +19,7 @@ export default async function FamilyHome({ params, searchParams }: Props) {
   const { manage } = await params;
   const { welcome } = await searchParams;
   const { fund, tot, publicLink, family, last4 } = await loadFamily(manage);
-  const [pays, reqs, deps, done, docs] = await Promise.all([payoutsOf(fund.id), requestsOf(fund.id), depositsOf(fund.id), tasksDone(fund.id), documentsOf(fund.id)]);
+  const [pays, reqs, deps, done, docs, sups, reds] = await Promise.all([payoutsOf(fund.id), requestsOf(fund.id), depositsOf(fund.id), tasksDone(fund.id), documentsOf(fund.id), activeSuppliers(), redemptionsOf(fund.id)]);
   const plan = planByKey(fund.situation);
   const allTasks = [...GENERAL.tasks, ...(plan ? plan.tasks : [])];
   const nextTasks = allTasks.filter((t) => !done.has(t.key)).slice(0, 3);
@@ -101,7 +100,7 @@ export default async function FamilyHome({ params, searchParams }: Props) {
       </section>
 
       <nav className="tiles" aria-label="עוד באזור המשפחה">
-        <Link href={`${base}/suppliers`}><IcShop />הטבות וספקים<small>{SUPPLIERS.length} הסדרים</small></Link>
+        <Link href={`${base}/suppliers`}><IcShop />הטבות וספקים<small>{sups.length ? `${sups.length} ספקים משתתפים` : 'בקרוב באזורכם'}{reds.length ? ` · ${reds.length} מימושים` : ''}</small></Link>
         <Link href={`${base}/support`}><IcHeadset />הליווי האישי<small>{CONTACT_PHONE ? 'שיחה או וואטסאפ' : 'פנייה אלינו'}</small></Link>
         <Link href={`${base}/file`}><IcFolder />התיק והמסמכים<small>{checks.filter((c) => c.done).length} מתוך {checks.length} הושלמו</small></Link>
       </nav>

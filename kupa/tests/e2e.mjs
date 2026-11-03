@@ -5,6 +5,10 @@ import { spawn } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { createRequire } from 'node:module';
 const { chromium } = createRequire(import.meta.url)(process.env.PLAYWRIGHT_PATH || 'playwright');
+import { createHmac } from 'node:crypto';
+const hm = (k, m) => createHmac('sha256', k).update(m).digest('hex');
+// חתימת כרטיס כמו בשרת (src/lib/card.ts), כדי לדמות סריקה טרייה או ישנה
+const signCard = (card, ts) => `${ts}.${hm(hm('card-secret-test', 'kupa-card-v1'), `${card}|${ts}`).slice(0, 32)}`;
 import { startMockMorning } from './mock-morning.mjs';
 import { startMockAnthropic } from './mock-anthropic.mjs';
 
@@ -22,7 +26,7 @@ const app = spawn('npx', ['next', 'start', '-p', String(PORT)], {
   env: { ...process.env, KUPA_LOCAL_DB: 'memory', DATABASE_URL: '', POSTGRES_URL: '',
     MORNING_AUTH_URL: `http://localhost:${MOCK}/idp/v1/oauth/token`, MORNING_API_BASE: `http://localhost:${MOCK}/api/v1`,
     MORNING_ID: 'test-id', MORNING_SECRET: 'test-secret', MORNING_HOOK: 'hook-secret-123', MORNING_PLUGIN_ID: '',
-    ADMIN_PASSWORD: 'admin-pass', NEXT_PUBLIC_SITE_URL: SITE, FEE_PCT: '6', FEE_MODE: 'required', NEXT_PUBLIC_BRAND: 'לזכרם',
+    ADMIN_PASSWORD: 'admin-pass', CARD_SECRET: 'card-secret-test', NEXT_PUBLIC_SITE_URL: SITE, FEE_PCT: '6', FEE_MODE: 'required', NEXT_PUBLIC_BRAND: 'לזכרם',
     ANTHROPIC_API_KEY: 'test-key', ANTHROPIC_BASE_URL: 'http://localhost:4547', AI_MODEL: 'claude-opus-5-5' },
   stdio: ['ignore', 'pipe', 'pipe'], detached: true,
 });
@@ -328,6 +332,101 @@ try {
   await page.waitForURL(/\/assistant\?q=/);
   await page.waitForSelector('.bubble.assistant:has-text("מה עושים היום?")');
   check(true, 'שאלה מהבית נשלחת אוטומטית לעוזר');
+
+  // 11. שלב 1: כרטיס ההטבות. ספק, הטבה, קישור כניסה, מימוש מאובטח, חסימה
+  console.log('כרטיס ההטבות');
+  await page.goto(`${SITE}/admin/suppliers`);
+  await page.waitForSelector('#s-name');
+  await page.fill('#s-name', 'קייטרינג של רחל');
+  await page.fill('#s-cat', 'קייטרינג לשבעה');
+  await page.fill('#s-city', 'ירושלים');
+  await page.fill('#s-phone', '0529876543');
+  await page.fill('#s-desc', 'ארוחות חמות לשבעה, משלוח עד הבית.');
+  await page.check('input[name=activate]');
+  await page.click('form:has(#s-name) button[type=submit]');
+  await page.waitForURL(/\/admin\/suppliers\/[0-9a-f-]{36}$/);
+  const supplierAdminUrl = page.url();
+  check(true, 'ספק נוסף ואושר, עמוד הספק בניהול נפתח');
+  await page.fill('#b-title', 'הנחה על ארוחות לשבעה');
+  await page.fill('#b-value', '10');
+  await page.fill('#b-terms', 'בהזמנה מראש');
+  await page.click('form:has(#b-title) button[type=submit]');
+  await page.waitForSelector('.notice-ok:has-text("ההטבה נוספה")');
+  check((await page.textContent('table.tbl')).includes('10% הנחה'), 'ההטבה מופיעה: 10% הנחה');
+  await page.click('button:has-text("קישור כניסה לספק")');
+  await page.waitForSelector('.linkbox');
+  const loginLink = (await page.locator('.linkbox').first().textContent()).trim();
+  check(/\/p\/login\/[A-Za-z0-9_-]{32}$/.test(loginLink), 'קישור כניסה לספק הונפק');
+
+  // המשפחה: תוקף, QR חי, ורשימת הספקים האמיתית
+  await page.goto(manageUrl + '/card');
+  let cb = await page.textContent('body');
+  check(cb.includes('בתוקף עד') && cb.includes('בתוקף'), 'כרטיס המשפחה: בתוקף, עם תאריך');
+  const qrSrc = await page.getAttribute('.qr img', 'src');
+  check(qrSrc && qrSrc.includes(`/api/m/`) && qrSrc.includes('/qr'), 'ה-QR מגיע מנקודת הקצה החיה');
+  const qrRes = await fetch(`${SITE}${qrSrc.split('?')[0]}`);
+  check(qrRes.status === 200 && qrRes.headers.get('content-type') === 'image/png', 'נקודת הקצה של ה-QR מחזירה PNG');
+  await page.goto(manageUrl + '/suppliers');
+  cb = await page.textContent('body');
+  check(cb.includes('קייטרינג של רחל') && cb.includes('10% הנחה') && !cb.includes('להמחשה'), 'רשימת הספקים: הספק האמיתי עם ההטבה, בלי הדוגמאות');
+
+  // הספק: בלי כניסה אין מימוש
+  const cardTok = cardLink.split('/s/')[1];
+  await page.goto(cardLink);
+  check((await page.textContent('body')).includes('כניסת ספקים'), 'ספק לא מחובר: רואה "כניסת ספקים" ולא טופס מימוש');
+
+  // הטלפון של הספק: הקשר נפרד
+  const phone = await browser.newContext({ viewport: { width: 420, height: 860 }, locale: 'he-IL' });
+  const sp2 = await phone.newPage();
+  await sp2.goto(loginLink);
+  await sp2.waitForURL(/\/p$/);
+  check((await sp2.textContent('body')).includes('קייטרינג של רחל'), 'הספק נכנס מהקישור ורואה את הפורטל שלו');
+  const again = await phone.newPage(); await again.goto(loginLink); await again.waitForURL(/login=expired/); await again.close();
+  check(true, 'קישור הכניסה חד-פעמי: פתיחה שנייה נדחית');
+  await sp2.goto(cardLink);
+  check((await sp2.textContent('body')).includes('זה לא קוד שנסרק'), 'קישור בלי חתימה: אין מימוש');
+  const nowSec = Math.floor(Date.now() / 1000);
+  await sp2.goto(`${cardLink}?t=${signCard(cardTok, nowSec - 600)}`);
+  check((await sp2.textContent('body')).includes('כבר לא טרי'), 'חתימה ישנה (10 דקות): אין מימוש');
+  await sp2.goto(`${cardLink}?t=${signCard(cardTok, nowSec)}.x`);
+  check((await sp2.textContent('body')).includes('זה לא קוד שנסרק') || (await sp2.textContent('body')).includes('לא טרי'), 'חתימה פגומה: אין מימוש');
+  const freshT = signCard(cardTok, nowSec);
+  await sp2.goto(`${cardLink}?t=${freshT}`);
+  await sp2.waitForSelector('#benefit');
+  await sp2.fill('#amount_saved', '120');
+  await sp2.fill('#rnote', 'הזמנה 4471');
+  await sp2.click('form:has(#benefit) button[type=submit]');
+  await sp2.waitForSelector('.notice-ok:has-text("ההטבה מומשה")');
+  check(true, 'סריקה טרייה + ספק מחובר: ההטבה מומשה');
+  await sp2.goto(`${cardLink}?t=${freshT}`);
+  const after = await sp2.textContent('body');
+  check(after.includes('מומש כבר') && (await sp2.locator('form:has(#benefit) button[type=submit]').isDisabled()), 'אותה משפחה שוב: ההטבה מסומנת "מומש כבר" והכפתור כבוי');
+  await sp2.goto(`${SITE}/p`);
+  check((await sp2.textContent('body')).includes('הזמנה 4471') && (await sp2.textContent('body')).includes('₪120'), 'הפורטל מציג את המימוש עם החיסכון');
+  await phone.close();
+
+  // המשפחה והניהול רואים את המימוש; חסימה ושחרור
+  await page.goto(manageUrl + '/card');
+  cb = await page.textContent('body');
+  check(cb.includes('קייטרינג של רחל') && cb.includes('חסכתם ₪120'), 'המשפחה רואה את המימוש: חסכתם ₪120');
+  await page.goto(supplierAdminUrl);
+  check((await page.textContent('body')).includes('הזמנה 4471'), 'ניהול הספק מציג את המימוש');
+  await page.goto(`${SITE}/admin`); await page.click('table.tbl a'); await page.waitForSelector('#payee');
+  check((await page.textContent('body')).includes('מימושי הטבות (1)'), 'עמוד הקופה בניהול: מימוש אחד');
+  await page.fill('form:has(input[value=block]) input[name=reason]', 'חשד לשימוש לא מורשה');
+  await page.click('button:has-text("לחסום את הכרטיס")');
+  await page.waitForSelector('.pill:has-text("חסום")');
+  check(true, 'הכרטיס נחסם בניהול');
+  const blockedSup = await fetch(`${cardLink}?t=${signCard(cardTok, Math.floor(Date.now() / 1000))}`).then((r) => r.text());
+  check(blockedSup.includes('הכרטיס לא פעיל'), 'הספק רואה: הכרטיס לא פעיל');
+  await page.goto(manageUrl + '/card');
+  check((await page.textContent('body')).includes('הכרטיס חסום') && (await page.textContent('body')).includes('חשד לשימוש'), 'המשפחה רואה חסימה עם הסיבה');
+  await page.goto(`${SITE}/admin`); await page.click('table.tbl a'); await page.waitForSelector('#payee');
+  await page.click('button:has-text("לשחרר את החסימה")');
+  await page.waitForSelector('.notice-ok:has-text("הכרטיס עודכן")');
+  await page.goto(manageUrl + '/card');
+  check((await page.textContent('body')).includes('בתוקף עד') && !(await page.textContent('body')).includes('הכרטיס חסום'), 'אחרי השחרור הכרטיס שוב בתוקף');
+
   // 9. קופה לזכרה
   console.log('לזכרה');
   await page.setViewportSize({ width: 420, height: 860 });

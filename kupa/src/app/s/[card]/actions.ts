@@ -27,3 +27,44 @@ export async function requestCharge(card: string, _prev: ChargeState, fd: FormDa
   revalidatePath('/admin'); revalidatePath(`/admin/${fund.id}`); revalidatePath(`/m/${fund.manage_token}/card`);
   return { ok: `הבקשה נשלחה למשפחה ולאישור. אחרי האישור נעביר ${ils(amount)} ל${payee}.` };
 }
+
+export type RedeemState = { error?: string; ok?: string } | undefined;
+
+/** מימוש הטבה: רק ספק מחובר, רק עם קוד שנסרק עכשיו, רק בכרטיס פעיל, עד המכסה, ובלי שימוש חוזר באותה סריקה. */
+export async function redeemBenefit(card: string, t: string, _prev: RedeemState, fd: FormData): Promise<RedeemState> {
+  const { currentSupplier } = await import('@/lib/supplier-auth');
+  const { verifyCard, cardState } = await import('@/lib/card');
+  const { benefitById, redemptionCount } = await import('@/lib/funds');
+  const { UUID_RE } = await import('@/lib/tokens');
+  const { createHash } = await import('node:crypto');
+  if (!TOKEN_RE.test(card)) return { error: 'קישור לא תקין' };
+  const supplier = await currentSupplier();
+  if (!supplier) return { error: 'צריך להתחבר כספק.' };
+  if (supplier.status !== 'active') return { error: 'הספק עדיין לא אושר.' };
+  const fund = await fundByCard(card);
+  if (!fund) return { error: 'הכרטיס לא נמצא' };
+  if (cardState(fund) !== 'active') return { error: 'הכרטיס לא פעיל.' };
+  const sig = verifyCard(card, t);
+  if (!sig.ok) return { error: 'הקוד לא טרי. סרקו את הכרטיס מחדש.' };
+  const benefitId = String(fd.get('benefit') || '');
+  if (!UUID_RE.test(benefitId)) return { error: 'בחרו הטבה.' };
+  const benefit = await benefitById(benefitId);
+  if (!benefit || benefit.supplier_id !== supplier.id || !benefit.active) return { error: 'ההטבה לא זמינה.' };
+  const today = new Date().toISOString().slice(0, 10);
+  if ((benefit.valid_from && String(benefit.valid_from).slice(0, 10) > today) || (benefit.valid_until && String(benefit.valid_until).slice(0, 10) < today)) return { error: 'ההטבה לא בתוקף היום.' };
+  const used = await redemptionCount(fund.id, benefit.id);
+  if (used >= benefit.max_per_family) return { error: 'המשפחה כבר מימשה את ההטבה הזו.' };
+  const saved = round2(Number(String(fd.get('amount_saved') || '').replace(/[^\d.]/g, ''))) || null;
+  const note = String(fd.get('note') || '').trim().slice(0, 200) || null;
+  const nonce = createHash('sha256').update(`${card}|${sig.ts}|${benefit.id}`).digest('hex').slice(0, 40);
+  try {
+    await many(
+      `INSERT INTO kupa_redemptions (fund_id, supplier_id, benefit_id, supplier_name, benefit_title, amount_saved, note, redeemed_by, nonce) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+      [fund.id, supplier.id, benefit.id, supplier.name, benefit.title, saved, note, supplier.email, nonce]);
+  } catch (e) {
+    if (String(e).includes('nonce')) return { error: 'הסריקה הזו כבר שימשה למימוש. לסריקה חדשה בקשו מהמשפחה להציג שוב.' };
+    throw e;
+  }
+  revalidatePath(`/m/${fund.manage_token}/card`); revalidatePath('/p'); revalidatePath(`/admin/${fund.id}`);
+  return { ok: `${benefit.title} נרשמה למשפחת ${fund.display_name}.${saved ? ` חיסכון ${ils(saved)}.` : ''}` };
+}

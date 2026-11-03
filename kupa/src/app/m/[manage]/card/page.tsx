@@ -1,45 +1,62 @@
 import type { Metadata } from 'next';
-import QRCode from 'qrcode';
 import { loadFamily } from '../_shared';
-import { payoutsOf, requestsOf } from '@/lib/funds';
+import { payoutsOf, requestsOf, redemptionsOf } from '@/lib/funds';
 import { ils, fmtDate } from '@/lib/format';
+import { cardState, CARD_STATE_LABEL } from '@/lib/card';
+import { CONTACT_PHONE } from '@/lib/site';
 import FamilyShell from '@/components/FamilyShell';
 import FamilyCard from '@/components/FamilyCard';
-import CopyButton from '@/components/CopyButton';
+import LiveQr from '@/components/LiveQr';
 import { RequestPayoutForm } from '../ManageForms';
 import { cancelRequest } from '../actions';
-import { IcCoins, IcList, IcCard } from '@/components/icons';
+import { IcCoins, IcList, IcCard, IcShop } from '@/components/icons';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'כרטיס ותשלומים', robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: 'הכרטיס שלכם', robots: { index: false, follow: false } };
 type Props = { params: Promise<{ manage: string }>; searchParams: Promise<{ payee?: string; amount?: string; purpose?: string }> };
 const REQ: Record<string, [string, string]> = { pending: ['ממתין לאישור', 'pill-warn'], paid: ['שולם', 'pill-ok'], rejected: ['לא אושר', 'pill-err'] };
 
 export default async function CardPage({ params, searchParams }: Props) {
   const { manage } = await params;
   const { payee, amount, purpose } = await searchParams;
-  const { fund, tot, family, last4, cardLink } = await loadFamily(manage);
-  const [pays, reqs] = await Promise.all([payoutsOf(fund.id), requestsOf(fund.id)]);
+  const { fund, tot, family, last4 } = await loadFamily(manage);
+  const [pays, reqs, reds] = await Promise.all([payoutsOf(fund.id), requestsOf(fund.id), redemptionsOf(fund.id)]);
   const visiblePays = pays.filter((p) => p.visible);
-  const qr = await QRCode.toDataURL(cardLink, { margin: 1, width: 300, color: { dark: '#16304D', light: '#FFFFFF' } });
+  const state = cardState(fund);
+  const [stateLabel, stateCls] = CARD_STATE_LABEL[state];
 
   return (
     <FamilyShell manage={manage} active="card">
-      <header className="fam-head"><div><h1>כרטיס ותשלומים</h1><p>הכרטיס משלם לספקים ישירות מהקופה. אתם מבקשים, אנחנו מאשרים ומשלמים.</p></div></header>
+      <header className="fam-head"><div><h1>הכרטיס שלכם</h1><p>כרטיס החבר של המשפחה: הטבות אצל ספקים משתתפים, ותשלום לספקים ישירות מהקופה.</p></div></header>
+
+      {state === 'blocked' ? <div className="notice notice-err" style={{ marginBottom: 14 }}><b>הכרטיס חסום.</b> {fund.card_block_reason || ''} {CONTACT_PHONE ? <a href={`tel:${CONTACT_PHONE}`}>דברו איתנו</a> : null}</div> : null}
+      {state === 'expired' ? <div className="notice notice-warn" style={{ marginBottom: 14 }}><b>תוקף הכרטיס פג</b> ב-{fmtDate(fund.card_valid_until)}. {CONTACT_PHONE ? <a href={`tel:${CONTACT_PHONE}`}>דברו איתנו</a> : 'פנו אלינו'} כדי להאריך.</div> : null}
 
       <section className="fam-grid fam-grid-card">
-        <FamilyCard familyName={family} last4={last4} />
+        <div className="stack" style={{ gap: 8 }}>
+          <FamilyCard familyName={family} last4={last4} />
+          <div className="card-meta"><span className={`pill ${stateCls}`}>{stateLabel}</span>{fund.card_valid_until ? <small className="muted">בתוקף עד {fmtDate(fund.card_valid_until)}</small> : null}</div>
+        </div>
         <div className="stats" style={{ gridTemplateColumns: '1fr', gap: 10 }}>
           <div className="stat"><small>נאסף</small><b>{ils(tot.raised)}</b></div>
           <div className="stat"><small>שולם מהקופה</small><b>{ils(tot.paid_out)}</b></div>
           <div className="stat"><small>יתרה זמינה</small><b>{ils(tot.available)}</b>{tot.requested ? <small>{ils(tot.requested)} בבקשות שממתינות</small> : null}</div>
         </div>
         <div className="panel">
-          <h2><IcCard />הכרטיס אצל הספק</h2>
-          <div className="qr"><img src={qr} alt="QR של כרטיס המשפחה" width={150} height={150} />
-            <p>הספק סורק את הקוד, רואה את היתרה הזמינה ושולח בקשת חיוב. אתם רואים אותה כאן, ואנחנו מאשרים ומשלמים לו. הכסף לא יוצא בלי אישור.</p></div>
-          <div className="fd-actions"><CopyButton text={cardLink} label="העתק קישור לספק" className="btn-outline" /></div>
+          <h2><IcCard />להציג אצל הספק</h2>
+          {state === 'active' ? (
+            <div className="qr"><LiveQr src={`/api/m/${manage}/qr`} size={150} />
+              <p>הספק סורק את הקוד מהמסך שלכם. הקוד מתחדש כל דקה, אז צילום מסך לא עובד. הספק רואה את שם המשפחה ואת ההטבה, לא את הקופה שלכם.</p></div>
+          ) : <p className="muted">הכרטיס לא פעיל כרגע, ולכן אין קוד להצגה.</p>}
         </div>
+      </section>
+
+      <section className="panel" style={{ marginBottom: 18 }}>
+        <h2><IcShop />הטבות שמימשתם</h2>
+        {reds.length ? (
+          <ul className="pay-list">{reds.map((r) => (
+            <li key={r.id}><div className="t"><b>{r.supplier_name}</b><small>{[r.benefit_title, fmtDate(r.created_at)].filter(Boolean).join(' · ')}{r.note ? ` · ${r.note}` : ''}</small></div>{Number(r.amount_saved) ? <span className="a">חסכתם {ils(r.amount_saved)}</span> : null}</li>))}</ul>
+        ) : <p className="muted">עדיין לא מימשתם הטבה. ברשימת הספקים תראו מה מגיע לכם עם הכרטיס.</p>}
       </section>
 
       <section className="fam-grid2">

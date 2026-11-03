@@ -6,6 +6,8 @@ import type { Fund, Totals, PayoutRequest, Payout, DocRow } from './funds';
 import { GENERAL, planByKey } from '@/data/now';
 import { DOC_KINDS } from '@/data/documents';
 import { SUPPLIERS } from '@/data/suppliers';
+import { cardState, CARD_STATE_LABEL, fmtBenefit } from './card';
+import type { Supplier, Benefit, Redemption } from './funds';
 import { eventTitle, familyName, memOf, ils } from './format';
 import { BRAND, FAMILY_BRAND, CONTACT_PHONE } from './site';
 
@@ -26,9 +28,10 @@ export const QUICK_QUESTIONS = [
 /* ---------- הקשר ---------- */
 export type FamilyContext = {
   fund: Fund; tot: Totals; requests: PayoutRequest[]; payouts: Payout[]; done?: Set<string>; docs?: DocRow[];
+  suppliers?: Supplier[]; benefits?: (Benefit & { supplier_name: string })[]; redemptions?: Redemption[];
 };
 
-function contextText({ fund, tot, requests, payouts, done, docs }: FamilyContext): string {
+function contextText({ fund, tot, requests, payouts, done, docs, suppliers, benefits, redemptions }: FamilyContext): string {
   const plan = planByKey(fund.situation);
   const tasks = [...GENERAL.tasks, ...(plan ? plan.tasks : [])];
   const tasksText = tasks.map((t) => `- [${done?.has(t.key) ? 'בוצע' : 'פתוח'}] ${t.text}`).join('\n');
@@ -37,7 +40,12 @@ function contextText({ fund, tot, requests, payouts, done, docs }: FamilyContext
   const events = fund.events.map((e) => `- ${eventTitle(e)}: ${[e.date, e.time, e.place, e.address, e.note].filter(Boolean).join(' · ') || 'פרטים חסרים'}`).join('\n') || '- עדיין לא הוזנו אירועים';
   const open = requests.filter((r) => r.status === 'pending').map((r) => `- ${r.payee}: ${ils(r.amount)}${r.purpose ? ` עבור ${r.purpose}` : ''} (ממתין לאישור${r.source === 'supplier' ? ', הספק ביקש' : ''})`).join('\n') || '- אין';
   const paid = payouts.filter((p) => p.visible).slice(0, 8).map((p) => `- ${p.payee}: ${ils(p.amount)}${p.purpose ? ` עבור ${p.purpose}` : ''}`).join('\n') || '- עדיין לא שולם מהקופה';
-  const sups = SUPPLIERS.map((s) => `- ${s.name} (${s.category}): ${s.description}${s.example ? ' [הסדר לדוגמה, טרם נחתם]' : ` [${s.benefit}]`}`).join('\n');
+  const sups = suppliers && suppliers.length
+    ? suppliers.map((s) => { const bs = (benefits || []).filter((b) => b.supplier_id === s.id).map(fmtBenefit); return `- ${s.name} (${s.category}${s.city ? `, ${s.city}` : ''}): ${s.description || ''}${bs.length ? ` [הטבות עם הכרטיס: ${bs.join(', ')}]` : ' [מקבל את הכרטיס]'}`; }).join('\n')
+    : SUPPLIERS.map((s) => `- ${s.name} (${s.category}): ${s.description}${s.example ? ' [הסדר לדוגמה, טרם נחתם]' : ` [${s.benefit}]`}`).join('\n');
+  const cst = cardState(fund);
+  const cardText = `${CARD_STATE_LABEL[cst][0]}${fund.card_valid_until ? `, בתוקף עד ${String(fund.card_valid_until).slice(0, 10)}` : ''}${cst === 'blocked' && fund.card_block_reason ? ` (${fund.card_block_reason})` : ''}`;
+  const redsText = (redemptions || []).slice(0, 8).map((r) => `- ${r.supplier_name}: ${r.benefit_title}${Number(r.amount_saved) ? ` (חיסכון ${ils(r.amount_saved)})` : ''}`).join('\n') || '- עדיין לא מומשו הטבות';
   return `היום: ${today}
 המשפחה: ${familyName(fund.display_name)}. ${memOf(fund.gender)} ${fund.display_name}${fund.years ? ` (${fund.years})` : ''}${fund.city ? `, ${fund.city}` : ''}.
 מנהל/ת הקופה: ${fund.manager_name || 'לא צוין'}.
@@ -49,8 +57,11 @@ ${events}
 ${open}
 תשלומים שכבר בוצעו:
 ${paid}
+כרטיס ההטבות של המשפחה: ${cardText}. המשפחה מציגה אותו (QR מהמסך) אצל ספק משתתף ומקבלת את ההטבה; אפשר גם לבקש דרכו תשלום לספק מהקופה.
 ספקים שמקבלים את כרטיס המשפחה:
 ${sups}
+הטבות שכבר מומשו:
+${redsText}
 המצב שנבחר ב"מה עושים עכשיו": ${plan ? plan.label : 'לא נבחר'}.
 צעדים:
 ${tasksText}

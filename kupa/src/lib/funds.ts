@@ -9,6 +9,7 @@ export type Fund = {
   photo_initial: string | null; purpose: string | null; target_ils: unknown; surplus_to: string | null;
   events: FundEvent[]; manager_name: string | null; manager_phone: string | null; manager_email: string | null;
   show_amounts: boolean; allow_messages: boolean; fee_pct: unknown; view_count: number; situation: string | null;
+  card_status: 'active' | 'blocked'; card_valid_until: unknown; card_block_reason: string | null;
   opened_at: unknown; closed_at: unknown; created_at: unknown; updated_at: unknown;
 };
 
@@ -137,3 +138,37 @@ export function cleanFundInput(fd: FormData) {
     allow_messages: fd.get('allow_messages') === 'on',
   };
 }
+
+/* ---------- שלב 1: כרטיס ההטבות, ספקים, הטבות, מימושים ---------- */
+export type Supplier = {
+  id: string; slug: string; name: string; category: string; icon: string; description: string | null; city: string | null;
+  phone: string | null; email: string | null; website: string | null; status: 'pending' | 'active' | 'inactive'; created_at: unknown; updated_at: unknown;
+};
+export type Benefit = {
+  id: string; supplier_id: string; title: string; kind: 'percent' | 'fixed' | 'gift'; value: unknown; terms: string | null;
+  max_per_family: number; valid_from: unknown; valid_until: unknown; active: boolean; created_at: unknown; updated_at: unknown;
+};
+export type Redemption = {
+  id: string; fund_id: string; supplier_id: string | null; benefit_id: string | null; supplier_name: string; benefit_title: string;
+  amount_saved: unknown; note: string | null; redeemed_by: string | null; nonce: string | null; created_at: unknown;
+};
+export type SupplierRow = Supplier & { benefits: unknown; redemptions: unknown };
+
+export const allSuppliers = () => many<SupplierRow>(
+  `SELECT s.*, (SELECT COUNT(*) FROM kupa_benefits b WHERE b.supplier_id = s.id AND b.active) AS benefits,
+          (SELECT COUNT(*) FROM kupa_redemptions r WHERE r.supplier_id = s.id) AS redemptions
+   FROM kupa_suppliers s ORDER BY CASE s.status WHEN 'active' THEN 0 WHEN 'pending' THEN 1 ELSE 2 END, s.created_at DESC`);
+export const activeSuppliers = () => many<Supplier>(`SELECT * FROM kupa_suppliers WHERE status = 'active' ORDER BY category, name`);
+export const supplierById = (id: string) => one<Supplier>(`SELECT * FROM kupa_suppliers WHERE id = $1`, [id]);
+/** הטבות פעילות ובתוקף היום, לספקים פעילים. */
+export const liveBenefits = () => many<Benefit & { supplier_name: string }>(
+  `SELECT b.*, s.name AS supplier_name FROM kupa_benefits b JOIN kupa_suppliers s ON s.id = b.supplier_id
+   WHERE b.active AND s.status = 'active' AND (b.valid_from IS NULL OR b.valid_from <= CURRENT_DATE) AND (b.valid_until IS NULL OR b.valid_until >= CURRENT_DATE)
+   ORDER BY s.name, b.created_at`);
+export const benefitsOf = (supplierId: string) => many<Benefit>(`SELECT * FROM kupa_benefits WHERE supplier_id = $1 ORDER BY active DESC, created_at`, [supplierId]);
+export const benefitById = (id: string) => one<Benefit>(`SELECT * FROM kupa_benefits WHERE id = $1`, [id]);
+export const redemptionsOf = (fundId: string) => many<Redemption>(`SELECT * FROM kupa_redemptions WHERE fund_id = $1 ORDER BY created_at DESC`, [fundId]);
+export const redemptionsOfSupplier = (supplierId: string) => many<Redemption & { family: string }>(
+  `SELECT r.*, f.display_name AS family FROM kupa_redemptions r JOIN kupa_funds f ON f.id = r.fund_id WHERE r.supplier_id = $1 ORDER BY r.created_at DESC LIMIT 200`, [supplierId]);
+export const redemptionCount = async (fundId: string, benefitId: string) =>
+  num((await one<{ n: unknown }>(`SELECT COUNT(*) AS n FROM kupa_redemptions WHERE fund_id = $1 AND benefit_id = $2`, [fundId, benefitId]))?.n);
