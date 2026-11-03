@@ -30,7 +30,7 @@ async function open(): Promise<Db> {
     const schema = readFileSync(join(process.cwd(), 'db', 'schema.sql'), 'utf8');
     await pg.exec(schema);
     const local: Db = { query: async (text, params = []) => (await pg.query(text, params as never[])).rows as never };
-    if (process.env.KUPA_DEMO_SEED !== '0') {
+    if (process.env.KUPA_DEMO_SEED === '1') {
       const { seedDemo } = await import('./demo-seed');
       await seedDemo(local).catch((e) => console.error('demo seed', e));
     }

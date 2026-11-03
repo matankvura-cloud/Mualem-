@@ -3,7 +3,7 @@ import Footer from '@/components/Footer';
 import { FEE_PCT, FEE_MODE, BRAND, SLOGAN } from '@/lib/site';
 import { DEMO } from '@/lib/demo-seed';
 
-const demoMode = !!process.env.KUPA_LOCAL_DB && !process.env.DATABASE_URL && !process.env.POSTGRES_URL && process.env.KUPA_DEMO_SEED !== '0';
+const demoMode = process.env.KUPA_DEMO_SEED === '1';
 
 export default function Landing() {
   return (
@@ -43,7 +43,6 @@ export default function Landing() {
         <section className="fd-sec">
           <h2>קופה לדוגמה</h2>
           <div className="stack">
-            <div className="notice notice-warn">סביבת ניסיון עם נתונים מומצאים. הקישורים האלה קבועים ועובדים תמיד.</div>
             <Link className="btn-ghost" href={`/m/${DEMO.manage}`}>צד המשפחה: הבית, הכרטיס, הספקים ›</Link>
             <Link className="btn-ghost" href={`/f/${DEMO.token}`}>העמוד שהקרובים רואים ›</Link>
             <Link className="btn-ghost" href={`/s/${DEMO.card}`}>מה שהספק רואה אחרי סריקת הכרטיס ›</Link>
