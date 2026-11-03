@@ -12,7 +12,7 @@ import { EditFundForm, AddEventForm } from '../ManageForms';
 import { removeEvent, setStatus } from '../actions';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'התיק המשפחתי', robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: 'התיק והמסמכים', robots: { index: false, follow: false } };
 type Props = { params: Promise<{ manage: string }>; searchParams: Promise<{ doc?: string }> };
 const DOC_MSG: Record<string, [string, string]> = { ok: ['המסמך נשמר בתיק.', 'notice-ok'], empty: ['לא נבחר קובץ.', 'notice-warn'], big: ['הקובץ גדול מדי. עד 4MB.', 'notice-warn'], type: ['אפשר להעלות PDF או תמונה (JPG, PNG, WEBP, HEIC).', 'notice-warn'] };
 const kb = (n: number) => n > 1024 * 1024 ? `${(n / 1048576).toFixed(1)}MB` : `${Math.max(1, Math.round(n / 1024))}KB`;

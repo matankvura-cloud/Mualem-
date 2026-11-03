@@ -1,7 +1,7 @@
 -- לזכרם · במקום פרחים — סכמה. אידמפוטנטית: אפשר להריץ שוב ושוב.
 -- מורץ אוטומטית ב-build (scripts/migrate.mjs) כשיש DATABASE_URL.
 -- כל הטבלאות עם קידומת kupa_ כדי לחיות לצד הטבלאות הקיימות בפרויקט ה-Supabase של אבלות ישראל.
--- RLS מופעל בלי מדיניות: ה-API הציבורי של Supabase (anon) לא רואה אותן; האפליקציה מתחברת כ-postgres.
+-- RLS מופעל; מדיניות kupa_app_all רק לתפקיד kupa_app (בעל הטבלאות). ה-API הציבורי של Supabase (anon) לא רואה אותן.
 
 CREATE TABLE IF NOT EXISTS kupa_settings (
   key text PRIMARY KEY,
@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS kupa_documents (
 );
 CREATE INDEX IF NOT EXISTS kupa_documents_fund_idx ON kupa_documents(fund_id, created_at DESC);
 
--- RLS בלי מדיניות: גישה רק דרך חיבור ישיר (postgres / service role), לא דרך PostgREST.
+-- RLS: גישה רק דרך חיבור ישיר כ-kupa_app (DATABASE_URL), לא דרך PostgREST.
 ALTER TABLE kupa_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kupa_funds ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kupa_deposits ENABLE ROW LEVEL SECURITY;

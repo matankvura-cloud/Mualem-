@@ -47,10 +47,12 @@ PLAYWRIGHT_PATH=/path/to/node_modules/playwright npm run test:e2e   # או npm i
 
 ## הפריסה הקיימת
 פרויקט Vercel: **family-avlut** (נפרס מהענף `ccr-343644c7-ob2tvp` של `matankvura-cloud/Mualem-`, Root Directory `kupa`).
-- כתובת: https://family-avlut.vercel.app · הכתובת הקבועה המיועדת: `my.avlut.org.il` (CNAME `my` → `cname.vercel-dns.com`). `family.avlut.org.il` שייך להדגמה של ChatGPT ולא לכאן.
-- בלי `DATABASE_URL` האתר רץ על מסד בזיכרון (`KUPA_LOCAL_DB=memory`) עם קופה לדוגמה בקישורים קבועים
-  (`/m/demo-manage-yaakov-levi-2026-kupa`, `/f/demo-yaakov-levi-2026`, `/s/demo-card-yaakov-levi-2026`). הנתונים מתאפסים.
-- ברגע ש-Neon מחובר (`DATABASE_URL`), הוא גובר, הסכמה רצה ב-build, והקופה לדוגמה לא נזרעת.
+- כתובות: https://my.avlut.org.il (קבועה) · https://family-avlut.vercel.app. `family.avlut.org.il` שייך להדגמה של ChatGPT ולא לכאן.
+- **מסד נתונים אמיתי**: פרויקט ה-Supabase של אבלות ישראל `tlm-family-crm` (eu-central-1). הטבלאות `kupa_*`
+  חיות לצד הטבלאות הקיימות שם, עם RLS; האפליקציה מתחברת דרך ה-pooler (פורט 6543) כתפקיד ייעודי
+  `kupa_app` שהוא בעל הטבלאות. `DATABASE_URL` מוגדר ב-Vercel (production + preview). הסכמה רצה ב-build.
+- בלי `DATABASE_URL` (פיתוח מקומי) האתר רץ על מסד בזיכרון (`KUPA_LOCAL_DB=memory`); עם `KUPA_DEMO_SEED=1`
+  נזרעת קופה לדוגמה (`/m/demo-manage-yaakov-levi-2026-kupa`, `/f/demo-yaakov-levi-2026`, `/s/demo-card-yaakov-levi-2026`).
 - פריסה מחדש: ב-Vercel → Deployments → Redeploy, או חיבור הריפו ב-Settings → Git כדי שכל דחיפה תיפרס.
 
 ## פריסה ב-Vercel (ידני, בידי מתן)
@@ -58,8 +60,7 @@ PLAYWRIGHT_PATH=/path/to/node_modules/playwright npm run test:e2e   # או npm i
    ב-Vercel לבחור Root Directory = `kupa` בריפו הנוכחי.
 2. **Vercel project** חדש מהריפו. Framework: Next.js. ה-build מריץ
    `scripts/migrate.mjs` אוטומטית (יוצר את הטבלאות אם אין `DATABASE_URL` — מדלג).
-3. **Neon**: Storage → Create Database → Neon (Free) → Connect to project.
-   זה מגדיר `DATABASE_URL` לבד.
+3. **מסד**: `DATABASE_URL` לכל Postgres (כבר מוגדר ל-Supabase `tlm-family-crm`, תפקיד `kupa_app`).
 4. **משתני סביבה** (Settings → Environment Variables), לפי `.env.example`:
    `MORNING_ID`, `MORNING_SECRET` (מורנינג ← הגדרות ← חיבורים ← API),
    `MORNING_HOOK` (אקראי: `openssl rand -hex 24`), `ADMIN_PASSWORD`,
