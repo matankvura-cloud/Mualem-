@@ -3,6 +3,7 @@ import { revalidatePath } from 'next/cache';
 import { many, one } from '@/lib/db';
 import { UUID_RE, TOKEN_RE, token } from '@/lib/tokens';
 import { fundByToken } from '@/lib/funds';
+import { cleanProfile, PROFILE_SET, profileParams } from '@/lib/supplier-profile';
 
 export type LeadState = { error?: string; ok?: string; wa?: string; values?: Record<string, string> } | undefined;
 const digits = (s: string) => s.replace(/\D/g, '');
@@ -36,10 +37,8 @@ export async function joinSupplier(_prev: JoinState, fd: FormData): Promise<Join
   const values = Object.fromEntries([...fd.entries()].filter(([k, v]) => typeof v === 'string' && !k.startsWith('$')) as [string, string][]);
   const name = String(fd.get('name') || '').trim().slice(0, 120);
   const category = String(fd.get('category') || '').trim().slice(0, 60);
-  const city = String(fd.get('city') || '').trim().slice(0, 80) || null;
-  const phone = String(fd.get('phone') || '').trim().slice(0, 30);
-  const email = String(fd.get('email') || '').trim().slice(0, 160) || null;
-  const description = String(fd.get('description') || '').trim().slice(0, 400) || null;
+  const prof = cleanProfile(fd);
+  const phone = prof.phone || '';
   const icon = String(fd.get('icon') || 'meal');
   const bTitle = String(fd.get('benefit_title') || '').trim().slice(0, 120);
   const bKind = String(fd.get('benefit_kind') || 'percent');
@@ -53,8 +52,9 @@ export async function joinSupplier(_prev: JoinState, fd: FormData): Promise<Join
   if (bKind !== 'gift' && !(bValue && bValue > 0)) return { error: 'צריך ערך להטבה: אחוז או סכום.', values };
   const pin = String(Math.floor(100000 + Math.random() * 900000));
   const row = await one<{ id: string }>(
-    `INSERT INTO kupa_suppliers (slug, name, category, icon, description, city, phone, email, status, pin) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,'pending',$9) RETURNING id`,
-    [`${slugify(name)}-${token(3)}`, name, category, ICONS.has(icon) ? icon : 'meal', description, city, phone, email, pin]);
+    `INSERT INTO kupa_suppliers (slug, name, category, icon, status, pin) VALUES ($1,$2,$3,$4,'pending',$5) RETURNING id`,
+    [`${slugify(name)}-${token(3)}`, name, category, ICONS.has(icon) ? icon : 'meal', pin]);
+  if (row) await many(`UPDATE kupa_suppliers SET ${PROFILE_SET} WHERE id = $1`, [row.id, ...profileParams(prof)]);
   if (row) await many(`INSERT INTO kupa_benefits (supplier_id, title, kind, value, terms) VALUES ($1,$2,$3,$4,$5)`, [row.id, bTitle, bKind, bValue, bTerms]);
   revalidatePath('/admin/suppliers');
   return { ok: 'נרשמתם. נבדוק ונאשר, ואז תופיעו במדריך ותקבלו פניות ממשפחות.' };

@@ -1,6 +1,6 @@
 'use client';
 import { useActionState, useState } from 'react';
-import { updateFund, addEvent, requestPayout, type ActState } from './actions';
+import { updateFund, addEvent, requestPayout, reviewSupplier, type ActState } from './actions';
 import { ils } from '@/lib/format';
 import type { Fund } from '@/lib/funds';
 import { EVENT_KINDS } from '@/lib/format';
@@ -99,6 +99,24 @@ export function AddEventForm({ manage }: { manage: string }) {
       <div className="field"><label className="l" htmlFor="maps_url">קישור לניווט</label><input id="maps_url" name="maps_url" type="url" maxLength={300} dir="ltr" placeholder="https://maps.google.com/?q=…" /></div>
       <Status s={state} />
       <button className="btn" type="submit" disabled={pending}>{pending ? 'מוסיפים…' : 'להוסיף'}</button>
+    </form>
+  );
+}
+
+export function ReviewForm({ manage, suppliers }: { manage: string; suppliers: { id: string; name: string; reviewed: boolean }[] }) {
+  const [state, action, pending] = useActionState<ActState, FormData>(reviewSupplier.bind(null, manage), undefined);
+  if (!suppliers.length) return null;
+  return (
+    <form action={action} className="stack panel" noValidate>
+      <h2>לדרג ספק שעבדתם איתו</h2>
+      <p className="muted">הדירוג שלכם עוזר למשפחות הבאות. מוצג במדריך עם שם המשפחה בלבד.</p>
+      <div className="field"><label className="l" htmlFor="rv-sup">הספק</label>
+        <select id="rv-sup" name="supplier" defaultValue={suppliers.find((s) => !s.reviewed)?.id ?? suppliers[0].id}>{suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}{s.reviewed ? ' (דירגתם, אפשר לעדכן)' : ''}</option>)}</select></div>
+      <div className="field"><span className="l">כמה כוכבים</span>
+        <div className="rate" role="radiogroup" aria-label="דירוג">{[1, 2, 3, 4, 5].map((n) => <label key={n}><input type="radio" name="rating" value={n} defaultChecked={n === 5} aria-label={`${n} כוכבים`} /><span>★</span></label>)}</div></div>
+      <div className="field"><label className="l" htmlFor="rv-text">כמה מילים (לא חובה)</label><textarea id="rv-text" name="text" maxLength={500} placeholder="איך היה השירות, האם ההטבה כובדה, האם הגיעו בזמן" /></div>
+      <Status s={state} />
+      <button className="btn-copper" type="submit" disabled={pending}>{pending ? 'שומרים…' : 'לשלוח דירוג'}</button>
     </form>
   );
 }

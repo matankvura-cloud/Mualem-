@@ -1,6 +1,7 @@
 'use client';
 import { useActionState } from 'react';
 import { saveBenefit, updateSupplierProfile, setLeadStatus, type FormState } from './actions';
+import ProfileFields from '@/app/suppliers/ProfileFields';
 
 export function BenefitForm({ supplierId, asAdmin = false }: { supplierId: string; asAdmin?: boolean }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveBenefit.bind(null, supplierId, asAdmin), undefined);
@@ -24,20 +25,26 @@ export function BenefitForm({ supplierId, asAdmin = false }: { supplierId: strin
   );
 }
 
-export function ProfileForm({ v }: { v: { description: string | null; city: string | null; phone: string | null; website: string | null } }) {
+export function ProfileForm({ v, hasLogo }: { v: Record<string, string | number | null>; hasLogo: boolean }) {
   const [state, action, pending] = useActionState<FormState, FormData>(updateSupplierProfile, undefined);
   return (
-    <form action={action} className="stack card" noValidate>
-      <h3 style={{ fontSize: 15 }}>הפרופיל שלכם (מוצג למשפחות)</h3>
-      <div className="field"><label className="l" htmlFor="p-desc">תיאור קצר</label><textarea id="p-desc" name="description" maxLength={400} defaultValue={v.description ?? ''} /></div>
-      <div className="grid2">
-        <div className="field"><label className="l" htmlFor="p-city">עיר / אזור</label><input id="p-city" name="city" type="text" maxLength={80} defaultValue={v.city ?? ''} /></div>
-        <div className="field"><label className="l" htmlFor="p-phone">טלפון</label><input id="p-phone" name="phone" type="tel" maxLength={30} dir="ltr" defaultValue={v.phone ?? ''} /></div>
-      </div>
-      <div className="field"><label className="l" htmlFor="p-web">אתר (לא חובה)</label><input id="p-web" name="website" type="url" maxLength={200} dir="ltr" defaultValue={v.website ?? ''} /></div>
-      {state?.error ? <p className="fd-err" role="alert">{state.error}</p> : state?.ok ? <p className="notice notice-ok">{state.ok}</p> : null}
-      <button className="btn btn-inline" type="submit" disabled={pending}>{pending ? 'שומרים…' : 'לשמור'}</button>
-    </form>
+    <div className="stack">
+      <form action="/api/p/logo" method="post" encType="multipart/form-data" className="card stack" style={{ gap: 8 }}>
+        <h3 style={{ fontSize: 15 }}>לוגו</h3>
+        <div className="fd-actions" style={{ alignItems: 'center' }}>
+          {hasLogo ? <img src={`/suppliers/logo/${v.id}?v=${String(v.updated_at)}`} alt="" width={56} height={56} style={{ borderRadius: 12, objectFit: 'cover', border: '1px solid var(--line)' }} /> : null}
+          <input type="file" name="logo" accept="image/png,image/jpeg,image/webp" required style={{ flex: 1 }} />
+          <button className="btn-outline" type="submit" style={{ width: 'auto' }}>להעלות</button>
+        </div>
+        <small className="muted">ריבוע, עד 2MB. מוצג במדריך ובעמוד שלכם.</small>
+      </form>
+      <form action={action} className="stack card" noValidate>
+        <h3 style={{ fontSize: 15 }}>הפרופיל שלכם (מוצג למשפחות)</h3>
+        <ProfileFields v={v} withBasics={false} />
+        {state?.error ? <p className="fd-err" role="alert">{state.error}</p> : state?.ok ? <p className="notice notice-ok">{state.ok}</p> : null}
+        <button className="btn btn-inline" type="submit" disabled={pending}>{pending ? 'שומרים…' : 'לשמור'}</button>
+      </form>
+    </div>
   );
 }
 

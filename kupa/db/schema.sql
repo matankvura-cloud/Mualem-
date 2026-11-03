@@ -163,6 +163,37 @@ ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS pin text;
 ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS commission_pct numeric(5,2) NOT NULL DEFAULT 10;
 UPDATE kupa_suppliers SET pin = lpad((floor(random() * 1000000))::int::text, 6, '0') WHERE pin IS NULL;
 
+-- פרופיל עסק מלא (כמו מדרג): פרטים משפטיים, כתובת, שעות, שירותים, לוגו, אימות.
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS legal_name text;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS business_id text;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS business_type text;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS contact_name text;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS address text;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS areas text;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS hours text;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS services text;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS instagram text;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS facebook text;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS kosher text;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS payment_methods text;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS delivery text;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS founded_year integer;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS verified boolean NOT NULL DEFAULT false;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS logo bytea;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS logo_mime text;
+
+-- דירוג של משפחה לספק, אחרי עבודה שנסגרה (פנייה או מימוש). דירוג אחד לקופה לספק.
+CREATE TABLE IF NOT EXISTS kupa_reviews (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  supplier_id uuid NOT NULL REFERENCES kupa_suppliers(id) ON DELETE CASCADE,
+  fund_id uuid NOT NULL REFERENCES kupa_funds(id) ON DELETE CASCADE,
+  rating integer NOT NULL CHECK (rating BETWEEN 1 AND 5),
+  text text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (supplier_id, fund_id)
+);
+CREATE INDEX IF NOT EXISTS kupa_reviews_supplier_idx ON kupa_reviews(supplier_id, created_at DESC);
+
 -- הטבה של ספק. kind: percent (אחוז הנחה), fixed (סכום קבוע), gift (מתנה/שירות).
 CREATE TABLE IF NOT EXISTS kupa_benefits (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -240,3 +271,4 @@ ALTER TABLE kupa_redemptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kupa_supplier_logins ENABLE ROW LEVEL SECURITY;
 -- הטבלאות נוצרות על ידי kupa_app (בעל הטבלאות), ולכן ה-RLS לא חוסם אותו; anon לא רואה אותן.
 ALTER TABLE kupa_leads ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kupa_reviews ENABLE ROW LEVEL SECURITY;

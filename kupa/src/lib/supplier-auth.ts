@@ -4,7 +4,7 @@ import { cookies } from 'next/headers';
 import { createHash } from 'node:crypto';
 import { hmac, sameSecret, token } from './tokens';
 import { one, many } from './db';
-import type { Supplier } from './funds';
+import { SUP_COLS, type Supplier } from './funds';
 
 const COOKIE = 'kupa_supplier';
 const key = () => hmac(process.env.CARD_SECRET || process.env.ADMIN_PASSWORD || 'dev', 'kupa-supplier-session');
@@ -15,7 +15,7 @@ export async function currentSupplier(): Promise<Supplier | null> {
   const c = (await cookies()).get(COOKIE)?.value || '';
   const [id, s] = c.split('.');
   if (!id || !s || !sameSecret(s, sig(id))) return null;
-  const sup = await one<Supplier>(`SELECT * FROM kupa_suppliers WHERE id = $1 AND status <> 'inactive'`, [id]);
+  const sup = await one<Supplier>(`SELECT ${SUP_COLS} FROM kupa_suppliers WHERE id = $1 AND status <> 'inactive'`, [id]);
   return sup;
 }
 
@@ -31,7 +31,7 @@ export async function redeemSupplierLogin(t: string): Promise<Supplier | null> {
   const row = await one<{ supplier_id: string }>(
     `UPDATE kupa_supplier_logins SET used_at = now() WHERE token_hash = $1 AND used_at IS NULL AND expires_at > now() RETURNING supplier_id`, [hash(t)]);
   if (!row) return null;
-  const sup = await one<Supplier>(`SELECT * FROM kupa_suppliers WHERE id = $1`, [row.supplier_id]);
+  const sup = await one<Supplier>(`SELECT ${SUP_COLS} FROM kupa_suppliers WHERE id = $1`, [row.supplier_id]);
   if (!sup) return null;
   (await cookies()).set(COOKIE, `${sup.id}.${sig(sup.id)}`, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 60 * 60 * 24 * 90 });
   return sup;

@@ -258,3 +258,20 @@ a.sup:hover{border-color:var(--navy)}
 .land-card{padding:26px 20px;background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
 .land-card h2{font-family:'Frank Ruhl Libre',Georgia,serif;font-size:24px;margin:4px 0 8px}
 .land-card p{color:var(--soft);font-size:15px;line-height:1.6;margin-bottom:12px}
+/* פרופיל ספק */
+.sup-head{display:flex;gap:14px;align-items:center}
+.sup-head .img{display:grid;place-items:center;background:var(--sage-soft);flex:none}
+.sup-head .img svg{width:40px;height:40px;color:#4F6B4C}
+.badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.stars{display:inline-flex;align-items:center;gap:6px;font-size:13.5px}
+.stars i{font-style:normal;color:var(--copper);letter-spacing:1px}
+.details{display:grid;grid-template-columns:1fr 1fr;gap:8px 16px;margin:0}
+.details div{display:flex;flex-direction:column;gap:2px;border-bottom:1px solid var(--line);padding-bottom:6px}
+.details dt{font-size:12px;color:var(--soft)}.details dd{margin:0;font-size:14.5px;word-break:break-word}
+@media(max-width:520px){.details{grid-template-columns:1fr}}
+.reviews{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px}
+.reviews li{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:#fff}
+.reviews li p{margin:6px 0;line-height:1.6}
+.benefit-hero{border-color:var(--copper);background:var(--copper-soft)}
+.sups .img img{border-radius:14px}
+.rate{display:flex;gap:6px}.rate label{cursor:pointer;font-size:26px;color:#D8D3C7}.rate input{position:absolute;opacity:0;width:0;height:0}.rate input:checked~span,.rate label.on{color:var(--copper)}

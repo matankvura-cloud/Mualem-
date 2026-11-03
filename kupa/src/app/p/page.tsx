@@ -33,7 +33,7 @@ export default async function SupplierPortal({ searchParams }: Props) {
       <div className="topbar"><b style={{ fontFamily: "'Frank Ruhl Libre',Georgia,serif", color: 'var(--navy)', fontSize: 17 }}>{BRAND} · ספקים</b>
         <form action={supplierSignOut}><button className="btn-ghost" type="submit" style={{ minHeight: 36, fontSize: 13 }}>לצאת</button></form></div>
       <div className="pad stack" style={{ gap: 16 }}>
-        <div><h1 className="page-title">{sup.name}</h1><p className="lead">{sup.category}{sup.city ? ` · ${sup.city}` : ''} · <span className={`pill ${sup.status === 'active' ? 'pill-ok' : 'pill-warn'}`}>{sup.status === 'active' ? 'ספק פעיל' : 'ממתין לאישור'}</span></p></div>
+        <div><h1 className="page-title">{sup.name}</h1><p className="lead">{sup.category}{sup.city ? ` · ${sup.city}` : ''} · <span className={`pill ${sup.status === 'active' ? 'pill-ok' : 'pill-warn'}`}>{sup.status === 'active' ? 'ספק פעיל' : 'ממתין לאישור'}</span>{sup.verified ? <> <span className="pill pill-ok">מאומת</span></> : null}{sup.status === 'active' ? <> · <a href={`/suppliers/${sup.slug}`}>העמוד שלכם במדריך</a></> : null}</p></div>
         {sup.status !== 'active' ? <div className="notice notice-warn">הפרופיל וההטבות יוצגו למשפחות אחרי שנאשר אתכם. אפשר כבר להכין את ההטבות.</div> : null}
         <div className="fd-note"><b>איך זה עובד:</b> משפחות רואות אתכם ב<a href="/suppliers">מדריך הספקים</a> ולוחצות "לקבל הצעה". הפנייה מופיעה כאן ומגיעה גם לוואטסאפ שלכם. חוזרים אליהן, סוגרים, ומסמנים "נסגר" עם הסכום.</div>
         <div className="fd-note"><b>מימוש בקופה (לספקים שעובדים פנים מול פנים):</b> המשפחה מציגה את הכרטיס שלה בטלפון. סורקים את הקוד עם מצלמת הטלפון, בוחרים את העסק שלכם מהרשימה, מקלידים את קוד הספק שלכם <b dir="ltr" style={{ letterSpacing: '.15em' }}>{sup.pin}</b>, בוחרים הטבה ולוחצים "לממש". הקוד של המשפחה מתחלף כל דקה, אז צילום מסך לא תקף.</div>
@@ -75,7 +75,7 @@ export default async function SupplierPortal({ searchParams }: Props) {
           ) : <div className="fd-note">עדיין לא מומשו הטבות אצלכם.</div>}
         </section>
 
-        <ProfileForm v={sup} />
+        <ProfileForm v={{ ...sup, created_at: String(sup.created_at), updated_at: String(sup.updated_at), commission_pct: null, verified: null }} hasLogo={!!sup.logo_mime} />
       </div>
     </div>
   );

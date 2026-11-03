@@ -500,7 +500,16 @@ try {
   await page.goto(`${SITE}/suppliers/join`);
   await page.fill('#j-name', 'אוהלים של משה');
   await page.fill('#j-cat', 'אוהלים וציוד');
+  await page.fill('#j-legal', 'משה אוהלים בע״מ');
+  await page.fill('#j-bid', '515123456');
+  await page.selectOption('#j-btype', 'company');
+  await page.fill('#j-year', '2009');
+  await page.fill('#j-address', 'הרצל 10, אשדוד');
+  await page.fill('#j-areas', 'דרום ומרכז');
+  await page.fill('#j-hours', 'א׳–ה׳ 8:00–18:00');
   await page.fill('#j-phone', '0537654321');
+  await page.fill('#j-web', 'ohalim.co.il');
+  await page.fill('#j-services', 'אוהל לשבעה\nכיסאות ושולחנות');
   await page.fill('#j-bt', 'הנחה על אוהל לשבעה');
   await page.fill('#j-bv', '15');
   await page.click('form:has(#j-name) button[type=submit]');
@@ -514,6 +523,27 @@ try {
   await page.waitForSelector('tr:has-text("אוהלים של משה") .pill:has-text("פעיל")');
   const dir3 = await fetch(`${SITE}/suppliers`).then((r) => r.text());
   check(dir3.includes('אוהלים של משה') && dir3.includes('15% הנחה'), 'אחרי האישור הספק מופיע במדריך עם ההטבה');
+  await page.goto(`${SITE}/suppliers`);
+  const moshHref = await page.locator('a.sup:has-text("אוהלים של משה")').getAttribute('href');
+  const moshPage = await fetch(`${SITE}${moshHref}`).then((r) => r.text());
+  check(moshPage.includes('515123456') && moshPage.includes('הרצל 10') && moshPage.includes('חברה בע״מ') && moshPage.includes('ohalim.co.il') && moshPage.includes('אוהל לשבעה') && moshPage.includes('מאז 2009'), 'עמוד הספק: ח.פ, כתובת, סוג עסק, אתר, שירותים, שנת הקמה');
+  check(moshPage.includes('לא מאומת') === false && moshPage.includes('הפרטים נמסרו על ידי העסק'), 'ספק חדש מסומן כלא מאומת');
+  await page.goto(`${SITE}/admin/suppliers`); await page.click('a:has-text("אוהלים של משה")'); await page.waitForSelector('button:has-text("לסמן כמאומת")');
+  await page.click('button:has-text("לסמן כמאומת")');
+  await page.waitForSelector('.pill:has-text("מאומת")');
+  const dir4 = await fetch(`${SITE}/suppliers`).then((r) => r.text());
+  check(dir4.includes('✓ מאומת'), 'אחרי אימות: תג "מאומת" במדריך');
+  // דירוג: המשפחה (קופה של יעקב לוי) סגרה עבודה עם קייטרינג של רחל, ולכן יכולה לדרג
+  await page.goto(manageUrl + '/suppliers');
+  check((await page.locator('#rv-sup option').allTextContents()).join('|').includes('קייטרינג של רחל') && !(await page.locator('#rv-sup option').allTextContents()).join('|').includes('אוהלים'), 'דירוג: רק הספק שעבדו איתו ברשימה');
+  await page.click('.rate label:nth-child(4)');
+  await page.fill('#rv-text', 'הגיעו בזמן, האוכל טוב, ההטבה כובדה.');
+  await page.click('form:has(#rv-sup) button[type=submit]');
+  await page.waitForSelector('.notice-ok:has-text("הדירוג נשמר")');
+  const dir5 = await fetch(`${SITE}/suppliers`).then((r) => r.text());
+  check(dir5.includes('4.0') && dir5.includes('(1)'), 'המדריך מציג דירוג 4.0 (1)');
+  const rachelPage = await fetch(`${SITE}${supHref}`).then((r) => r.text());
+  check(rachelPage.includes('הגיעו בזמן') && rachelPage.includes('משפחת לוי'), 'עמוד הספק מציג את הדירוג עם שם המשפחה');
   await page.goto(manageUrl + '/suppliers');
   check((await page.locator('a:has-text("לקבל הצעה עם ההטבה")').first().getAttribute('href')).includes('?f='), 'אזור המשפחה: "לקבל הצעה" מוביל לעמוד הספק עם הקופה');
 

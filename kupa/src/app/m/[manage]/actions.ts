@@ -82,3 +82,24 @@ export async function setStatus(manage: string, status: 'open' | 'closed') {
   await many(`UPDATE kupa_funds SET status = $2, closed_at = CASE WHEN $2 = 'closed' THEN now() ELSE NULL END, updated_at = now() WHERE id = $1`, [fund.id, status]);
   revalidatePath(`/m/${manage}`); revalidatePath(`/f/${fund.token}`);
 }
+
+/** דירוג ספק על ידי המשפחה, רק אחרי עבודה שנסגרה (פנייה) או מימוש. דירוג אחד לספק. */
+export async function reviewSupplier(manage: string, _prev: ActState, fd: FormData): Promise<ActState> {
+  const { fundByManage, ratableSuppliers } = await import('@/lib/funds');
+  const { TOKEN_RE, UUID_RE } = await import('@/lib/tokens');
+  const { many } = await import('@/lib/db');
+  const { revalidatePath } = await import('next/cache');
+  if (!TOKEN_RE.test(manage)) return { error: 'קישור לא תקין' };
+  const fund = await fundByManage(manage);
+  if (!fund) return { error: 'הקופה לא נמצאה' };
+  const supplierId = String(fd.get('supplier') || '');
+  const rating = Number(fd.get('rating'));
+  const text = String(fd.get('text') || '').trim().slice(0, 500) || null;
+  if (!UUID_RE.test(supplierId)) return { error: 'בחרו ספק.' };
+  if (!(rating >= 1 && rating <= 5)) return { error: 'בחרו כמה כוכבים.' };
+  const allowed = (await ratableSuppliers(fund.id)).find((s) => s.id === supplierId);
+  if (!allowed) return { error: 'אפשר לדרג רק ספק שעבדתם איתו דרך הכרטיס.' };
+  await many(`INSERT INTO kupa_reviews (supplier_id, fund_id, rating, text) VALUES ($1,$2,$3,$4) ON CONFLICT (supplier_id, fund_id) DO UPDATE SET rating = EXCLUDED.rating, text = EXCLUDED.text, created_at = now()`, [supplierId, fund.id, rating, text]);
+  revalidatePath(`/m/${manage}/suppliers`); revalidatePath('/suppliers'); revalidatePath(`/suppliers/${allowed.slug}`); revalidatePath(`/admin/suppliers/${supplierId}`);
+  return { ok: 'תודה, הדירוג נשמר ומוצג במדריך.' };
+}

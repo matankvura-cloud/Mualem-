@@ -2,14 +2,15 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { isAdmin } from '@/lib/admin';
-import { supplierById, benefitsOf, redemptionsOfSupplier, leadsOf, LEAD_STATUS } from '@/lib/funds';
+import { supplierById, benefitsOf, redemptionsOfSupplier, leadsOf, LEAD_STATUS, reviewsOf, BUSINESS_TYPES } from '@/lib/funds';
+import { SupplierLogo, Stars } from '@/components/SupplierHeader';
 import { UUID_RE } from '@/lib/tokens';
 import { fmtBenefit } from '@/lib/card';
 import { ils, fmtDateTime, fmtDate, familyName } from '@/lib/format';
 import { LoginForm, LoginLinkButton, CommissionForm } from '../../AdminForms';
 import { BenefitForm, LeadActions } from '@/app/p/SupplierForms';
 import { toggleBenefit } from '@/app/p/actions';
-import { setSupplierStatus, regenSupplierPin } from '../../actions';
+import { setSupplierStatus, regenSupplierPin, setSupplierVerified } from '../../actions';
 import { num } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -22,12 +23,20 @@ export default async function AdminSupplier({ params }: Props) {
   if (!UUID_RE.test(id)) notFound();
   const sup = await supplierById(id);
   if (!sup) notFound();
-  const [benefits, reds, leads] = await Promise.all([benefitsOf(id), redemptionsOfSupplier(id), leadsOf(id)]);
+  const [benefits, reds, leads, reviews] = await Promise.all([benefitsOf(id), redemptionsOfSupplier(id), leadsOf(id), reviewsOf(id)]);
   return (
     <div className="fd fd-wide">
       <div className="topbar"><Link className="fd-back" href="/admin/suppliers">&rsaquo; כל הספקים</Link><span className={`pill ${sup.status === 'active' ? 'pill-ok' : sup.status === 'pending' ? 'pill-warn' : 'pill-muted'}`}>{sup.status === 'active' ? 'פעיל' : sup.status === 'pending' ? 'ממתין' : 'לא פעיל'}</span></div>
       <div className="pad stack" style={{ gap: 16 }}>
-        <div><h1 className="page-title">{sup.name}</h1><p className="lead">{[sup.category, sup.city, sup.phone, sup.email].filter(Boolean).join(' · ')}</p>{sup.description ? <p className="muted">{sup.description}</p> : null}</div>
+        <header className="sup-head"><SupplierLogo s={sup} size={72} /><div><h1 className="page-title">{sup.name}</h1><p className="lead">{[sup.category, sup.city, sup.phone, sup.email].filter(Boolean).join(' · ')}</p><Stars avg={sup.rating_avg} count={sup.rating_count} /></div></header>
+        <section className="card stack">
+          <h2 style={{ fontSize: 18 }}>פרטי העסק {sup.verified ? <span className="pill pill-ok">✓ מאומת</span> : <span className="pill pill-warn">לא מאומת</span>}</h2>
+          <dl className="details">{([['שם מלא', sup.legal_name], ['ח.פ / ע.מ', sup.business_id], ['סוג', sup.business_type ? BUSINESS_TYPES[sup.business_type] : null], ['משנת', sup.founded_year], ['כתובת', sup.address], ['אזורים', sup.areas], ['שעות', sup.hours], ['איש קשר', sup.contact_name], ['אתר', sup.website], ['אינסטגרם', sup.instagram], ['פייסבוק', sup.facebook], ['כשרות', sup.kosher], ['תשלום', sup.payment_methods], ['משלוחים', sup.delivery]] as [string, unknown][]).filter(([, v]) => v).map(([k, v]) => <div key={k}><dt>{k}</dt><dd>{String(v)}</dd></div>)}</dl>
+          {sup.description ? <p className="muted">{sup.description}</p> : null}
+          {sup.services ? <p className="muted" style={{ whiteSpace: 'pre-line' }}>{sup.services}</p> : null}
+          <form action={setSupplierVerified.bind(null, id, !sup.verified)}><button className={sup.verified ? 'btn-ghost' : 'btn-outline'} type="submit" style={{ width: 'auto' }}>{sup.verified ? 'לבטל אימות' : 'לסמן כמאומת (בדקתי ח.פ וטלפון)'}</button></form>
+          <a className="btn-ghost" href={`/suppliers/${sup.slug}`} target="_blank" rel="noopener" style={{ width: 'auto' }}>העמוד הציבורי</a>
+        </section>
         <section className="card stack">
           <h2 style={{ fontSize: 18 }}>קוד הספק</h2>
           <p className="muted">הספק מקליד את הקוד בעמוד הסריקה כדי לאשר מימוש. שולחים לו אותו פעם אחת. אין צורך בכניסה.</p>
@@ -62,6 +71,10 @@ export default async function AdminSupplier({ params }: Props) {
                   <td className="num">{Number(l.order_amount) ? ils(l.order_amount) : '—'}</td><td className="num">{Number(l.commission) ? ils(l.commission) : '—'}</td>
                   <td style={{ minWidth: 220 }}><LeadActions leadId={l.id} status={l.status} asAdmin /></td></tr>); })}</tbody>
             </table></div>) : <div className="fd-note">עדיין אין פניות לספק הזה.</div>}
+        </section>
+        <section className="stack">
+          <h2 style={{ fontSize: 18 }}>דירוגים <small className="muted">({reviews.length})</small></h2>
+          {reviews.length ? <ul className="reviews">{reviews.map((r) => <li key={r.id}><div className="fd-row"><b>{familyName(r.family)}</b><span className="stars"><i>{'★'.repeat(r.rating)}</i></span></div>{r.text ? <p>{r.text}</p> : null}<small className="muted">{fmtDate(r.created_at)}</small></li>)}</ul> : <div className="fd-note">אין דירוגים עדיין.</div>}
         </section>
         <section className="stack">
           <h2 style={{ fontSize: 18 }}>הטבות</h2>

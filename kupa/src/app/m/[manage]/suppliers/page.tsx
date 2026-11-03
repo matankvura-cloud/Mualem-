@@ -1,7 +1,9 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { loadFamily } from '../_shared';
-import { activeSuppliers, liveBenefits } from '@/lib/funds';
+import { activeSuppliers, liveBenefits, ratableSuppliers } from '@/lib/funds';
+import { ReviewForm } from '../ManageForms';
+import { SupplierLogo, Stars } from '@/components/SupplierHeader';
 import { SUPPLIERS } from '@/data/suppliers';
 import { fmtBenefit } from '@/lib/card';
 import FamilyShell from '@/components/FamilyShell';
@@ -17,7 +19,7 @@ export default async function SuppliersPage({ params }: Props) {
   const { manage } = await params;
   const { fund } = await loadFamily(manage);
   const base = `/m/${manage}`;
-  const [sups, bens] = await Promise.all([activeSuppliers(), liveBenefits()]);
+  const [sups, bens, ratable] = await Promise.all([activeSuppliers(), liveBenefits(), ratableSuppliers(fund.id)]);
   const byId = new Map<string, typeof bens>();
   for (const b of bens) byId.set(b.supplier_id, [...(byId.get(b.supplier_id) || []), b]);
   const real = sups.length > 0;
@@ -26,9 +28,9 @@ export default async function SuppliersPage({ params }: Props) {
       <header className="fam-head"><div><h1>הטבות וספקים</h1><p>מציגים את הכרטיס אצל ספק משתתף ומקבלים את ההטבה. אפשר גם לבקש תשלום לספק ישירות מהקופה.</p></div></header>
       {!real ? <div className="notice notice-warn" style={{ marginBottom: 14 }}>עדיין אין ספקים משתתפים באזור שלכם. הספקים שלמטה הם להמחשה. אפשר לבקש תשלום לכל ספק, גם כזה שלא ברשימה.</div> : <p className="muted" style={{ marginBottom: 14 }}>לוחצים "לקבל הצעה", הספק חוזר אליכם עם ההטבה. <Link href={`/suppliers?f=${fund.token}`}>למדריך המלא ›</Link></p>}
       <div className="sups">
-        {real ? sups.map((s) => { const I = iconOf(s.icon); const bs = byId.get(s.id) || []; return (
-          <div className="sup" key={s.id}><div className="img"><I /></div>
-            <div className="body"><b>{s.name}</b>
+        {real ? sups.map((s) => { const bs = byId.get(s.id) || []; return (
+          <div className="sup" key={s.id}><div className="img"><SupplierLogo s={s} size={70} /></div>
+            <div className="body"><b>{s.name}{s.verified ? <span className="pill pill-ok" style={{ marginInlineStart: 6, fontSize: 11 }}>✓ מאומת</span> : null}</b><Stars avg={s.rating_avg} count={s.rating_count} />
               {bs.length ? bs.map((b) => <span className="benefit" key={b.id} title={b.terms || ''}>{fmtBenefit(b)}{b.kind !== 'gift' ? ` · ${b.title}` : ''}</span>) : <span className="benefit">מקבל את הכרטיס</span>}
               {s.description ? <p>{s.description}</p> : null}
               {s.city || s.phone ? <small className="muted">{[s.city, s.phone].filter(Boolean).join(' · ')}</small> : null}
@@ -40,6 +42,7 @@ export default async function SuppliersPage({ params }: Props) {
               <Link className="btn-copper" href={`${base}/card?payee=${encodeURIComponent(s.name)}`}>תשלום בכרטיס</Link></div></div>); })}
       </div>
       <p className="muted" style={{ marginTop: 14 }}>ספק שלא ברשימה? <Link href={`${base}/card`}>בקשו תשלום</Link> עם שם הספק וטלפון, ונסדר את זה מולו.</p>
+      <div style={{ marginTop: 18 }}><ReviewForm manage={manage} suppliers={ratable} /></div>
     </FamilyShell>
   );
 }

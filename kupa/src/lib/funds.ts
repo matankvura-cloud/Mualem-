@@ -143,8 +143,15 @@ export function cleanFundInput(fd: FormData) {
 export type Supplier = {
   id: string; slug: string; name: string; category: string; icon: string; description: string | null; city: string | null;
   phone: string | null; email: string | null; website: string | null; status: 'pending' | 'active' | 'inactive';
-  pin: string | null; commission_pct: unknown; created_at: unknown; updated_at: unknown;
+  pin: string | null; commission_pct: unknown;
+  legal_name: string | null; business_id: string | null; business_type: string | null; contact_name: string | null; address: string | null;
+  areas: string | null; hours: string | null; services: string | null; instagram: string | null; facebook: string | null; kosher: string | null;
+  payment_methods: string | null; delivery: string | null; founded_year: number | null; verified: boolean; logo_mime: string | null;
+  created_at: unknown; updated_at: unknown;
 };
+/** עמודות הספק בלי הלוגו (bytea), לרשימות ולעמודים. */
+export const SUP_COLS = `id, slug, name, category, icon, description, city, phone, email, website, status, pin, commission_pct, legal_name, business_id, business_type, contact_name, address, areas, hours, services, instagram, facebook, kosher, payment_methods, delivery, founded_year, verified, logo_mime, created_at, updated_at`;
+export type Rated = { rating_avg: unknown; rating_count: unknown };
 export type Benefit = {
   id: string; supplier_id: string; title: string; kind: 'percent' | 'fixed' | 'gift'; value: unknown; terms: string | null;
   max_per_family: number; valid_from: unknown; valid_until: unknown; active: boolean; created_at: unknown; updated_at: unknown;
@@ -156,15 +163,16 @@ export type Redemption = {
 export type SupplierRow = Supplier & { benefits: unknown; redemptions: unknown; orders: unknown; commission: unknown; leads_new: unknown; leads_commission: unknown };
 
 export const allSuppliers = () => many<SupplierRow>(
-  `SELECT s.*, (SELECT COUNT(*) FROM kupa_benefits b WHERE b.supplier_id = s.id AND b.active) AS benefits,
+  `SELECT ${SUP_COLS}, (SELECT COUNT(*) FROM kupa_benefits b WHERE b.supplier_id = s.id AND b.active) AS benefits,
           (SELECT COUNT(*) FROM kupa_redemptions r WHERE r.supplier_id = s.id) AS redemptions,
           COALESCE((SELECT SUM(order_amount) FROM kupa_redemptions r WHERE r.supplier_id = s.id), 0) AS orders,
           COALESCE((SELECT SUM(commission) FROM kupa_redemptions r WHERE r.supplier_id = s.id), 0) AS commission,
           (SELECT COUNT(*) FROM kupa_leads l WHERE l.supplier_id = s.id AND l.status = 'new') AS leads_new,
           COALESCE((SELECT SUM(commission) FROM kupa_leads l WHERE l.supplier_id = s.id AND l.status = 'closed'), 0) AS leads_commission
    FROM kupa_suppliers s ORDER BY CASE s.status WHEN 'active' THEN 0 WHEN 'pending' THEN 1 ELSE 2 END, s.created_at DESC`);
-export const activeSuppliers = () => many<Supplier>(`SELECT * FROM kupa_suppliers WHERE status = 'active' ORDER BY category, name`);
-export const supplierById = (id: string) => one<Supplier>(`SELECT * FROM kupa_suppliers WHERE id = $1`, [id]);
+const RATING = `(SELECT ROUND(AVG(rating)::numeric, 1) FROM kupa_reviews r WHERE r.supplier_id = s.id) AS rating_avg, (SELECT COUNT(*) FROM kupa_reviews r WHERE r.supplier_id = s.id) AS rating_count`;
+export const activeSuppliers = () => many<Supplier & Rated>(`SELECT ${SUP_COLS}, ${RATING} FROM kupa_suppliers s WHERE status = 'active' ORDER BY verified DESC, rating_count DESC, category, name`);
+export const supplierById = (id: string) => one<Supplier & Rated>(`SELECT ${SUP_COLS}, ${RATING} FROM kupa_suppliers s WHERE id = $1`, [id]);
 /** הטבות פעילות ובתוקף היום, לספקים פעילים. */
 export const liveBenefits = () => many<Benefit & { supplier_name: string }>(
   `SELECT b.*, s.name AS supplier_name FROM kupa_benefits b JOIN kupa_suppliers s ON s.id = b.supplier_id
@@ -183,7 +191,7 @@ export async function suppliersWithBenefits() {
   return sups.map((s) => ({ id: s.id, name: s.name, category: s.category, benefits: bens.filter((b) => b.supplier_id === s.id) })).filter((s) => s.benefits.length > 0);
 }
 
-export const supplierBySlug = (slug: string) => one<Supplier>(`SELECT * FROM kupa_suppliers WHERE slug = $1`, [slug]);
+export const supplierBySlug = (slug: string) => one<Supplier & Rated>(`SELECT ${SUP_COLS}, ${RATING} FROM kupa_suppliers s WHERE slug = $1`, [slug]);
 export const liveBenefitsOf = (supplierId: string) => many<Benefit>(
   `SELECT * FROM kupa_benefits WHERE supplier_id = $1 AND active AND (valid_from IS NULL OR valid_from <= CURRENT_DATE) AND (valid_until IS NULL OR valid_until >= CURRENT_DATE) ORDER BY created_at`, [supplierId]);
 
@@ -194,3 +202,15 @@ export type Lead = {
 export const leadsOf = (supplierId: string) => many<Lead & { family: string | null }>(
   `SELECT l.*, f.display_name AS family FROM kupa_leads l LEFT JOIN kupa_funds f ON f.id = l.fund_id WHERE l.supplier_id = $1 ORDER BY CASE l.status WHEN 'new' THEN 0 WHEN 'contacted' THEN 1 ELSE 2 END, l.created_at DESC LIMIT 300`, [supplierId]);
 export const LEAD_STATUS: Record<string, [string, string]> = { new: ['חדש', 'pill-warn'], contacted: ['בטיפול', 'pill'], closed: ['נסגר', 'pill-ok'], lost: ['לא יצא', 'pill-muted'] };
+
+export type Review = { id: string; supplier_id: string; fund_id: string; rating: number; text: string | null; created_at: unknown; family: string };
+export const reviewsOf = (supplierId: string) => many<Review>(
+  `SELECT r.*, f.display_name AS family FROM kupa_reviews r JOIN kupa_funds f ON f.id = r.fund_id WHERE r.supplier_id = $1 ORDER BY r.created_at DESC LIMIT 100`, [supplierId]);
+/** ספקים שהמשפחה עבדה איתם (פנייה שנסגרה או מימוש), ולכן יכולה לדרג. */
+export const ratableSuppliers = (fundId: string) => many<{ id: string; name: string; slug: string; reviewed: boolean }>(
+  `SELECT DISTINCT s.id, s.name, s.slug, EXISTS (SELECT 1 FROM kupa_reviews v WHERE v.supplier_id = s.id AND v.fund_id = $1) AS reviewed
+   FROM kupa_suppliers s WHERE s.status = 'active' AND (
+     EXISTS (SELECT 1 FROM kupa_leads l WHERE l.supplier_id = s.id AND l.fund_id = $1 AND l.status = 'closed')
+     OR EXISTS (SELECT 1 FROM kupa_redemptions r WHERE r.supplier_id = s.id AND r.fund_id = $1))`, [fundId]);
+export { BUSINESS_TYPES } from './supplier-consts';
+export const PROFILE_FIELDS = ['legal_name', 'business_id', 'business_type', 'contact_name', 'address', 'areas', 'hours', 'services', 'instagram', 'facebook', 'kosher', 'payment_methods', 'delivery', 'city', 'phone', 'email', 'website', 'description'] as const;

@@ -52,13 +52,12 @@ export async function toggleBenefit(supplierId: string, asAdmin: boolean, benefi
 export async function updateSupplierProfile(_prev: FormState, fd: FormData): Promise<FormState> {
   const sup = await currentSupplier();
   if (!sup) return { error: 'לא מחובר' };
-  const description = String(fd.get('description') || '').trim().slice(0, 400) || null;
-  const city = String(fd.get('city') || '').trim().slice(0, 80) || null;
-  const phone = String(fd.get('phone') || '').trim().slice(0, 30) || null;
-  const website = String(fd.get('website') || '').trim().slice(0, 200) || null;
-  await many(`UPDATE kupa_suppliers SET description = $2, city = $3, phone = $4, website = $5, updated_at = now() WHERE id = $1`, [sup.id, description, city, phone, website]);
-  revalidatePath('/p');
-  return { ok: 'הפרופיל נשמר.' };
+  const { cleanProfile, PROFILE_SET, profileParams } = await import('@/lib/supplier-profile');
+  const prof = cleanProfile(fd);
+  if (!prof.phone || prof.phone.replace(/\D/g, '').length < 9) return { error: 'צריך טלפון לפניות.' };
+  await many(`UPDATE kupa_suppliers SET ${PROFILE_SET} WHERE id = $1`, [sup.id, ...profileParams(prof)]);
+  revalidatePath('/p'); revalidatePath(`/suppliers/${sup.slug}`); revalidatePath('/suppliers');
+  return { ok: 'הפרופיל נשמר. כך הוא מוצג למשפחות במדריך.' };
 }
 
 export async function supplierSignOut() { await supplierLogout(); redirect('/p'); }

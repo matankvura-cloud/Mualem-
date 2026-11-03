@@ -161,3 +161,10 @@ export async function setSupplierCommission(id: string, _prev: SupplierState, fd
   revalidatePath(`/admin/suppliers/${id}`); revalidatePath('/admin/suppliers');
   return { ok: 'העמלה עודכנה.' };
 }
+
+export async function setSupplierVerified(id: string, verified: boolean) {
+  if (!(await isAdmin())) return;
+  if (!UUID_RE.test(id)) return;
+  await many(`UPDATE kupa_suppliers SET verified = $2, updated_at = now() WHERE id = $1`, [id, verified]);
+  revalidatePath(`/admin/suppliers/${id}`); revalidatePath('/admin/suppliers'); revalidatePath('/suppliers');
+}
