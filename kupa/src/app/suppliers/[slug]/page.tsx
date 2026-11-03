@@ -14,17 +14,18 @@ import Footer from '@/components/Footer';
 export const dynamic = 'force-dynamic';
 type Props = { params: Promise<{ slug: string }>; searchParams: Promise<{ f?: string }> };
 type IconKey = keyof typeof SUP_ICON;
+const safeDecode = (v: string) => { try { return decodeURIComponent(v); } catch { return v; } };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const s = await supplierBySlug(slug);
+  const s = await supplierBySlug(safeDecode(slug));
   return s && s.status === 'active' ? { title: `${s.name} · הטבה לכרטיס המשפחה`, description: s.description || `${s.name}, ${s.category}. הטבה למשפחות עם כרטיס המשפחה של ${FAMILY_BRAND}.` } : { title: 'ספק', robots: { index: false } };
 }
 
 export default async function SupplierPublic({ params, searchParams }: Props) {
   const { slug } = await params;
   const { f } = await searchParams;
-  const sup = await supplierBySlug(slug);
+  const sup = await supplierBySlug(safeDecode(slug));
   if (!sup || sup.status !== 'active') notFound();
   const [bens, fund] = await Promise.all([liveBenefitsOf(sup.id), f && TOKEN_RE.test(f) ? fundByToken(f) : null]);
   const I = SUP_ICON[(sup.icon in SUP_ICON ? sup.icon : 'meal') as IconKey];
