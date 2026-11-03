@@ -9,7 +9,7 @@ import { SUPPLIERS } from '@/data/suppliers';
 import FamilyShell from '@/components/FamilyShell';
 import FamilyCard from '@/components/FamilyCard';
 import CopyButton from '@/components/CopyButton';
-import { IcCoins, IcList, IcPlus, IcPeople, IcHeadset, IcFolder, IcShop, IcCheck, IcUser, IcPhone, IcChat, IcSteps, SUP_ICON } from '@/components/icons';
+import { IcCoins, IcList, IcPlus, IcPeople, IcHeadset, IcFolder, IcShop, IcPhone, IcChat, IcSteps } from '@/components/icons';
 import { FAMILY_BRAND } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
@@ -85,23 +85,7 @@ export default async function FamilyHome({ params, searchParams }: Props) {
         </div>
       </section>
 
-      <section className="panel" style={{ marginBottom: 18 }}>
-        <h2><IcShop />הטבות וספקים מומלצים עבורכם</h2>
-        <div className="sups">{SUPPLIERS.slice(0, 4).map((s) => { const I = SUP_ICON[s.icon]; return (
-          <div className="sup" key={s.id}><div className="img"><I /></div>
-            <div className="body"><b>{s.name}</b><span className="benefit">{s.benefit}</span>
-              <Link className="btn-copper" href={`${base}/card?payee=${encodeURIComponent(s.name)}`}>תשלום בכרטיס</Link></div></div>); })}
-        </div>
-        <Link className="more" href={`${base}/suppliers`}>לכל הספקים וההסדרים ›</Link>
-      </section>
-
       <section className="fam-grid">
-        <div className="panel">
-          <h2><IcHeadset />הליווי האישי שלכם</h2>
-          <div className="escort"><div className="face"><IcUser /></div>
-            <p>יועץ הליווי שלנו כאן להקשיב, לכוון ולעזור לכם בכל שאלה ובכל שלב.{CONTACT_PHONE ? '' : ' הטלפון יופיע כאן ברגע שיוגדר.'}</p></div>
-          {CONTACT_PHONE ? <a className="btn-copper" href={`https://wa.me/972${CONTACT_PHONE.replace(/\D/g, '').replace(/^0/, '')}`} target="_blank" rel="noopener" style={{ marginTop: 12 }}><IcPhone />בקשת שיחה</a> : <Link className="btn-outline" href={`${base}/support`} style={{ marginTop: 12 }}>לליווי האישי</Link>}
-        </div>
         <div className="panel">
           <h2><IcPeople />עזרה מהקרובים</h2>
           {donors.length ? (<>
@@ -114,12 +98,13 @@ export default async function FamilyHome({ params, searchParams }: Props) {
             <CopyButton text={publicLink} className="btn-outline" />
           </div>
         </div>
-        <div className="panel">
-          <h2><IcFolder />התיק המשפחתי</h2>
-          <ul className="checks">{checks.map((c) => <li key={c.label} className={c.done ? 'done' : ''}><i>{c.done ? <IcCheck /> : null}</i>{c.label}</li>)}</ul>
-          <Link className="more" href={`${base}/file`}>לניהול התיק המשפחתי ›</Link>
-        </div>
       </section>
+
+      <nav className="tiles" aria-label="עוד באזור המשפחה">
+        <Link href={`${base}/suppliers`}><IcShop />הטבות וספקים<small>{SUPPLIERS.length} הסדרים</small></Link>
+        <Link href={`${base}/support`}><IcHeadset />הליווי האישי<small>{CONTACT_PHONE ? 'שיחה או וואטסאפ' : 'פנייה אלינו'}</small></Link>
+        <Link href={`${base}/file`}><IcFolder />התיק והמסמכים<small>{checks.filter((c) => c.done).length} מתוך {checks.length} הושלמו</small></Link>
+      </nav>
     </FamilyShell>
   );
 }

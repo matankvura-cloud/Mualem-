@@ -50,7 +50,7 @@ PLAYWRIGHT_PATH=/path/to/node_modules/playwright npm run test:e2e   # או npm i
 - כתובות: https://my.avlut.org.il (קבועה) · https://family-avlut.vercel.app. `family.avlut.org.il` שייך להדגמה של ChatGPT ולא לכאן.
 - **מסד נתונים אמיתי**: פרויקט ה-Supabase של אבלות ישראל `tlm-family-crm` (eu-central-1). הטבלאות `kupa_*`
   חיות לצד הטבלאות הקיימות שם, עם RLS; האפליקציה מתחברת דרך ה-pooler (פורט 6543) כתפקיד ייעודי
-  `kupa_app` שהוא בעל הטבלאות. `DATABASE_URL` מוגדר ב-Vercel (production + preview). הסכמה רצה ב-build.
+  `kupa_app` שהוא בעל הטבלאות. `DATABASE_URL` מוגדר ב-Vercel (production + preview). הסכמה רצה בנפרד מה-build (`npm run migrate`).
 - בלי `DATABASE_URL` (פיתוח מקומי) האתר רץ על מסד בזיכרון (`KUPA_LOCAL_DB=memory`); עם `KUPA_DEMO_SEED=1`
   נזרעת קופה לדוגמה (`/m/demo-manage-yaakov-levi-2026-kupa`, `/f/demo-yaakov-levi-2026`, `/s/demo-card-yaakov-levi-2026`).
 - פריסה מחדש: ב-Vercel → Deployments → Redeploy, או חיבור הריפו ב-Settings → Git כדי שכל דחיפה תיפרס.
@@ -59,7 +59,7 @@ PLAYWRIGHT_PATH=/path/to/node_modules/playwright npm run test:e2e   # או npm i
 1. **ריפו**: להעביר את תיקיית `kupa/` לריפו `matankvura-cloud/kupa` (פרטי) — או
    ב-Vercel לבחור Root Directory = `kupa` בריפו הנוכחי.
 2. **Vercel project** חדש מהריפו. Framework: Next.js. ה-build מריץ
-   `scripts/migrate.mjs` אוטומטית (יוצר את הטבלאות אם אין `DATABASE_URL` — מדלג).
+   `next build` בלבד. הסכמה רצה בנפרד: `npm run migrate` עם `DATABASE_URL` (אידמפוטנטי), לא בזמן ה-build.
 3. **מסד**: `DATABASE_URL` לכל Postgres (כבר מוגדר ל-Supabase `tlm-family-crm`, תפקיד `kupa_app`).
 4. **משתני סביבה** (Settings → Environment Variables), לפי `.env.example`:
    `MORNING_ID`, `MORNING_SECRET` (מורנינג ← הגדרות ← חיבורים ← API),

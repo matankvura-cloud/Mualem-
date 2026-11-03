@@ -50,6 +50,7 @@ try {
   await page.fill('#display_name', 'יעקב לוי ז״ל');
   await page.fill('#years', '1941 – 2026');
   await page.fill('#city', 'ירושלים');
+  await page.click('button:has-text("המשך")');
   await page.fill('#quote', 'אבא תמיד אמר שלא צריך פרחים. אם רוצים לעזור, זה המקום.');
   await page.fill('#quote_by', 'המשפחה');
   await page.fill('#funeral_date', '2026-11-03');
@@ -58,6 +59,7 @@ try {
   await page.fill('#shiva_place', 'רח׳ הפלמ״ח 12, ירושלים');
   await page.fill('#shiva_date', '2026-11-03');
   await page.fill('#shiva_note', '10:00–22:00 · תפילות 06:30, 16:30');
+  await page.click('button:has-text("המשך")');
   await page.fill('#purpose', 'הקופה מכסה את הלוויה והשבעה. מה שייאסף מעבר לכך מיועד למצבה.');
   await page.fill('#target_ils', '34000');
   await page.fill('#manager_name', 'רונית לוי');
@@ -332,6 +334,7 @@ try {
   await page.goto(`${SITE}/new`);
   await page.fill('#display_name', 'שרה כהן ז״ל');
   await page.check('input[name=gender][value=f]');
+  await page.click('button:has-text("לדלג, להשלים אחר כך")');
   await page.fill('#manager_name', 'דוד כהן');
   await page.fill('#manager_phone', '0521234567');
   await page.click('button[type=submit]');

@@ -1,20 +1,29 @@
 'use client';
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { createFund, type NewState } from './actions';
+
+const STEPS = ['מי', 'מתי ואיפה', 'הקופה ואתם'];
 
 export default function NewFundForm() {
   const [state, action, pending] = useActionState<NewState, FormData>(createFund, undefined);
+  // אשף בשלושה צעדים. כל השדות נשארים בטופס (מוסתרים), כך שהשליחה והשרת לא משתנים.
+  const [step, setStep] = useState(0);
   // אחרי שגיאה React מאפס את הטופס; מחזירים את מה שהוקלד.
   const v = state?.values ?? {};
   const d = (k: string) => ({ defaultValue: v[k] ?? '' });
+  const last = step === STEPS.length - 1;
   return (
     <form action={action} className="fd-pay" noValidate>
       <div>
         <h1>פותחים קופה</h1>
-        <p className="lead">דקה אחת, ואפשר לשלוח את הקישור. את כל הפרטים אפשר לערוך אחר כך מקישור הניהול.</p>
+        <p className="lead">שלושה צעדים קצרים. רק השם ופרטי הקשר שלכם חובה; את כל השאר אפשר להשלים אחר כך מקישור הניהול.</p>
       </div>
 
-      <fieldset className="stack">
+      <ol className="fd-steps" aria-label="שלבי הפתיחה">
+        {STEPS.map((s, i) => <li key={s} className={i === step ? 'cur' : i < step ? 'done' : ''} aria-current={i === step ? 'step' : undefined}><i>{i + 1}</i>{s}</li>)}
+      </ol>
+
+      <fieldset className="stack" hidden={step !== 0}>
         <legend>מי</legend>
         <div className="field"><label className="l" htmlFor="display_name">שם הנפטר/ת, כפי שיופיע בעמוד</label>
           <input id="display_name" name="display_name" {...d('display_name')} type="text" required maxLength={120} placeholder="למשל: יעקב לוי ז״ל" /></div>
@@ -26,12 +35,9 @@ export default function NewFundForm() {
           <div className="field"><label className="l" htmlFor="years">שנים</label><input id="years" name="years" {...d('years')} type="text" maxLength={60} placeholder="1941 – 2026" /></div>
           <div className="field"><label className="l" htmlFor="city">עיר</label><input id="city" name="city" {...d('city')} type="text" maxLength={80} /></div>
         </div>
-        <div className="field"><label className="l" htmlFor="quote">כמה מילים (יופיעו בראש העמוד)</label>
-          <textarea id="quote" name="quote" {...d('quote')} maxLength={300} placeholder="אבא תמיד אמר שלא צריך פרחים. אם רוצים לעזור, זה המקום." /></div>
-        <div className="field"><label className="l" htmlFor="quote_by">מי כתב</label><input id="quote_by" name="quote_by" {...d('quote_by')} type="text" maxLength={80} placeholder="המשפחה" /></div>
       </fieldset>
 
-      <fieldset className="stack">
+      <fieldset className="stack" hidden={step !== 1}>
         <legend>מתי ואיפה (אפשר להשלים אחר כך)</legend>
         <div className="grid2">
           <div className="field"><label className="l" htmlFor="funeral_date">תאריך הלוויה</label><input id="funeral_date" name="funeral_date" {...d('funeral_date')} type="date" /></div>
@@ -43,9 +49,12 @@ export default function NewFundForm() {
           <div className="field"><label className="l" htmlFor="shiva_date">מתאריך</label><input id="shiva_date" name="shiva_date" {...d('shiva_date')} type="date" /></div>
           <div className="field"><label className="l" htmlFor="shiva_note">שעות / תפילות</label><input id="shiva_note" name="shiva_note" {...d('shiva_note')} type="text" maxLength={160} placeholder="10:00–22:00 · תפילות 06:30, 16:30" /></div>
         </div>
+        <div className="field"><label className="l" htmlFor="quote">כמה מילים (יופיעו בראש העמוד)</label>
+          <textarea id="quote" name="quote" {...d('quote')} maxLength={300} placeholder="אבא תמיד אמר שלא צריך פרחים. אם רוצים לעזור, זה המקום." /></div>
+        <div className="field"><label className="l" htmlFor="quote_by">מי כתב</label><input id="quote_by" name="quote_by" {...d('quote_by')} type="text" maxLength={80} placeholder="המשפחה" /></div>
       </fieldset>
 
-      <fieldset className="stack">
+      <fieldset className="stack" hidden={step !== 2}>
         <legend>הקופה</legend>
         <div className="field"><label className="l" htmlFor="purpose">לאן הכסף הולך</label>
           <textarea id="purpose" name="purpose" {...d('purpose')} maxLength={500} placeholder="הקופה מכסה את הלוויה והשבעה. מה שייאסף מעבר לכך מיועד למצבה ולאזכרת השלושים." /></div>
@@ -57,7 +66,7 @@ export default function NewFundForm() {
         <label className="fd-check"><input type="checkbox" name="allow_messages" defaultChecked={state ? v.allow_messages === 'on' : true} />לאפשר למפקידים לכתוב מילה למשפחה</label>
       </fieldset>
 
-      <fieldset className="stack">
+      <fieldset className="stack" hidden={step !== 2}>
         <legend>מי מנהל את הקופה (לא מוצג בעמוד)</legend>
         <div className="grid2">
           <div className="field"><label className="l" htmlFor="manager_name">שם</label><input id="manager_name" name="manager_name" {...d('manager_name')} type="text" required maxLength={80} autoComplete="name" /></div>
@@ -67,8 +76,17 @@ export default function NewFundForm() {
       </fieldset>
 
       {state?.error ? <p className="fd-err" role="alert">{state.error}</p> : null}
-      <button className="btn" type="submit" disabled={pending}>{pending ? 'פותחים…' : 'לפתוח את הקופה'}</button>
-      <p className="fd-small">הקופה נפתחת מיד. שמרו את קישור הניהול שתקבלו בעמוד הבא.</p>
+
+      {last ? (
+        <button className="btn" type="submit" disabled={pending}>{pending ? 'פותחים…' : 'לפתוח את הקופה'}</button>
+      ) : (
+        <button className="btn" type="button" onClick={() => setStep(step + 1)}>המשך</button>
+      )}
+      <div className="fd-actions">
+        {step > 0 ? <button className="btn-outline" type="button" onClick={() => setStep(step - 1)}>חזרה</button> : null}
+        {!last ? <button className="btn-outline" type="button" onClick={() => setStep(STEPS.length - 1)}>לדלג, להשלים אחר כך</button> : null}
+      </div>
+      <p className="fd-small">{last ? 'הקופה נפתחת מיד. שמרו את קישור הניהול שתקבלו בעמוד הבא.' : `שלב ${step + 1} מתוך ${STEPS.length}`}</p>
     </form>
   );
 }
