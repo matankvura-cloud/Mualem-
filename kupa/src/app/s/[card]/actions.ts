@@ -30,17 +30,24 @@ export async function requestCharge(card: string, _prev: ChargeState, fd: FormDa
 
 export type RedeemState = { error?: string; ok?: string } | undefined;
 
-/** מימוש הטבה: רק ספק מחובר, רק עם קוד שנסרק עכשיו, רק בכרטיס פעיל, עד המכסה, ובלי שימוש חוזר באותה סריקה. */
+/** מימוש הטבה: ספק מזוהה (עוגייה או קוד ספק), רק עם קוד שנסרק עכשיו, רק בכרטיס פעיל, עד המכסה, ובלי שימוש חוזר באותה סריקה. */
 export async function redeemBenefit(card: string, t: string, _prev: RedeemState, fd: FormData): Promise<RedeemState> {
   const { currentSupplier } = await import('@/lib/supplier-auth');
   const { verifyCard, cardState } = await import('@/lib/card');
-  const { benefitById, redemptionCount } = await import('@/lib/funds');
-  const { UUID_RE } = await import('@/lib/tokens');
+  const { benefitById, redemptionCount, supplierById } = await import('@/lib/funds');
+  const { UUID_RE, sameSecret } = await import('@/lib/tokens');
   const { createHash } = await import('node:crypto');
   if (!TOKEN_RE.test(card)) return { error: 'קישור לא תקין' };
-  const supplier = await currentSupplier();
-  if (!supplier) return { error: 'צריך להתחבר כספק.' };
+  const supplierId = String(fd.get('supplier') || '');
+  if (!UUID_RE.test(supplierId)) return { error: 'בחרו ספק.' };
+  const logged = await currentSupplier();
+  const supplier = logged && logged.id === supplierId ? logged : await supplierById(supplierId);
+  if (!supplier) return { error: 'הספק לא נמצא.' };
   if (supplier.status !== 'active') return { error: 'הספק עדיין לא אושר.' };
+  if (!(logged && logged.id === supplier.id)) {
+    const pin = String(fd.get('pin') || '').replace(/\D/g, '');
+    if (!supplier.pin || pin.length !== 6 || !sameSecret(pin, supplier.pin)) return { error: 'קוד הספק שגוי. הקוד הוא 6 ספרות שקיבלתם בהצטרפות.' };
+  }
   const fund = await fundByCard(card);
   if (!fund) return { error: 'הכרטיס לא נמצא' };
   if (cardState(fund) !== 'active') return { error: 'הכרטיס לא פעיל.' };
@@ -55,12 +62,14 @@ export async function redeemBenefit(card: string, t: string, _prev: RedeemState,
   const used = await redemptionCount(fund.id, benefit.id);
   if (used >= benefit.max_per_family) return { error: 'המשפחה כבר מימשה את ההטבה הזו.' };
   const saved = round2(Number(String(fd.get('amount_saved') || '').replace(/[^\d.]/g, ''))) || null;
+  const order = round2(Number(String(fd.get('order_amount') || '').replace(/[^\d.]/g, ''))) || null;
+  const commission = order ? round2(order * (Number(supplier.commission_pct) || 0) / 100) : null;
   const note = String(fd.get('note') || '').trim().slice(0, 200) || null;
   const nonce = createHash('sha256').update(`${card}|${sig.ts}|${benefit.id}`).digest('hex').slice(0, 40);
   try {
     await many(
-      `INSERT INTO kupa_redemptions (fund_id, supplier_id, benefit_id, supplier_name, benefit_title, amount_saved, note, redeemed_by, nonce) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
-      [fund.id, supplier.id, benefit.id, supplier.name, benefit.title, saved, note, supplier.email, nonce]);
+      `INSERT INTO kupa_redemptions (fund_id, supplier_id, benefit_id, supplier_name, benefit_title, amount_saved, order_amount, commission, note, redeemed_by, nonce) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
+      [fund.id, supplier.id, benefit.id, supplier.name, benefit.title, saved, order, commission, note, logged ? supplier.email : 'pin', nonce]);
   } catch (e) {
     if (String(e).includes('nonce')) return { error: 'הסריקה הזו כבר שימשה למימוש. לסריקה חדשה בקשו מהמשפחה להציג שוב.' };
     throw e;

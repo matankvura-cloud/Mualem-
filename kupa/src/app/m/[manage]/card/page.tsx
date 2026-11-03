@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import { loadFamily } from '../_shared';
-import { payoutsOf, requestsOf, redemptionsOf } from '@/lib/funds';
+import { payoutsOf, requestsOf, redemptionsOf, activeSuppliers } from '@/lib/funds';
 import { ils, fmtDate } from '@/lib/format';
 import { cardState, CARD_STATE_LABEL } from '@/lib/card';
 import { CONTACT_PHONE } from '@/lib/site';
@@ -20,7 +20,7 @@ export default async function CardPage({ params, searchParams }: Props) {
   const { manage } = await params;
   const { payee, amount, purpose } = await searchParams;
   const { fund, tot, family, last4 } = await loadFamily(manage);
-  const [pays, reqs, reds] = await Promise.all([payoutsOf(fund.id), requestsOf(fund.id), redemptionsOf(fund.id)]);
+  const [pays, reqs, reds, sups] = await Promise.all([payoutsOf(fund.id), requestsOf(fund.id), redemptionsOf(fund.id), activeSuppliers()]);
   const visiblePays = pays.filter((p) => p.visible);
   const state = cardState(fund);
   const [stateLabel, stateCls] = CARD_STATE_LABEL[state];
@@ -60,7 +60,7 @@ export default async function CardPage({ params, searchParams }: Props) {
       </section>
 
       <section className="fam-grid2">
-        <RequestPayoutForm manage={manage} available={tot.available} defaultPayee={payee || ''} defaultAmount={amount || ''} defaultPurpose={purpose || ''} />
+        <RequestPayoutForm manage={manage} available={tot.available} defaultPayee={payee || ''} defaultAmount={amount || ''} defaultPurpose={purpose || ''} suppliers={sups.map((s) => s.name)} />
         <div className="panel">
           <h2><IcList />בקשות ותשלומים</h2>
           {reqs.length ? (

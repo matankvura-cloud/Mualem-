@@ -6,10 +6,11 @@ import { supplierById, benefitsOf, redemptionsOfSupplier } from '@/lib/funds';
 import { UUID_RE } from '@/lib/tokens';
 import { fmtBenefit } from '@/lib/card';
 import { ils, fmtDateTime, familyName } from '@/lib/format';
-import { LoginForm, LoginLinkButton } from '../../AdminForms';
+import { LoginForm, LoginLinkButton, CommissionForm } from '../../AdminForms';
 import { BenefitForm } from '@/app/p/SupplierForms';
 import { toggleBenefit } from '@/app/p/actions';
-import { setSupplierStatus } from '../../actions';
+import { setSupplierStatus, regenSupplierPin } from '../../actions';
+import { num } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'ספק · ניהול', robots: { index: false, follow: false } };
@@ -28,7 +29,19 @@ export default async function AdminSupplier({ params }: Props) {
       <div className="pad stack" style={{ gap: 16 }}>
         <div><h1 className="page-title">{sup.name}</h1><p className="lead">{[sup.category, sup.city, sup.phone, sup.email].filter(Boolean).join(' · ')}</p>{sup.description ? <p className="muted">{sup.description}</p> : null}</div>
         <section className="card stack">
-          <h2 style={{ fontSize: 18 }}>כניסה לפורטל הספק</h2>
+          <h2 style={{ fontSize: 18 }}>קוד הספק</h2>
+          <p className="muted">הספק מקליד את הקוד בעמוד הסריקה כדי לאשר מימוש. שולחים לו אותו פעם אחת. אין צורך בכניסה.</p>
+          <div className="card-meta"><span className="linkbox" style={{ fontSize: 22, letterSpacing: '.2em' }} dir="ltr">{sup.pin}</span>
+            <form action={regenSupplierPin.bind(null, id)}><button className="btn-ghost" type="submit" style={{ minHeight: 36, fontSize: 13 }}>להחליף קוד</button></form></div>
+          <CommissionForm supplierId={id} pct={num(sup.commission_pct)} />
+          <div className="stats">
+            <div className="stat"><small>עסקאות שדווחו</small><b>{ils(reds.reduce((a, r) => a + num(r.order_amount), 0))}</b></div>
+            <div className="stat"><small>עמלה לפלטפורמה</small><b>{ils(reds.reduce((a, r) => a + num(r.commission), 0))}</b></div>
+          </div>
+        </section>
+        <section className="card stack">
+          <h2 style={{ fontSize: 18 }}>כניסה לפורטל הספק (לא חובה)</h2>
+          <p className="muted">הפורטל מאפשר לספק לנהל הטבות ולראות מימושים. הכניסה בקישור אישי; מימוש אפשר גם בלי זה, עם הקוד.</p>
           <LoginLinkButton supplierId={id} />
           <div className="fd-actions">
             {sup.status !== 'active' ? <form action={setSupplierStatus.bind(null, id, 'active')}><button className="btn-outline" type="submit">לאשר ולהציג למשפחות</button></form> : null}
@@ -52,8 +65,8 @@ export default async function AdminSupplier({ params }: Props) {
           <h2 style={{ fontSize: 18 }}>מימושים <small className="muted">({reds.length})</small></h2>
           {reds.length ? (
             <div className="tbl-wrap"><table className="tbl">
-              <thead><tr><th>מתי</th><th>משפחה</th><th>הטבה</th><th>חיסכון</th><th>הערה</th></tr></thead>
-              <tbody>{reds.map((r) => (<tr key={r.id}><td className="num">{fmtDateTime(r.created_at)}</td><td><b>{familyName(r.family)}</b></td><td>{r.benefit_title}</td><td className="num">{Number(r.amount_saved) ? ils(r.amount_saved) : '—'}</td><td className="muted">{r.note}</td></tr>))}</tbody>
+              <thead><tr><th>מתי</th><th>משפחה</th><th>הטבה</th><th>עסקה</th><th>עמלה</th><th>חיסכון</th><th>הערה</th></tr></thead>
+              <tbody>{reds.map((r) => (<tr key={r.id}><td className="num">{fmtDateTime(r.created_at)}</td><td><b>{familyName(r.family)}</b></td><td>{r.benefit_title}</td><td className="num">{Number(r.order_amount) ? ils(r.order_amount) : '—'}</td><td className="num">{Number(r.commission) ? ils(r.commission) : '—'}</td><td className="num">{Number(r.amount_saved) ? ils(r.amount_saved) : '—'}</td><td className="muted">{r.note}</td></tr>))}</tbody>
             </table></div>) : <div className="fd-note">עדיין לא מומשו הטבות אצל הספק הזה.</div>}
         </section>
       </div>

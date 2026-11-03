@@ -1,6 +1,6 @@
 'use client';
 import { useActionState } from 'react';
-import { adminLogin, addPayout, approveRequest, rejectRequest, addSupplier, makeSupplierLogin, adminSetCard, type LoginState, type PayoutState, type ReqState, type SupplierState, type CardState2 } from './actions';
+import { adminLogin, addPayout, approveRequest, rejectRequest, addSupplier, makeSupplierLogin, adminSetCard, setSupplierCommission, type LoginState, type PayoutState, type ReqState, type SupplierState, type CardState2 } from './actions';
 
 export function LoginForm() {
   const [state, action, pending] = useActionState<LoginState, FormData>(adminLogin, undefined);
@@ -79,6 +79,7 @@ export function SupplierForm() {
         <div className="field"><label className="l" htmlFor="s-email">מייל</label><input id="s-email" name="email" type="email" maxLength={160} dir="ltr" /></div>
       </div>
       <div className="field"><label className="l" htmlFor="s-desc">תיאור קצר (מוצג למשפחות)</label><input id="s-desc" name="description" type="text" maxLength={400} /></div>
+      <div className="field"><label className="l" htmlFor="s-comm">עמלת הפלטפורמה מעסקאות הספק (%)</label><input id="s-comm" name="commission_pct" type="text" inputMode="decimal" defaultValue="10" /></div>
       <label className="fd-check"><input type="checkbox" name="activate" />להציג למשפחות מיד (ספק פעיל)</label>
       {state?.error ? <p className="fd-err" role="alert">{state.error}</p> : state?.ok ? <p className="notice notice-ok">{state.ok}</p> : null}
       <button className="btn btn-inline" type="submit" disabled={pending}>{pending ? 'מוסיפים…' : 'להוסיף ספק'}</button>
@@ -112,5 +113,16 @@ export function CardControls({ fundId, blocked, validUntil }: { fundId: string; 
       </form>
       {state?.error ? <p className="fd-err">{state.error}</p> : state?.ok ? <p className="notice notice-ok">{state.ok}</p> : null}
     </div>
+  );
+}
+
+export function CommissionForm({ supplierId, pct }: { supplierId: string; pct: number }) {
+  const [state, action, pending] = useActionState<SupplierState, FormData>(setSupplierCommission.bind(null, supplierId), undefined);
+  return (
+    <form action={action} className="fd-actions" noValidate>
+      <div className="field" style={{ flex: 1 }}><label className="l" htmlFor={`comm-${supplierId}`}>עמלה מעסקאות (%)</label><input id={`comm-${supplierId}`} name="commission_pct" type="text" inputMode="decimal" defaultValue={String(pct)} /></div>
+      <button className="btn-outline" type="submit" disabled={pending} style={{ alignSelf: 'flex-end' }}>לעדכן</button>
+      {state?.error ? <p className="fd-err">{state.error}</p> : state?.ok ? <p className="notice notice-ok">{state.ok}</p> : null}
+    </form>
   );
 }

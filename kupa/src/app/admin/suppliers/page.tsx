@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { isAdmin } from '@/lib/admin';
 import { allSuppliers } from '@/lib/funds';
 import { num } from '@/lib/db';
+import { ils } from '@/lib/format';
 import { LoginForm, SupplierForm } from '../AdminForms';
 import { setSupplierStatus } from '../actions';
 
@@ -22,18 +23,21 @@ export default async function AdminSuppliers() {
           <div className="stat"><small>ממתינים לאישור</small><b>{sups.filter((s) => s.status === 'pending').length}</b></div>
           <div className="stat"><small>הטבות פעילות</small><b>{sups.reduce((a, s) => a + num(s.benefits), 0)}</b></div>
           <div className="stat"><small>מימושים</small><b>{sups.reduce((a, s) => a + num(s.redemptions), 0)}</b></div>
+          <div className="stat"><small>עסקאות שדווחו</small><b>{ils(sups.reduce((a, s) => a + num(s.orders), 0))}</b></div>
+          <div className="stat"><small>עמלות לפלטפורמה</small><b>{ils(sups.reduce((a, s) => a + num(s.commission), 0))}</b></div>
         </section>
         <div className="tbl-wrap"><table className="tbl">
-          <thead><tr><th>ספק</th><th>קטגוריה</th><th>מצב</th><th>הטבות</th><th>מימושים</th><th></th></tr></thead>
+          <thead><tr><th>ספק</th><th>קטגוריה</th><th>מצב</th><th>קוד</th><th>עמלה</th><th>הטבות</th><th>מימושים</th><th>עמלות</th><th></th></tr></thead>
           <tbody>{sups.map((s) => { const [l, c] = ST[s.status] || [s.status, '']; return (
             <tr key={s.id}>
               <td><Link href={`/admin/suppliers/${s.id}`}><b>{s.name}</b></Link>{s.city ? <><br /><small className="muted">{s.city}</small></> : null}</td>
               <td>{s.category}</td><td><span className={`pill ${c}`}>{l}</span></td>
-              <td className="num">{num(s.benefits)}</td><td className="num">{num(s.redemptions)}</td>
+              <td className="num" dir="ltr">{s.pin}</td><td className="num">{num(s.commission_pct)}%</td>
+              <td className="num">{num(s.benefits)}</td><td className="num">{num(s.redemptions)}</td><td className="num">{ils(s.commission)}</td>
               <td>{s.status !== 'active' ? <form action={setSupplierStatus.bind(null, s.id, 'active')}><button className="btn-ghost" type="submit" style={{ minHeight: 32, fontSize: 12 }}>לאשר</button></form>
                 : <form action={setSupplierStatus.bind(null, s.id, 'inactive')}><button className="btn-ghost btn-danger" type="submit" style={{ minHeight: 32, fontSize: 12 }}>להסיר</button></form>}</td>
             </tr>); })}
-            {!sups.length ? <tr><td colSpan={6} className="muted">עדיין אין ספקים. הוסיפו את הראשון למטה.</td></tr> : null}
+            {!sups.length ? <tr><td colSpan={9} className="muted">עדיין אין ספקים. הוסיפו את הראשון למטה.</td></tr> : null}
           </tbody>
         </table></div>
         <SupplierForm />

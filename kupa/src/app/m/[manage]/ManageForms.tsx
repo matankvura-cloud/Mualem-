@@ -1,5 +1,5 @@
 'use client';
-import { useActionState } from 'react';
+import { useActionState, useState } from 'react';
 import { updateFund, addEvent, requestPayout, type ActState } from './actions';
 import { ils } from '@/lib/format';
 import type { Fund } from '@/lib/funds';
@@ -46,15 +46,26 @@ export function EditFundForm({ manage, fund }: { manage: string; fund: Fund }) {
   );
 }
 
-export function RequestPayoutForm({ manage, available, defaultPayee = '', defaultAmount = '', defaultPurpose = '' }: { manage: string; available: number; defaultPayee?: string; defaultAmount?: string; defaultPurpose?: string }) {
+export function RequestPayoutForm({ manage, available, defaultPayee = '', defaultAmount = '', defaultPurpose = '', suppliers = [] }: { manage: string; available: number; defaultPayee?: string; defaultAmount?: string; defaultPurpose?: string; suppliers?: string[] }) {
   const [state, action, pending] = useActionState<ActState, FormData>(requestPayout.bind(null, manage), undefined);
   const v = state?.values ?? {};
+  const initial = v.payee ?? defaultPayee;
+  const [pick, setPick] = useState(suppliers.length ? (initial && suppliers.includes(initial) ? initial : initial ? 'other' : suppliers[0]) : 'other');
   return (
     <form action={action} className="stack panel" noValidate>
       <h2>לבקש תשלום לספק מהקופה</h2>
-      <p className="muted">כותבים למי ועל מה, אנחנו מאשרים ומשלמים לספק ישירות מהקופה. היתרה הזמינה: <b>{ils(available)}</b>.</p>
+      <p className="muted">בוחרים ספק או כותבים למי, אנחנו מאשרים ומשלמים לספק ישירות מהקופה. היתרה הזמינה: <b>{ils(available)}</b>.</p>
+      {suppliers.length ? (
+        <div className="field"><label className="l" htmlFor="payee_pick">ספק מהרשימה</label>
+          <select id="payee_pick" value={pick} onChange={(e) => setPick(e.target.value)}>
+            {suppliers.map((n) => <option key={n} value={n}>{n}</option>)}
+            <option value="other">ספק אחר (לא ברשימה)</option>
+          </select></div>
+      ) : null}
       <div className="grid2">
-        <div className="field"><label className="l" htmlFor="payee">למי לשלם</label><input id="payee" name="payee" defaultValue={v.payee ?? defaultPayee} type="text" required maxLength={120} placeholder="חברה קדישא, קייטרינג, מצבות…" /></div>
+        {pick === 'other' || !suppliers.length
+          ? <div className="field"><label className="l" htmlFor="payee">למי לשלם</label><input id="payee" name="payee" defaultValue={initial && !suppliers.includes(initial) ? initial : ''} type="text" required maxLength={120} placeholder="חברה קדישא, קייטרינג, מצבות…" /></div>
+          : <input type="hidden" id="payee" name="payee" value={pick} />}
         <div className="field"><label className="l" htmlFor="amount">סכום בש״ח</label><input id="amount" name="amount" defaultValue={v.amount ?? defaultAmount} type="text" inputMode="decimal" required /></div>
       </div>
       <div className="grid2">

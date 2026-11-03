@@ -3,7 +3,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { fundByCard, totals, cardLast4, benefitsOf, redemptionCount } from '@/lib/funds';
+import { fundByCard, totals, cardLast4, suppliersWithBenefits, redemptionCount } from '@/lib/funds';
 import { TOKEN_RE } from '@/lib/tokens';
 import { ils, familyName, fmtDate } from '@/lib/format';
 import { FAMILY_BRAND as BRAND } from '@/lib/site';
@@ -28,8 +28,11 @@ export default async function SupplierPage({ params, searchParams }: Props) {
   const [stateLabel, stateCls] = CARD_STATE_LABEL[state];
   const sig = verifyCard(card, t);
   const fam = familyName(fund.display_name);
-  const benefits = supplier ? (await benefitsOf(supplier.id)).filter((b) => b.active) : [];
-  const used = supplier ? Object.fromEntries(await Promise.all(benefits.map(async (b) => [b.id, await redemptionCount(fund.id, b.id)]))) : {};
+  const sups = sig.ok && state === 'active' ? await suppliersWithBenefits() : [];
+  const used: Record<string, number> = {};
+  for (const s of sups) for (const b of s.benefits) used[b.id] = await redemptionCount(fund.id, b.id);
+  const options = sups.map((s) => ({ id: s.id, name: s.name, category: s.category,
+    benefits: s.benefits.map((b) => ({ id: b.id, title: b.title, label: fmtBenefit(b), terms: b.terms, left: Math.max(0, b.max_per_family - (used[b.id] || 0)) })) }));
 
   return (
     <div className="fd">
@@ -45,17 +48,16 @@ export default async function SupplierPage({ params, searchParams }: Props) {
 
         <div className="panel">
           <h2>מימוש הטבה</h2>
-          {!supplier ? (
-            <p className="muted">כדי לממש הטבה צריך להיות ספק משתתף ומחובר. <Link href="/p">כניסת ספקים</Link>. ספק שעדיין לא הצטרף יכול לשלוח בקשת חיוב למטה.</p>
-          ) : state !== 'active' ? (
+          {state !== 'active' ? (
             <p className="muted">הכרטיס לא פעיל, אי אפשר לממש.</p>
           ) : !sig.ok ? (
             <div className="notice notice-warn"><b>{sig.reason === 'missing' ? 'זה לא קוד שנסרק מהכרטיס.' : 'הקוד שנסרק כבר לא טרי.'}</b> בקשו מהמשפחה להציג את הכרטיס מהמסך שלהם וסרקו שוב. זה מגן עליכם ועל המשפחה מזיופים.</div>
-          ) : !benefits.length ? (
-            <p className="muted">אין לכם הטבות פעילות. מוסיפים הטבה <Link href="/p">בפורטל</Link>.</p>
-          ) : (
-            <RedeemForm card={card} t={t || ''} benefits={benefits.map((b) => ({ id: b.id, title: b.title, label: fmtBenefit(b), terms: b.terms, left: Math.max(0, b.max_per_family - (used[b.id] || 0)) }))} />
-          )}
+          ) : !options.length ? (
+            <p className="muted">עדיין אין ספקים עם הטבות פעילות במערכת.</p>
+          ) : (<>
+            <p className="muted" style={{ marginBottom: 10 }}>בוחרים את העסק שלכם, מקלידים את קוד הספק, ובוחרים הטבה. {supplier ? 'אתם מחוברים, בלי קוד.' : <>אין לכם קוד? <Link href="/p">כניסת ספקים</Link> או בקשת חיוב למטה.</>}</p>
+            <RedeemForm card={card} t={t || ''} suppliers={options} loggedId={supplier?.id ?? null} />
+          </>)}
         </div>
 
         <div className="stats">

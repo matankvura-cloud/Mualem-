@@ -158,6 +158,11 @@ CREATE TABLE IF NOT EXISTS kupa_suppliers (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
+-- קוד ספק (6 ספרות) לאישור מימוש בלי כניסה, ועמלת הפלטפורמה מעסקאות הספק.
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS pin text;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS commission_pct numeric(5,2) NOT NULL DEFAULT 10;
+UPDATE kupa_suppliers SET pin = lpad((floor(random() * 1000000))::int::text, 6, '0') WHERE pin IS NULL;
+
 -- הטבה של ספק. kind: percent (אחוז הנחה), fixed (סכום קבוע), gift (מתנה/שירות).
 CREATE TABLE IF NOT EXISTS kupa_benefits (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -189,6 +194,9 @@ CREATE TABLE IF NOT EXISTS kupa_redemptions (
   nonce text UNIQUE,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+-- סכום העסקה והעמלה שמגיעה לפלטפורמה מהספק על המימוש.
+ALTER TABLE kupa_redemptions ADD COLUMN IF NOT EXISTS order_amount numeric(12,2);
+ALTER TABLE kupa_redemptions ADD COLUMN IF NOT EXISTS commission numeric(12,2);
 CREATE INDEX IF NOT EXISTS kupa_redemptions_fund_idx ON kupa_redemptions(fund_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS kupa_redemptions_supplier_idx ON kupa_redemptions(supplier_id, created_at DESC);
 

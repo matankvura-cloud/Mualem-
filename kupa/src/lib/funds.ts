@@ -142,7 +142,8 @@ export function cleanFundInput(fd: FormData) {
 /* ---------- שלב 1: כרטיס ההטבות, ספקים, הטבות, מימושים ---------- */
 export type Supplier = {
   id: string; slug: string; name: string; category: string; icon: string; description: string | null; city: string | null;
-  phone: string | null; email: string | null; website: string | null; status: 'pending' | 'active' | 'inactive'; created_at: unknown; updated_at: unknown;
+  phone: string | null; email: string | null; website: string | null; status: 'pending' | 'active' | 'inactive';
+  pin: string | null; commission_pct: unknown; created_at: unknown; updated_at: unknown;
 };
 export type Benefit = {
   id: string; supplier_id: string; title: string; kind: 'percent' | 'fixed' | 'gift'; value: unknown; terms: string | null;
@@ -150,13 +151,15 @@ export type Benefit = {
 };
 export type Redemption = {
   id: string; fund_id: string; supplier_id: string | null; benefit_id: string | null; supplier_name: string; benefit_title: string;
-  amount_saved: unknown; note: string | null; redeemed_by: string | null; nonce: string | null; created_at: unknown;
+  amount_saved: unknown; order_amount: unknown; commission: unknown; note: string | null; redeemed_by: string | null; nonce: string | null; created_at: unknown;
 };
-export type SupplierRow = Supplier & { benefits: unknown; redemptions: unknown };
+export type SupplierRow = Supplier & { benefits: unknown; redemptions: unknown; orders: unknown; commission: unknown };
 
 export const allSuppliers = () => many<SupplierRow>(
   `SELECT s.*, (SELECT COUNT(*) FROM kupa_benefits b WHERE b.supplier_id = s.id AND b.active) AS benefits,
-          (SELECT COUNT(*) FROM kupa_redemptions r WHERE r.supplier_id = s.id) AS redemptions
+          (SELECT COUNT(*) FROM kupa_redemptions r WHERE r.supplier_id = s.id) AS redemptions,
+          COALESCE((SELECT SUM(order_amount) FROM kupa_redemptions r WHERE r.supplier_id = s.id), 0) AS orders,
+          COALESCE((SELECT SUM(commission) FROM kupa_redemptions r WHERE r.supplier_id = s.id), 0) AS commission
    FROM kupa_suppliers s ORDER BY CASE s.status WHEN 'active' THEN 0 WHEN 'pending' THEN 1 ELSE 2 END, s.created_at DESC`);
 export const activeSuppliers = () => many<Supplier>(`SELECT * FROM kupa_suppliers WHERE status = 'active' ORDER BY category, name`);
 export const supplierById = (id: string) => one<Supplier>(`SELECT * FROM kupa_suppliers WHERE id = $1`, [id]);
@@ -172,3 +175,8 @@ export const redemptionsOfSupplier = (supplierId: string) => many<Redemption & {
   `SELECT r.*, f.display_name AS family FROM kupa_redemptions r JOIN kupa_funds f ON f.id = r.fund_id WHERE r.supplier_id = $1 ORDER BY r.created_at DESC LIMIT 200`, [supplierId]);
 export const redemptionCount = async (fundId: string, benefitId: string) =>
   num((await one<{ n: unknown }>(`SELECT COUNT(*) AS n FROM kupa_redemptions WHERE fund_id = $1 AND benefit_id = $2`, [fundId, benefitId]))?.n);
+/** ספקים פעילים עם ההטבות החיות שלהם, לרשימה הנפתחת בעמוד הסריקה. */
+export async function suppliersWithBenefits() {
+  const [sups, bens] = await Promise.all([activeSuppliers(), liveBenefits()]);
+  return sups.map((s) => ({ id: s.id, name: s.name, category: s.category, benefits: bens.filter((b) => b.supplier_id === s.id) })).filter((s) => s.benefits.length > 0);
+}

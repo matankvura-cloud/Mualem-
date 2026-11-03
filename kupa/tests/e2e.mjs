@@ -353,9 +353,16 @@ try {
   await page.click('form:has(#b-title) button[type=submit]');
   await page.waitForSelector('.notice-ok:has-text("ההטבה נוספה")');
   check((await page.textContent('table.tbl')).includes('10% הנחה'), 'ההטבה מופיעה: 10% הנחה');
+  await page.fill('#b-title', 'משלוח חינם לשבעה');
+  await page.selectOption('#b-kind', 'gift');
+  await page.fill('#b-value', '');
+  await page.click('form:has(#b-title) button[type=submit]');
+  await page.waitForSelector('.notice-ok:has-text("ההטבה נוספה")');
+  const supplierPin = (await page.locator('.card-meta .linkbox').first().textContent()).trim();
+  check(/^\d{6}$/.test(supplierPin), 'לספק קוד בן 6 ספרות בניהול');
   await page.click('button:has-text("קישור כניסה לספק")');
   await page.waitForSelector('.linkbox');
-  const loginLink = (await page.locator('.linkbox').first().textContent()).trim();
+  const loginLink = (await page.locator('.linkbox:has-text("/p/login/")').first().textContent()).trim();
   check(/\/p\/login\/[A-Za-z0-9_-]{32}$/.test(loginLink), 'קישור כניסה לספק הונפק');
 
   // המשפחה: תוקף, QR חי, ורשימת הספקים האמיתית
@@ -397,6 +404,7 @@ try {
   const freshT = signCard(cardTok, nowSec);
   await sp2.goto(`${cardLink}?t=${freshT}`);
   await sp2.waitForSelector('#benefit');
+  check((await sp2.locator('#pin').count()) === 0, 'ספק מחובר: אין שדה קוד');
   await sp2.fill('#amount_saved', '120');
   await sp2.fill('#rnote', 'הזמנה 4471');
   await sp2.click('form:has(#benefit) button[type=submit]');
@@ -404,19 +412,41 @@ try {
   check(true, 'סריקה טרייה + ספק מחובר: ההטבה מומשה');
   await sp2.goto(`${cardLink}?t=${freshT}`);
   const after = await sp2.textContent('body');
-  check(after.includes('מומש כבר') && (await sp2.locator('form:has(#benefit) button[type=submit]').isDisabled()), 'אותה משפחה שוב: ההטבה מסומנת "מומש כבר" והכפתור כבוי');
+  check(after.includes('מומש כבר') && (await sp2.locator('#benefit option:has-text("הנחה על ארוחות")').isDisabled()), 'אותה משפחה שוב: ההטבה שמומשה מסומנת "מומש כבר" וכבויה');
   await sp2.goto(`${SITE}/p`);
   check((await sp2.textContent('body')).includes('הזמנה 4471') && (await sp2.textContent('body')).includes('₪120'), 'הפורטל מציג את המימוש עם החיסכון');
   await phone.close();
+
+  // מסלול הקוד: טלפון אחר, בלי כניסה. הספק נבחר מהרשימה ומקליד את הקוד שלו
+  const phone2 = await browser.newContext({ viewport: { width: 420, height: 860 }, locale: 'he-IL' });
+  const sp3 = await phone2.newPage();
+  const t2 = signCard(cardTok, Math.floor(Date.now() / 1000));
+  await sp3.goto(`${cardLink}?t=${t2}`);
+  await sp3.waitForSelector('#supplier');
+  check((await sp3.locator('#pin').count()) === 1 && (await sp3.textContent('#supplier')).includes('קייטרינג של רחל'), 'בלי כניסה: רשימת ספקים ושדה קוד');
+  await sp3.selectOption('#benefit', { label: 'משלוח חינם לשבעה' });
+  await sp3.fill('#pin', '000000');
+  await sp3.fill('#order_amount', '2000');
+  await sp3.click('form:has(#benefit) button[type=submit]');
+  await sp3.waitForSelector('.fd-err:has-text("קוד הספק שגוי")');
+  check(true, 'קוד שגוי נדחה');
+  await sp3.fill('#pin', supplierPin);
+  await sp3.click('form:has(#benefit) button[type=submit]');
+  await sp3.waitForSelector('.notice-ok:has-text("ההטבה מומשה")');
+  check(true, 'קוד נכון: ההטבה מומשה בלי כניסה');
+  await phone2.close();
 
   // המשפחה והניהול רואים את המימוש; חסימה ושחרור
   await page.goto(manageUrl + '/card');
   cb = await page.textContent('body');
   check(cb.includes('קייטרינג של רחל') && cb.includes('חסכתם ₪120'), 'המשפחה רואה את המימוש: חסכתם ₪120');
   await page.goto(supplierAdminUrl);
-  check((await page.textContent('body')).includes('הזמנה 4471'), 'ניהול הספק מציג את המימוש');
+  const sa = await page.textContent('body');
+  check(sa.includes('הזמנה 4471') && sa.includes('₪2,000') && sa.includes('₪200'), 'ניהול הספק: שני מימושים, עסקה ₪2,000, עמלה ₪200 (10%)');
+  await page.goto(`${SITE}/admin/suppliers`);
+  check((await page.textContent('body')).includes('₪200'), 'רשימת הספקים: עמלות לפלטפורמה ₪200');
   await page.goto(`${SITE}/admin`); await page.click('table.tbl a'); await page.waitForSelector('#payee');
-  check((await page.textContent('body')).includes('מימושי הטבות (1)'), 'עמוד הקופה בניהול: מימוש אחד');
+  check((await page.textContent('body')).includes('מימושי הטבות (2)'), 'עמוד הקופה בניהול: שני מימושים');
   await page.fill('form:has(input[value=block]) input[name=reason]', 'חשד לשימוש לא מורשה');
   await page.click('button:has-text("לחסום את הכרטיס")');
   await page.waitForSelector('.pill:has-text("חסום")');
@@ -430,6 +460,9 @@ try {
   await page.waitForSelector('.notice-ok:has-text("הכרטיס עודכן")');
   await page.goto(manageUrl + '/card');
   check((await page.textContent('body')).includes('בתוקף עד') && !(await page.textContent('body')).includes('הכרטיס חסום'), 'אחרי השחרור הכרטיס שוב בתוקף');
+  check((await page.locator('#payee_pick option').allTextContents()).join('|').includes('קייטרינג של רחל') && (await page.locator('#payee_pick option').allTextContents()).join('|').includes('ספק אחר'), 'בקשת תשלום: רשימת ספקים נפתחת עם "ספק אחר"');
+  await page.selectOption('#payee_pick', 'other');
+  check((await page.locator('input#payee').count()) === 1, '"ספק אחר" פותח שדה חופשי');
 
   // 9. קופה לזכרה
   console.log('לזכרה');

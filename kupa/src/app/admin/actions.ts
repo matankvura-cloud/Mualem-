@@ -85,6 +85,7 @@ export async function adminSetStatus(fundId: string, status: 'open' | 'closed') 
 /* ---------- שלב 1: ספקים וכרטיס ---------- */
 export type SupplierState = { error?: string; ok?: string; link?: string } | undefined;
 const ICONS = new Set(['meal', 'chairs', 'stone', 'home', 'flowers', 'transport']);
+const newPin = () => String(Math.floor(100000 + Math.random() * 900000));
 const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9֐-׿]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'supplier';
 
 export async function addSupplier(_prev: SupplierState, fd: FormData): Promise<SupplierState> {
@@ -96,11 +97,12 @@ export async function addSupplier(_prev: SupplierState, fd: FormData): Promise<S
   if (category.length < 2) return { error: 'צריך קטגוריה.' };
   const { token } = await import('@/lib/tokens');
   const slug = `${slugify(name)}-${token(3)}`;
+  const commission = Math.max(0, Math.min(50, Number(String(fd.get('commission_pct') || '').replace(/[^\d.]/g, '')) || 0));
   const row = await one<{ id: string }>(
-    `INSERT INTO kupa_suppliers (slug, name, category, icon, description, city, phone, email, status) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
+    `INSERT INTO kupa_suppliers (slug, name, category, icon, description, city, phone, email, status, pin, commission_pct) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING id`,
     [slug, name, category, ICONS.has(icon) ? icon : 'meal', String(fd.get('description') || '').trim().slice(0, 400) || null,
       String(fd.get('city') || '').trim().slice(0, 80) || null, String(fd.get('phone') || '').trim().slice(0, 30) || null,
-      String(fd.get('email') || '').trim().slice(0, 160) || null, fd.get('activate') === 'on' ? 'active' : 'pending']);
+      String(fd.get('email') || '').trim().slice(0, 160) || null, fd.get('activate') === 'on' ? 'active' : 'pending', newPin(), commission]);
   revalidatePath('/admin/suppliers');
   if (row) redirect(`/admin/suppliers/${row.id}`);
   return { ok: 'הספק נוסף.' };
@@ -141,4 +143,21 @@ export async function adminSetCard(fundId: string, _prev: CardState2, fd: FormDa
   } else return { error: 'פעולה לא מוכרת' };
   revalidatePath(`/admin/${fundId}`); revalidatePath('/admin');
   return { ok: 'הכרטיס עודכן.' };
+}
+
+export async function regenSupplierPin(id: string) {
+  if (!(await isAdmin())) return;
+  if (!UUID_RE.test(id)) return;
+  await many(`UPDATE kupa_suppliers SET pin = $2, updated_at = now() WHERE id = $1`, [id, newPin()]);
+  revalidatePath(`/admin/suppliers/${id}`);
+}
+
+export async function setSupplierCommission(id: string, _prev: SupplierState, fd: FormData): Promise<SupplierState> {
+  if (!(await isAdmin())) return { error: 'לא מחובר' };
+  if (!UUID_RE.test(id)) return { error: 'ספק לא תקין' };
+  const pct = Number(String(fd.get('commission_pct') || '').replace(/[^\d.]/g, ''));
+  if (!(pct >= 0 && pct <= 50)) return { error: 'עמלה בין 0 ל-50 אחוז.' };
+  await many(`UPDATE kupa_suppliers SET commission_pct = $2, updated_at = now() WHERE id = $1`, [id, pct]);
+  revalidatePath(`/admin/suppliers/${id}`); revalidatePath('/admin/suppliers');
+  return { ok: 'העמלה עודכנה.' };
 }

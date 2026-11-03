@@ -34,7 +34,7 @@ export default async function SupplierPortal({ searchParams }: Props) {
       <div className="pad stack" style={{ gap: 16 }}>
         <div><h1 className="page-title">{sup.name}</h1><p className="lead">{sup.category}{sup.city ? ` · ${sup.city}` : ''} · <span className={`pill ${sup.status === 'active' ? 'pill-ok' : 'pill-warn'}`}>{sup.status === 'active' ? 'ספק פעיל' : 'ממתין לאישור'}</span></p></div>
         {sup.status !== 'active' ? <div className="notice notice-warn">הפרופיל וההטבות יוצגו למשפחות אחרי שנאשר אתכם. אפשר כבר להכין את ההטבות.</div> : null}
-        <div className="fd-note"><b>איך מממשים הטבה:</b> המשפחה מציגה את הכרטיס שלה בטלפון. סורקים את הקוד עם מצלמת הטלפון שלכם (מחוברים לפורטל הזה), בוחרים הטבה ולוחצים "לממש". הקוד מתחלף כל דקה, אז צילום מסך לא תקף.</div>
+        <div className="fd-note"><b>איך מממשים הטבה:</b> המשפחה מציגה את הכרטיס שלה בטלפון. סורקים את הקוד עם מצלמת הטלפון, בוחרים את העסק שלכם מהרשימה, מקלידים את קוד הספק שלכם <b dir="ltr" style={{ letterSpacing: '.15em' }}>{sup.pin}</b>, בוחרים הטבה ולוחצים "לממש". הקוד של המשפחה מתחלף כל דקה, אז צילום מסך לא תקף.</div>
 
         <section className="stack">
           <h2 style={{ fontSize: 18 }}>ההטבות שלכם</h2>
