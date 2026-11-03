@@ -4,7 +4,7 @@ import NewFundForm from './NewFundForm';
 import Footer from '@/components/Footer';
 import { BRAND } from '@/lib/site';
 
-export const metadata: Metadata = { title: 'פתיחת קופה', robots: { index: false } };
+export const metadata: Metadata = { title: 'פתיחת מרכז המשפחה', robots: { index: false } };
 
 export default function NewFundPage() {
   return (

@@ -7,7 +7,7 @@ export default function Footer({ brandLink = true }: { brandLink?: boolean }) {
       <span>
         {brandLink ? <Link href="/" style={{ color: 'inherit', fontWeight: 700, textDecoration: 'none' }}>{BRAND}</Link> : <b>{BRAND}</b>}
       </span>
-      {CONTACT_PHONE ? <a href={`tel:${CONTACT_PHONE}`}>דברו איתנו</a> : <Link href="/new">לפתוח קופה</Link>}
+      {CONTACT_PHONE ? <a href={`tel:${CONTACT_PHONE}`}>דברו איתנו</a> : <Link href="/new">לפתוח מרכז משפחה</Link>}
     </footer>
   );
 }

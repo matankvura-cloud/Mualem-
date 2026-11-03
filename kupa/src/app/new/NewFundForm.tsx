@@ -15,8 +15,8 @@ export default function NewFundForm() {
   return (
     <form action={action} className="fd-pay" noValidate>
       <div>
-        <h1>פותחים קופה</h1>
-        <p className="lead">שלושה צעדים קצרים. רק השם ופרטי הקשר שלכם חובה; את כל השאר אפשר להשלים אחר כך מקישור הניהול.</p>
+        <h1>פותחים את מרכז המשפחה</h1>
+        <p className="lead">שלושה צעדים קצרים, ומיד יש לכם כרטיס משפחה, קופה, מדריכים וליווי. רק השם ופרטי הקשר שלכם חובה; את כל השאר אפשר להשלים אחר כך.</p>
       </div>
 
       <ol className="fd-steps" aria-label="שלבי הפתיחה">
@@ -79,7 +79,7 @@ export default function NewFundForm() {
 
       {/* מפתחות שונים: אחרת React משתמש באותו אלמנט, משנה type ל-submit באמצע הלחיצה, והדפדפן שולח את הטופס מוקדם. */}
       {last ? (
-        <button key="submit" className="btn" type="submit" disabled={pending}>{pending ? 'פותחים…' : 'לפתוח את הקופה'}</button>
+        <button key="submit" className="btn" type="submit" disabled={pending}>{pending ? 'פותחים…' : 'לפתוח את מרכז המשפחה'}</button>
       ) : (
         <button key="next" className="btn" type="button" onClick={(e) => { e.preventDefault(); setStep(step + 1); }}>המשך</button>
       )}
@@ -87,7 +87,7 @@ export default function NewFundForm() {
         {step > 0 ? <button key="back" className="btn-outline" type="button" onClick={(e) => { e.preventDefault(); setStep(step - 1); }}>חזרה</button> : null}
         {!last ? <button key="skip" className="btn-outline" type="button" onClick={(e) => { e.preventDefault(); setStep(STEPS.length - 1); }}>לדלג, להשלים אחר כך</button> : null}
       </div>
-      <p className="fd-small">{last ? 'הקופה נפתחת מיד. שמרו את קישור הניהול שתקבלו בעמוד הבא.' : `שלב ${step + 1} מתוך ${STEPS.length}`}</p>
+      <p className="fd-small">{last ? 'מרכז המשפחה נפתח מיד. שמרו את הקישור האישי שתקבלו בעמוד הבא.' : `שלב ${step + 1} מתוך ${STEPS.length}`}</p>
     </form>
   );
 }

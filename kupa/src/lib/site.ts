@@ -11,12 +11,12 @@ export async function siteUrl(): Promise<string> {
 }
 
 /** שם המותג. מוגדר במקום אחד כדי שאפשר יהיה להחליף בלי לגעת בקוד. */
-export const BRAND = process.env.NEXT_PUBLIC_BRAND || 'לזכרם';
+export const BRAND = process.env.NEXT_PUBLIC_BRAND || 'לצידכם';
 /** המותג בצד המשפחה (למשל "אבלות ישראל" כשזה חלק מהאתר של אבלות ישראל). ברירת מחדל: BRAND. */
 export const FAMILY_BRAND = process.env.NEXT_PUBLIC_FAMILY_BRAND || BRAND;
 /** האתר הראשי שחוזרים אליו מצד המשפחה (למשל https://www.avlut.org.il). */
 export const HOME_URL = process.env.NEXT_PUBLIC_HOME_URL || '/';
-export const TAGLINE = 'קופה דיגיטלית לזכר יקיריכם';
+export const TAGLINE = 'כל התמיכה, במקום אחד';
 /** שם המוצר של מרכז המשפחה ("לצידכם"), והסלוגן שלו. */
 export const PRODUCT = process.env.NEXT_PUBLIC_PRODUCT_NAME || 'לצידכם';
 export const PRODUCT_TAGLINE = 'כל התמיכה, במקום אחד';

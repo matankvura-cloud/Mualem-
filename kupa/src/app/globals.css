@@ -360,3 +360,44 @@ a.sup:hover{border-color:var(--navy)}
 .land-portals a b{font-family:'Frank Ruhl Libre',Georgia,serif;font-size:18px;color:var(--navy);display:flex;align-items:center;gap:8px}
 .land-portals a b svg{width:22px;height:22px;color:var(--copper)}
 .land-portals a small{color:var(--soft);font-size:13px;line-height:1.5}
+/* ---------- דף הבית של "לצידכם" ---------- */
+.land2{max-width:1080px}
+.land2-top{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;gap:12px}
+.land2-brand{display:flex;align-items:center;gap:8px;font-family:'Frank Ruhl Libre',Georgia,serif;font-weight:700;font-size:22px;color:var(--navy);text-decoration:none}
+.land2-brand .brand-leaf{width:26px;height:26px;color:var(--copper)}.land2-brand .brand-leaf svg{width:26px;height:26px}
+.land2-nav{display:flex;align-items:center;gap:14px;font-size:14px}.land2-nav a{color:var(--navy);text-decoration:none;font-weight:600}
+.land2-nav .btn-outline{min-height:36px;padding:0 14px;width:auto}
+.land2-hero{text-align:center;padding:34px 20px 10px}
+.land2-hero h1{font-size:38px;line-height:1.15;margin:4px auto 10px;max-width:760px;color:var(--navy)}
+.land2-chips{display:inline-block;background:#EEF3F0;color:#2B5A41;border-radius:999px;padding:6px 16px;font-size:14px;font-weight:600}
+.land2-lead{max-width:640px;margin:16px auto 0;font-size:16px;line-height:1.65;color:var(--soft)}
+.land2-cta{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:22px}
+.land2-cta .btn{width:auto;min-width:260px}.land2-cta .btn-outline{width:auto;min-height:50px;padding:0 20px;border-radius:999px}
+.land2-preview{padding:24px 16px 8px}
+.land2-screen{display:flex;background:#fff;border:1px solid var(--line);border-radius:22px;overflow:hidden;box-shadow:0 18px 50px rgba(22,48,77,.12);min-height:380px}
+.land2-screen-side{width:190px;flex:0 0 auto;background:var(--navy);color:#fff;padding:18px 14px;display:flex;flex-direction:column;gap:4px}
+.land2-screen-side b{font-family:'Frank Ruhl Libre',Georgia,serif;font-size:20px;margin-bottom:12px}
+.land2-screen-side span{font-size:13px;padding:7px 10px;border-radius:10px;opacity:.85}.land2-screen-side span.on{background:var(--copper);opacity:1;font-weight:700}
+.land2-screen-main{flex:1;min-width:0;padding:18px;background:var(--bg)}
+.land2-screen-main h2{font-size:22px;margin-bottom:12px}
+.land2-screen-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.land2-screen-grid .fcard{min-height:150px;padding:14px 16px}
+.land2-screen-grid .mini{background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px;display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--soft)}
+.land2-screen-grid .mini b{color:var(--navy);font-family:'Frank Ruhl Libre',Georgia,serif;font-size:14px}
+.land2-screen-grid .mini i{display:block;height:6px;border-radius:999px;background:#EEEAE0;position:relative}.land2-screen-grid .mini i::after{content:"";position:absolute;inset:0 auto 0 0;width:66%;background:var(--copper);border-radius:999px}
+.land2-screen-grid .mini span{display:flex;align-items:center;gap:5px}.land2-screen-grid .mini span svg{width:13px;height:13px;color:var(--ok)}
+.land2-screen-grid .mini .face{width:30px;height:30px;border-radius:999px;background:var(--copper-soft);color:var(--copper);display:grid;place-items:center;font-weight:700}
+.land2-screen-grid .mini em{font-style:normal;margin-top:auto;background:var(--copper);color:#fff;border-radius:8px;padding:5px 8px;text-align:center;font-weight:600;font-size:12px}
+@media(max-width:760px){.land2-screen-side{display:none}.land2-screen-grid{grid-template-columns:1fr 1fr}.land2-hero h1{font-size:28px}}
+@media(max-width:480px){.land2-screen-grid{grid-template-columns:1fr}}
+.land2-sec{padding:26px 18px 0}.land2-sec>h2{font-size:22px;margin-bottom:12px;color:var(--navy)}
+.land2-areas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+@media(max-width:760px){.land2-areas{grid-template-columns:1fr 1fr}}@media(max-width:480px){.land2-areas{grid-template-columns:1fr}}
+.land2-areas .area{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:6px}
+.land2-areas .area .ic{width:40px;height:40px;border-radius:12px;background:var(--copper-soft);color:var(--copper);display:grid;place-items:center}.land2-areas .area .ic svg{width:22px;height:22px}
+.land2-areas .area b{font-family:'Frank Ruhl Libre',Georgia,serif;font-size:17px;color:var(--navy)}.land2-areas .area span:last-child{font-size:13.5px;color:var(--soft);line-height:1.55}
+.land2-kupa .panel p{font-size:14.5px;line-height:1.65;color:var(--soft);margin-bottom:10px}
+.land2-kupa .panel h2 svg{color:var(--copper)}
+.land-portals a em{font-style:normal;color:var(--copper);font-weight:700;font-size:13.5px;margin-top:4px}
+.land2-final{text-align:center;padding-bottom:30px}.land2-final h2{margin-bottom:14px}
+.btn svg{width:20px;height:20px;flex:0 0 auto}

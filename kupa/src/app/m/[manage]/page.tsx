@@ -48,7 +48,7 @@ export default async function FamilyHome({ params, searchParams }: Props) {
 
   return (
     <FamilyShell manage={manage} active="home">
-      {welcome ? <div className="notice notice-ok" style={{ marginBottom: 14 }}><b>ברוכים הבאים ל{PRODUCT}.</b> הקישור לשיתוף עם הקרובים נמצא ב"עזרה מהקרובים". את הקישור לעמוד הזה שומרים לעצמכם.</div> : null}
+      {welcome ? <div className="notice notice-ok" style={{ marginBottom: 14 }}><b>{PRODUCT} פתוח בשבילכם.</b> הקישור לשיתוף עם הקרובים נמצא ב"עזרה מהקרובים". את הקישור לעמוד הזה שומרים לעצמכם.</div> : null}
       <header className="fam-head">
         <div><h1>אנחנו כאן בשבילכם</h1><p>{PRODUCT_TAGLINE}: מידע, זכויות, שירותים וליווי אישי ל{family} בתקופה זו.</p></div>
         {phone ? <a className="btn-outline" href={wa || `tel:${phone}`} target={wa ? '_blank' : undefined} rel="noopener" style={{ width: 'auto' }}><IcPhone />בקשת שיחה</a> : null}

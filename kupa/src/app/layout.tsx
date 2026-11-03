@@ -4,7 +4,7 @@ import { BRAND, TAGLINE } from '@/lib/site';
 
 export const metadata: Metadata = {
   title: { default: `${BRAND} · ${TAGLINE}`, template: `%s · ${BRAND}` },
-  description: `${TAGLINE}. מי שרוצה לעזור מפקיד לקופה של המשפחה במקום לשלוח פרחים.`,
+  description: `${BRAND}: מרכז המשפחה לתקופת האבל. כרטיס משפחה, מדריכים, זכויות, שירותים וליווי אישי, במקום אחד.`,
 };
 export const viewport: Viewport = { width: 'device-width', initialScale: 1, viewportFit: 'cover', themeColor: '#16304D' };
 
