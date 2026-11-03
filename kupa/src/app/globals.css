@@ -1,5 +1,5 @@
 /* עיצוב לפי הדמו המאושר (Heebo + Frank Ruhl Libre). */
-/* צבעי המותג של אבלות ישראל: כחול לילה, זהב-נחושת, נייר. */
+/* כחול הלילה של אבלות ישראל, נחושת-טרקוטה כצבע פעולה (לא חרדל), נייר. */
 :root{--bg:#FBF9F4;--ink:#1C2733;--soft:#5B6472;--line:#E6E1D6;--navy:#16304D;--blue:#244B70;--blue-soft:#E8EEF5;--ok:#3E7C5A;--ok-soft:#EAF5EF;--warn:#C98A2C;--warn-soft:#FBF3E4;--err:#9B2C2C;--err-soft:#FBEAEA;color-scheme:light}
 *{box-sizing:border-box} html{background:var(--bg);-webkit-text-size-adjust:100%}
 body{margin:0;font-family:Heebo,Arial,sans-serif;color:var(--ink);direction:rtl;background:var(--bg);line-height:1.5}
@@ -94,7 +94,7 @@ table.tbl{width:100%;border-collapse:collapse;background:#fff;border:1px solid v
 .topbar .links{display:flex;gap:14px;font-size:14px}
 @media(min-width:600px){.fd{border-inline:1px solid var(--line)}}
 /* ===== צד המשפחה: לפי ההמחשה (סרגל צד, כרטיס, הטבות, ליווי) ===== */
-:root{--copper:#B58B4C;--copper-soft:#F4EADA;--sage:#8FA58B;--sage-soft:#E6EDE3}
+:root{--copper:#B8744A;--copper-soft:#F3E4D8;--sage:#8FA58B;--sage-soft:#E6EDE3}
 .fam{display:flex;min-height:100vh;background:var(--bg)}
 .fam-side{width:232px;flex:0 0 auto;background:var(--navy);color:#fff;padding:22px 16px;display:flex;flex-direction:column;gap:6px;position:sticky;top:0;height:100vh}
 .fam-side .brand{font-family:'Frank Ruhl Libre',Georgia,serif;font-size:26px;font-weight:700;line-height:1.1;margin:0 0 18px;color:#fff;text-decoration:none}
@@ -125,7 +125,7 @@ table.tbl{width:100%;border-collapse:collapse;background:#fff;border:1px solid v
 .fcard .top{display:flex;justify-content:space-between;align-items:center}
 .fcard .top b{font-size:17px;font-family:'Frank Ruhl Libre',Georgia,serif}
 .fcard .chip{display:flex;gap:10px;align-items:center}
-.fcard .chip i{display:block;width:34px;height:26px;border-radius:6px;background:linear-gradient(135deg,#EBD19A,#B58B4C);border:1px solid rgba(0,0,0,.15)}
+.fcard .chip i{display:block;width:34px;height:26px;border-radius:6px;background:linear-gradient(135deg,#E8C27A,#C9953F);border:1px solid rgba(0,0,0,.15)}
 .fcard .chip svg{width:22px;height:22px;opacity:.9}
 .fcard .name{font-size:15px;font-weight:600}
 .fcard .num{font-size:14px;letter-spacing:.14em;opacity:.9;direction:ltr;text-align:right}
