@@ -2,12 +2,12 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { isAdmin } from '@/lib/admin';
-import { supplierById, benefitsOf, redemptionsOfSupplier } from '@/lib/funds';
+import { supplierById, benefitsOf, redemptionsOfSupplier, leadsOf, LEAD_STATUS } from '@/lib/funds';
 import { UUID_RE } from '@/lib/tokens';
 import { fmtBenefit } from '@/lib/card';
-import { ils, fmtDateTime, familyName } from '@/lib/format';
+import { ils, fmtDateTime, fmtDate, familyName } from '@/lib/format';
 import { LoginForm, LoginLinkButton, CommissionForm } from '../../AdminForms';
-import { BenefitForm } from '@/app/p/SupplierForms';
+import { BenefitForm, LeadActions } from '@/app/p/SupplierForms';
 import { toggleBenefit } from '@/app/p/actions';
 import { setSupplierStatus, regenSupplierPin } from '../../actions';
 import { num } from '@/lib/db';
@@ -22,7 +22,7 @@ export default async function AdminSupplier({ params }: Props) {
   if (!UUID_RE.test(id)) notFound();
   const sup = await supplierById(id);
   if (!sup) notFound();
-  const [benefits, reds] = await Promise.all([benefitsOf(id), redemptionsOfSupplier(id)]);
+  const [benefits, reds, leads] = await Promise.all([benefitsOf(id), redemptionsOfSupplier(id), leadsOf(id)]);
   return (
     <div className="fd fd-wide">
       <div className="topbar"><Link className="fd-back" href="/admin/suppliers">&rsaquo; כל הספקים</Link><span className={`pill ${sup.status === 'active' ? 'pill-ok' : sup.status === 'pending' ? 'pill-warn' : 'pill-muted'}`}>{sup.status === 'active' ? 'פעיל' : sup.status === 'pending' ? 'ממתין' : 'לא פעיל'}</span></div>
@@ -36,7 +36,9 @@ export default async function AdminSupplier({ params }: Props) {
           <CommissionForm supplierId={id} pct={num(sup.commission_pct)} />
           <div className="stats">
             <div className="stat"><small>עסקאות שדווחו</small><b>{ils(reds.reduce((a, r) => a + num(r.order_amount), 0))}</b></div>
-            <div className="stat"><small>עמלה לפלטפורמה</small><b>{ils(reds.reduce((a, r) => a + num(r.commission), 0))}</b></div>
+            <div className="stat"><small>עמלה ממימושים</small><b>{ils(reds.reduce((a, r) => a + num(r.commission), 0))}</b></div>
+            <div className="stat"><small>עבודות שנסגרו מפניות</small><b>{ils(leads.filter((l) => l.status === 'closed').reduce((a, l) => a + num(l.order_amount), 0))}</b></div>
+            <div className="stat"><small>עמלה מפניות</small><b>{ils(leads.reduce((a, l) => a + num(l.commission), 0))}</b></div>
           </div>
         </section>
         <section className="card stack">
@@ -48,6 +50,18 @@ export default async function AdminSupplier({ params }: Props) {
             {sup.status === 'active' ? <form action={setSupplierStatus.bind(null, id, 'inactive')}><button className="btn-ghost btn-danger" type="submit">להסיר מהרשימה</button></form> : null}
             {sup.status === 'inactive' ? <form action={setSupplierStatus.bind(null, id, 'pending')}><button className="btn-ghost" type="submit">להחזיר לממתין</button></form> : null}
           </div>
+        </section>
+        <section className="stack">
+          <h2 style={{ fontSize: 18 }}>פניות ממשפחות <small className="muted">({leads.length}, {leads.filter((l) => l.status === 'new').length} חדשות)</small></h2>
+          {leads.length ? (
+            <div className="tbl-wrap"><table className="tbl">
+              <thead><tr><th>מתי</th><th>מי</th><th>מה</th><th>מצב</th><th>עבודה</th><th>עמלה</th><th></th></tr></thead>
+              <tbody>{leads.map((l) => { const [label, cls] = LEAD_STATUS[l.status] || [l.status, '']; return (
+                <tr key={l.id}><td className="num">{fmtDate(l.created_at)}</td><td><b>{l.name}</b>{l.family ? <><br /><small className="muted">{familyName(l.family)}</small></> : null}<br /><small dir="ltr">{l.phone}</small></td>
+                  <td className="muted">{l.message}</td><td><span className={`pill ${cls}`}>{label}</span></td>
+                  <td className="num">{Number(l.order_amount) ? ils(l.order_amount) : '—'}</td><td className="num">{Number(l.commission) ? ils(l.commission) : '—'}</td>
+                  <td style={{ minWidth: 220 }}><LeadActions leadId={l.id} status={l.status} asAdmin /></td></tr>); })}</tbody>
+            </table></div>) : <div className="fd-note">עדיין אין פניות לספק הזה.</div>}
         </section>
         <section className="stack">
           <h2 style={{ fontSize: 18 }}>הטבות</h2>

@@ -71,3 +71,32 @@ export async function enterWithToken(token: string) {
   const sup = await redeemSupplierLogin(token);
   redirect(sup ? '/p' : '/p?login=expired');
 }
+
+/** הספק מעדכן ליד: בטיפול / נסגר (עם סכום, מחשב עמלה) / לא יצא. */
+export async function setLeadStatus(leadId: string, asAdmin: boolean, _prev: FormState, fd: FormData): Promise<FormState> {
+  if (!UUID_RE.test(leadId)) return { error: 'ליד לא תקין' };
+  const { one } = await import('@/lib/db');
+  const lead = await one<{ supplier_id: string }>(`SELECT supplier_id FROM kupa_leads WHERE id = $1`, [leadId]);
+  if (!lead) return { error: 'הפנייה לא נמצאה' };
+  if (asAdmin) {
+    const { isAdmin } = await import('@/lib/admin');
+    if (!(await isAdmin())) return { error: 'לא מחובר' };
+  } else {
+    const sup = await currentSupplier();
+    if (!sup || sup.id !== lead.supplier_id) return { error: 'לא מחובר' };
+  }
+  const status = String(fd.get('status') || '');
+  if (!['contacted', 'closed', 'lost', 'new'].includes(status)) return { error: 'מצב לא תקין' };
+  const note = String(fd.get('note') || '').trim().slice(0, 300) || null;
+  if (status === 'closed') {
+    const amount = Number(String(fd.get('order_amount') || '').replace(/[^\d.]/g, ''));
+    if (!(amount > 0)) return { error: 'כדי לסגור צריך את סכום העבודה.' };
+    const sup = await one<{ commission_pct: unknown }>(`SELECT commission_pct FROM kupa_suppliers WHERE id = $1`, [lead.supplier_id]);
+    const commission = Math.round(amount * (Number(sup?.commission_pct) || 0)) / 100;
+    await many(`UPDATE kupa_leads SET status = 'closed', order_amount = $2, commission = $3, note = COALESCE($4, note), updated_at = now() WHERE id = $1`, [leadId, amount, commission, note]);
+  } else {
+    await many(`UPDATE kupa_leads SET status = $2, note = COALESCE($3, note), updated_at = now() WHERE id = $1`, [leadId, status, note]);
+  }
+  revalidatePath('/p'); revalidatePath(`/admin/suppliers/${lead.supplier_id}`); revalidatePath('/admin/suppliers');
+  return { ok: 'עודכן.' };
+}

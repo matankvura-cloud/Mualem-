@@ -18,6 +18,11 @@ export default function Landing() {
         <Link className="btn" href="/new">לפתוח קופה</Link>
         <span className="sub">בלי הרשמה · בלי עלות למשפחה · הקישור מוכן מיד</span>
       </section>
+      <section className="land-card">
+        <div><p className="fd-eyebrow">חדש</p><h2>כרטיס המשפחה</h2>
+          <p>כל משפחה שפותחת קופה מקבלת כרטיס: הטבות אצל ספקים משתתפים, תשלום לספקים ישירות מהקופה, ואזור משפחתי עם כל מה שצריך לעשות. חינם.</p>
+          <div className="fd-actions"><Link className="btn" href="/card" style={{ width: 'auto' }}>מה הכרטיס נותן</Link><Link className="btn-outline" href="/suppliers" style={{ width: 'auto' }}>הספקים המשתתפים</Link></div></div>
+      </section>
 
       <section className="fd-sec">
         <h2>איך זה עובד</h2>

@@ -247,3 +247,14 @@ input[type=file]{width:100%;font:inherit;font-size:14px;padding:10px;border:1.5p
 /* כרטיס ההטבות */
 .card-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
 .qr img{border-radius:12px;border:1px solid var(--line);background:#fff}
+/* מדריך ספקים ציבורי */
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips a{text-decoration:none;color:var(--navy);background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:13.5px;font-weight:600}
+.chips a.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.how{counter-reset:h;list-style:none;padding:0;margin:0 0 14px;display:flex;flex-direction:column;gap:10px}
+.how li{counter-increment:h;display:flex;gap:12px;align-items:flex-start;font-size:15px;line-height:1.5}
+.how li::before{content:counter(h);flex:none;width:28px;height:28px;border-radius:50%;background:var(--blue-soft);color:var(--navy);display:grid;place-items:center;font-weight:700;font-size:13px}
+a.sup:hover{border-color:var(--navy)}
+.land-card{padding:26px 20px;background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.land-card h2{font-family:'Frank Ruhl Libre',Georgia,serif;font-size:24px;margin:4px 0 8px}
+.land-card p{color:var(--soft);font-size:15px;line-height:1.6;margin-bottom:12px}

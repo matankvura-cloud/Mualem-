@@ -200,6 +200,23 @@ ALTER TABLE kupa_redemptions ADD COLUMN IF NOT EXISTS commission numeric(12,2);
 CREATE INDEX IF NOT EXISTS kupa_redemptions_fund_idx ON kupa_redemptions(fund_id, created_at DESC);
 CREATE INDEX IF NOT EXISTS kupa_redemptions_supplier_idx ON kupa_redemptions(supplier_id, created_at DESC);
 
+-- ליד: משפחה (או כל גולש) ביקשה הצעה מספק. הספק מטפל בפורטל; סגירה עם סכום רושמת עמלה.
+CREATE TABLE IF NOT EXISTS kupa_leads (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  supplier_id uuid NOT NULL REFERENCES kupa_suppliers(id) ON DELETE CASCADE,
+  fund_id uuid REFERENCES kupa_funds(id) ON DELETE SET NULL,
+  name text NOT NULL,
+  phone text NOT NULL,
+  message text,
+  status text NOT NULL DEFAULT 'new' CHECK (status IN ('new','contacted','closed','lost')),
+  order_amount numeric(12,2),
+  commission numeric(12,2),
+  note text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS kupa_leads_supplier_idx ON kupa_leads(supplier_id, status, created_at DESC);
+
 -- קישורי כניסה לספקים (הניהול מנפיק, הספק פותח פעם אחת בטלפון שלו).
 CREATE TABLE IF NOT EXISTS kupa_supplier_logins (
   token_hash text PRIMARY KEY,
@@ -222,3 +239,4 @@ ALTER TABLE kupa_benefits ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kupa_redemptions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kupa_supplier_logins ENABLE ROW LEVEL SECURITY;
 -- הטבלאות נוצרות על ידי kupa_app (בעל הטבלאות), ולכן ה-RLS לא חוסם אותו; anon לא רואה אותן.
+ALTER TABLE kupa_leads ENABLE ROW LEVEL SECURITY;

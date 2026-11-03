@@ -2,11 +2,11 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { currentSupplier } from '@/lib/supplier-auth';
-import { benefitsOf, redemptionsOfSupplier } from '@/lib/funds';
+import { benefitsOf, redemptionsOfSupplier, leadsOf, LEAD_STATUS } from '@/lib/funds';
 import { fmtBenefit } from '@/lib/card';
-import { ils, fmtDateTime, familyName } from '@/lib/format';
+import { ils, fmtDateTime, fmtDate, familyName } from '@/lib/format';
 import { FAMILY_BRAND as BRAND, CONTACT_PHONE } from '@/lib/site';
-import { BenefitForm, ProfileForm } from './SupplierForms';
+import { BenefitForm, ProfileForm, LeadActions } from './SupplierForms';
 import { toggleBenefit, supplierSignOut } from './actions';
 
 export const dynamic = 'force-dynamic';
@@ -26,7 +26,8 @@ export default async function SupplierPortal({ searchParams }: Props) {
       </div></div>
     );
   }
-  const [benefits, reds] = await Promise.all([benefitsOf(sup.id), redemptionsOfSupplier(sup.id)]);
+  const [benefits, reds, leads] = await Promise.all([benefitsOf(sup.id), redemptionsOfSupplier(sup.id), leadsOf(sup.id)]);
+  const newLeads = leads.filter((l) => l.status === 'new').length;
   return (
     <div className="fd fd-wide">
       <div className="topbar"><b style={{ fontFamily: "'Frank Ruhl Libre',Georgia,serif", color: 'var(--navy)', fontSize: 17 }}>{BRAND} · ספקים</b>
@@ -34,7 +35,20 @@ export default async function SupplierPortal({ searchParams }: Props) {
       <div className="pad stack" style={{ gap: 16 }}>
         <div><h1 className="page-title">{sup.name}</h1><p className="lead">{sup.category}{sup.city ? ` · ${sup.city}` : ''} · <span className={`pill ${sup.status === 'active' ? 'pill-ok' : 'pill-warn'}`}>{sup.status === 'active' ? 'ספק פעיל' : 'ממתין לאישור'}</span></p></div>
         {sup.status !== 'active' ? <div className="notice notice-warn">הפרופיל וההטבות יוצגו למשפחות אחרי שנאשר אתכם. אפשר כבר להכין את ההטבות.</div> : null}
-        <div className="fd-note"><b>איך מממשים הטבה:</b> המשפחה מציגה את הכרטיס שלה בטלפון. סורקים את הקוד עם מצלמת הטלפון, בוחרים את העסק שלכם מהרשימה, מקלידים את קוד הספק שלכם <b dir="ltr" style={{ letterSpacing: '.15em' }}>{sup.pin}</b>, בוחרים הטבה ולוחצים "לממש". הקוד של המשפחה מתחלף כל דקה, אז צילום מסך לא תקף.</div>
+        <div className="fd-note"><b>איך זה עובד:</b> משפחות רואות אתכם ב<a href="/suppliers">מדריך הספקים</a> ולוחצות "לקבל הצעה". הפנייה מופיעה כאן ומגיעה גם לוואטסאפ שלכם. חוזרים אליהן, סוגרים, ומסמנים "נסגר" עם הסכום.</div>
+        <div className="fd-note"><b>מימוש בקופה (לספקים שעובדים פנים מול פנים):</b> המשפחה מציגה את הכרטיס שלה בטלפון. סורקים את הקוד עם מצלמת הטלפון, בוחרים את העסק שלכם מהרשימה, מקלידים את קוד הספק שלכם <b dir="ltr" style={{ letterSpacing: '.15em' }}>{sup.pin}</b>, בוחרים הטבה ולוחצים "לממש". הקוד של המשפחה מתחלף כל דקה, אז צילום מסך לא תקף.</div>
+
+        <section className="stack">
+          <h2 style={{ fontSize: 18 }}>פניות ממשפחות {newLeads ? <span className="pill pill-warn">{newLeads} חדשות</span> : null}</h2>
+          {leads.length ? leads.map((l) => { const [label, cls] = LEAD_STATUS[l.status] || [l.status, '']; return (
+            <div className="card stack" key={l.id} style={{ gap: 8, borderColor: l.status === 'new' ? '#F0DDB8' : undefined }}>
+              <div className="fd-row" style={{ fontSize: 15, color: 'var(--ink)' }}><b>{l.name}{l.family ? ` · ${familyName(l.family)}` : ''}</b><span className={`pill ${cls}`}>{label}</span></div>
+              <p className="muted">{l.message || 'בלי פירוט'} · {fmtDate(l.created_at)}</p>
+              <a className="btn-copper" href={`https://wa.me/${l.phone.replace(/\D/g, '').replace(/^0/, '972')}`} target="_blank" rel="noopener" style={{ width: 'auto' }}>וואטסאפ ל{l.name} · <span dir="ltr">{l.phone}</span></a>
+              {Number(l.order_amount) ? <small className="muted">נסגר ב-{ils(l.order_amount)}{Number(l.commission) ? ` · עמלת הפלטפורמה ${ils(l.commission)}` : ''}</small> : null}
+              <LeadActions leadId={l.id} status={l.status} />
+            </div>); }) : <div className="fd-note">עדיין אין פניות. ברגע שמשפחה תלחץ "לקבל הצעה" בעמוד שלכם, היא תופיע כאן ותוכלו לחזור אליה בוואטסאפ.</div>}
+        </section>
 
         <section className="stack">
           <h2 style={{ fontSize: 18 }}>ההטבות שלכם</h2>

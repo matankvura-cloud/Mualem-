@@ -1,6 +1,6 @@
 'use client';
 import { useActionState } from 'react';
-import { saveBenefit, updateSupplierProfile, type FormState } from './actions';
+import { saveBenefit, updateSupplierProfile, setLeadStatus, type FormState } from './actions';
 
 export function BenefitForm({ supplierId, asAdmin = false }: { supplierId: string; asAdmin?: boolean }) {
   const [state, action, pending] = useActionState<FormState, FormData>(saveBenefit.bind(null, supplierId, asAdmin), undefined);
@@ -37,6 +37,24 @@ export function ProfileForm({ v }: { v: { description: string | null; city: stri
       <div className="field"><label className="l" htmlFor="p-web">אתר (לא חובה)</label><input id="p-web" name="website" type="url" maxLength={200} dir="ltr" defaultValue={v.website ?? ''} /></div>
       {state?.error ? <p className="fd-err" role="alert">{state.error}</p> : state?.ok ? <p className="notice notice-ok">{state.ok}</p> : null}
       <button className="btn btn-inline" type="submit" disabled={pending}>{pending ? 'שומרים…' : 'לשמור'}</button>
+    </form>
+  );
+}
+
+export function LeadActions({ leadId, status, asAdmin = false }: { leadId: string; status: string; asAdmin?: boolean }) {
+  const [state, action, pending] = useActionState<FormState, FormData>(setLeadStatus.bind(null, leadId, asAdmin), undefined);
+  if (status === 'closed' || status === 'lost') return state?.ok ? <small className="muted">{state.ok}</small> : null;
+  return (
+    <form action={action} className="stack" style={{ gap: 6 }} noValidate>
+      <div className="fd-actions">
+        {status === 'new' ? <button className="btn-outline" type="submit" name="status" value="contacted" disabled={pending} style={{ minHeight: 36, fontSize: 13 }}>דיברנו</button> : null}
+        <button className="btn-ghost" type="submit" name="status" value="lost" disabled={pending} style={{ minHeight: 36, fontSize: 13 }}>לא יצא</button>
+      </div>
+      <div className="fd-actions">
+        <input name="order_amount" type="text" inputMode="decimal" placeholder="סכום העבודה בש״ח" style={{ flex: 1 }} />
+        <button className="btn btn-inline" type="submit" name="status" value="closed" disabled={pending} style={{ minHeight: 36, fontSize: 13 }}>נסגר</button>
+      </div>
+      {state?.error ? <p className="fd-err">{state.error}</p> : null}
     </form>
   );
 }

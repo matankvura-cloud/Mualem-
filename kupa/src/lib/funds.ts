@@ -153,13 +153,15 @@ export type Redemption = {
   id: string; fund_id: string; supplier_id: string | null; benefit_id: string | null; supplier_name: string; benefit_title: string;
   amount_saved: unknown; order_amount: unknown; commission: unknown; note: string | null; redeemed_by: string | null; nonce: string | null; created_at: unknown;
 };
-export type SupplierRow = Supplier & { benefits: unknown; redemptions: unknown; orders: unknown; commission: unknown };
+export type SupplierRow = Supplier & { benefits: unknown; redemptions: unknown; orders: unknown; commission: unknown; leads_new: unknown; leads_commission: unknown };
 
 export const allSuppliers = () => many<SupplierRow>(
   `SELECT s.*, (SELECT COUNT(*) FROM kupa_benefits b WHERE b.supplier_id = s.id AND b.active) AS benefits,
           (SELECT COUNT(*) FROM kupa_redemptions r WHERE r.supplier_id = s.id) AS redemptions,
           COALESCE((SELECT SUM(order_amount) FROM kupa_redemptions r WHERE r.supplier_id = s.id), 0) AS orders,
-          COALESCE((SELECT SUM(commission) FROM kupa_redemptions r WHERE r.supplier_id = s.id), 0) AS commission
+          COALESCE((SELECT SUM(commission) FROM kupa_redemptions r WHERE r.supplier_id = s.id), 0) AS commission,
+          (SELECT COUNT(*) FROM kupa_leads l WHERE l.supplier_id = s.id AND l.status = 'new') AS leads_new,
+          COALESCE((SELECT SUM(commission) FROM kupa_leads l WHERE l.supplier_id = s.id AND l.status = 'closed'), 0) AS leads_commission
    FROM kupa_suppliers s ORDER BY CASE s.status WHEN 'active' THEN 0 WHEN 'pending' THEN 1 ELSE 2 END, s.created_at DESC`);
 export const activeSuppliers = () => many<Supplier>(`SELECT * FROM kupa_suppliers WHERE status = 'active' ORDER BY category, name`);
 export const supplierById = (id: string) => one<Supplier>(`SELECT * FROM kupa_suppliers WHERE id = $1`, [id]);
@@ -180,3 +182,15 @@ export async function suppliersWithBenefits() {
   const [sups, bens] = await Promise.all([activeSuppliers(), liveBenefits()]);
   return sups.map((s) => ({ id: s.id, name: s.name, category: s.category, benefits: bens.filter((b) => b.supplier_id === s.id) })).filter((s) => s.benefits.length > 0);
 }
+
+export const supplierBySlug = (slug: string) => one<Supplier>(`SELECT * FROM kupa_suppliers WHERE slug = $1`, [slug]);
+export const liveBenefitsOf = (supplierId: string) => many<Benefit>(
+  `SELECT * FROM kupa_benefits WHERE supplier_id = $1 AND active AND (valid_from IS NULL OR valid_from <= CURRENT_DATE) AND (valid_until IS NULL OR valid_until >= CURRENT_DATE) ORDER BY created_at`, [supplierId]);
+
+export type Lead = {
+  id: string; supplier_id: string; fund_id: string | null; name: string; phone: string; message: string | null;
+  status: 'new' | 'contacted' | 'closed' | 'lost'; order_amount: unknown; commission: unknown; note: string | null; created_at: unknown; updated_at: unknown;
+};
+export const leadsOf = (supplierId: string) => many<Lead & { family: string | null }>(
+  `SELECT l.*, f.display_name AS family FROM kupa_leads l LEFT JOIN kupa_funds f ON f.id = l.fund_id WHERE l.supplier_id = $1 ORDER BY CASE l.status WHEN 'new' THEN 0 WHEN 'contacted' THEN 1 ELSE 2 END, l.created_at DESC LIMIT 300`, [supplierId]);
+export const LEAD_STATUS: Record<string, [string, string]> = { new: ['חדש', 'pill-warn'], contacted: ['בטיפול', 'pill'], closed: ['נסגר', 'pill-ok'], lost: ['לא יצא', 'pill-muted'] };

@@ -464,6 +464,59 @@ try {
   await page.selectOption('#payee_pick', 'other');
   check((await page.locator('input#payee').count()) === 1, '"ספק אחר" פותח שדה חופשי');
 
+
+  // 12. שלב 1ב: מדריך ציבורי, עמוד ספק, ליד, סגירה עם עמלה, הצטרפות עצמית, עמוד הכרטיס
+  console.log('מדריך ספקים ולידים');
+  const cardPub = await fetch(`${SITE}/card`).then((r) => r.text());
+  check(cardPub.includes('כרטיס המשפחה') && cardPub.includes('קייטרינג של רחל'), 'עמוד הכרטיס הציבורי: מציג הטבה של ספק אמיתי');
+  await page.goto(`${SITE}/suppliers`);
+  const dirText = await page.textContent('body');
+  check(dirText.includes('קייטרינג של רחל') && dirText.includes('10% הנחה') && !dirText.includes('noindex'), 'המדריך הציבורי מציג את הספק עם ההטבה');
+  const supHref = await page.locator('a.sup').first().getAttribute('href');
+  check(/^\/suppliers\/[^/?]+$/.test(supHref), `קישור לעמוד הספק: ${supHref}`);
+  await page.goto(`${SITE}${supHref}?f=${publicUrl.split('/f/')[1]}`);
+  const supPub = await page.textContent('body');
+  check(supPub.includes('לקבל הצעה מקייטרינג של רחל') && supPub.includes('שם המשפחה: משפחת לוי'), 'עמוד הספק: טופס הצעה עם שם המשפחה מהקופה');
+  await page.fill('#lead-name', 'רונית לוי');
+  await page.fill('#lead-phone', '0501234567');
+  await page.fill('#lead-msg', 'ארוחות ל-20 איש, 3 ימים');
+  await page.click('form:has(#lead-name) button[type=submit]');
+  await page.waitForSelector('.notice-ok:has-text("הפנייה נרשמה")');
+  const waHref = await page.locator('.notice-ok a.btn').getAttribute('href');
+  check(waHref.startsWith('https://wa.me/972529876543?text=') && decodeURIComponent(waHref).includes('משפחת לוי') === false && decodeURIComponent(waHref).includes('יעקב'), 'כפתור וואטסאפ לספק עם פרטי הפנייה ושם הקופה');
+  await page.goto(supplierAdminUrl);
+  let adminSup = await page.textContent('body');
+  check(adminSup.includes('ארוחות ל-20 איש') && adminSup.includes('1 חדשות'), 'ניהול הספק: הפנייה מופיעה כחדשה');
+  await page.click('button:has-text("דיברנו")');
+  await page.waitForSelector('.pill:has-text("בטיפול")');
+  await page.fill('input[name=order_amount]', '5000');
+  await page.click('button:has-text("נסגר")');
+  await page.waitForSelector('.pill:has-text("נסגר")');
+  adminSup = await page.textContent('body');
+  check(adminSup.includes('₪5,000') && adminSup.includes('₪500'), 'סגירת הפנייה ב-₪5,000: עמלה ₪500 (10%)');
+  await page.goto(`${SITE}/admin/suppliers`);
+  check((await page.textContent('body')).includes('₪700'), 'רשימת הספקים: עמלות לפלטפורמה ₪700 (200 ממימוש + 500 מפנייה)');
+  // הצטרפות עצמית
+  await page.goto(`${SITE}/suppliers/join`);
+  await page.fill('#j-name', 'אוהלים של משה');
+  await page.fill('#j-cat', 'אוהלים וציוד');
+  await page.fill('#j-phone', '0537654321');
+  await page.fill('#j-bt', 'הנחה על אוהל לשבעה');
+  await page.fill('#j-bv', '15');
+  await page.click('form:has(#j-name) button[type=submit]');
+  await page.waitForSelector('.notice-ok:has-text("נרשמתם")');
+  check(true, 'ספק נרשם בעצמו');
+  const dir2 = await fetch(`${SITE}/suppliers`).then((r) => r.text());
+  check(!dir2.includes('אוהלים של משה'), 'ספק ממתין לא מופיע במדריך לפני אישור');
+  await page.goto(`${SITE}/admin/suppliers`);
+  check((await page.textContent('body')).includes('אוהלים של משה'), 'הניהול רואה את הספק החדש כממתין');
+  await page.click('tr:has-text("אוהלים של משה") button:has-text("לאשר")');
+  await page.waitForSelector('tr:has-text("אוהלים של משה") .pill:has-text("פעיל")');
+  const dir3 = await fetch(`${SITE}/suppliers`).then((r) => r.text());
+  check(dir3.includes('אוהלים של משה') && dir3.includes('15% הנחה'), 'אחרי האישור הספק מופיע במדריך עם ההטבה');
+  await page.goto(manageUrl + '/suppliers');
+  check((await page.locator('a:has-text("לקבל הצעה עם ההטבה")').first().getAttribute('href')).includes('?f='), 'אזור המשפחה: "לקבל הצעה" מוביל לעמוד הספק עם הקופה');
+
   // 9. קופה לזכרה
   console.log('לזכרה');
   await page.setViewportSize({ width: 420, height: 860 });
