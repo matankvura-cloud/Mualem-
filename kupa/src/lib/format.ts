@@ -1,7 +1,7 @@
 /** לזכרו / לזכרה. */
 export const memOf = (gender: string | null | undefined) => (gender === 'f' ? 'לזכרה של' : 'לזכרו של');
 export const was = (gender: string | null | undefined) => (gender === 'f' ? 'הייתה' : 'היה');
-export const ils = (n: unknown) => `₪${Math.round(Number(n) || 0).toLocaleString('he-IL')}`;
+export const ils = (n: unknown) => { const v = Number(n) || 0; return `₪${v % 1 ? v.toLocaleString('he-IL', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : v.toLocaleString('he-IL')}`; };
 export const round2 = (n: number) => Math.round(n * 100) / 100;
 
 const DAYS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
