@@ -77,14 +77,15 @@ export default function NewFundForm() {
 
       {state?.error ? <p className="fd-err" role="alert">{state.error}</p> : null}
 
+      {/* מפתחות שונים: אחרת React משתמש באותו אלמנט, משנה type ל-submit באמצע הלחיצה, והדפדפן שולח את הטופס מוקדם. */}
       {last ? (
-        <button className="btn" type="submit" disabled={pending}>{pending ? 'פותחים…' : 'לפתוח את הקופה'}</button>
+        <button key="submit" className="btn" type="submit" disabled={pending}>{pending ? 'פותחים…' : 'לפתוח את הקופה'}</button>
       ) : (
-        <button className="btn" type="button" onClick={() => setStep(step + 1)}>המשך</button>
+        <button key="next" className="btn" type="button" onClick={(e) => { e.preventDefault(); setStep(step + 1); }}>המשך</button>
       )}
       <div className="fd-actions">
-        {step > 0 ? <button className="btn-outline" type="button" onClick={() => setStep(step - 1)}>חזרה</button> : null}
-        {!last ? <button className="btn-outline" type="button" onClick={() => setStep(STEPS.length - 1)}>לדלג, להשלים אחר כך</button> : null}
+        {step > 0 ? <button key="back" className="btn-outline" type="button" onClick={(e) => { e.preventDefault(); setStep(step - 1); }}>חזרה</button> : null}
+        {!last ? <button key="skip" className="btn-outline" type="button" onClick={(e) => { e.preventDefault(); setStep(STEPS.length - 1); }}>לדלג, להשלים אחר כך</button> : null}
       </div>
       <p className="fd-small">{last ? 'הקופה נפתחת מיד. שמרו את קישור הניהול שתקבלו בעמוד הבא.' : `שלב ${step + 1} מתוך ${STEPS.length}`}</p>
     </form>
