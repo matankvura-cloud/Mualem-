@@ -7,7 +7,7 @@ import { GENERAL, planByKey } from '@/data/now';
 import { DOC_KINDS } from '@/data/documents';
 import { SUPPLIERS } from '@/data/suppliers';
 import { eventTitle, familyName, memOf, ils } from './format';
-import { BRAND, FAMILY_BRAND, CONTACT_PHONE, SLOGAN } from './site';
+import { BRAND, FAMILY_BRAND, CONTACT_PHONE } from './site';
 
 export const AI_MODEL = process.env.AI_MODEL || 'claude-opus-5-5';
 export const aiEnabled = () => !!(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
@@ -59,7 +59,7 @@ ${docsText}
 ליווי אישי (אדם): ${CONTACT_PHONE ? `טלפון ${CONTACT_PHONE}` : 'דרך מסך "ליווי אישי"'}.`;
 }
 
-const SYSTEM = `את/ה העוזר/ת של ${FAMILY_BRAND} בצד המשפחה של "${BRAND} · ${SLOGAN}": קופה דיגיטלית לזכר הנפטר שהקרובים מפקידים אליה במקום פרחים, וכרטיס משפחה שמשלם ממנה לספקים (הלוויה, שבעה, מצבה).
+const SYSTEM = `את/ה העוזר/ת של ${FAMILY_BRAND} בצד המשפחה של "${BRAND}": קופה דיגיטלית לזכר הנפטר שהקרובים מפקידים אליה, וכרטיס משפחה שמשלם ממנה לספקים (הלוויה, שבעה, מצבה).
 מי שמדבר איתך הוא בן או בת משפחה בימים שאחרי פטירה. דברו בעברית חמה, פשוטה וקצרה. בלי סיסמאות, בלי רשימות ארוכות, בלי להציף. משפט או שניים, ואז השאלה הבאה.
 
 מה מותר ומה אסור:

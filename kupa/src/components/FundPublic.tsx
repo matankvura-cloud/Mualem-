@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import type { Fund, Totals } from '@/lib/funds';
 import { ils, eventDay, eventTitle, memOf } from '@/lib/format';
-import { SLOGAN } from '@/lib/site';
 import CopyButton from './CopyButton';
 
 type Book = { name: string; message: string | null; amount: number | null }[];
@@ -13,7 +12,7 @@ export default function FundPublic({ fund, t, totals: tot, book, site }: { fund:
   const target = Number(fund.target_ils || 0);
   const pct = raised !== null && target > 0 ? Math.min(100, Math.round((raised / target) * 100)) : null;
   const link = `${site}/f/${t}`;
-  const shareText = encodeURIComponent(`${memOf(fund.gender)} ${fund.display_name}. ${SLOGAN}, אפשר להפקיד לקופה של המשפחה: ${link}`);
+  const shareText = encodeURIComponent(`${memOf(fund.gender)} ${fund.display_name}. אפשר להפקיד לקופה של המשפחה: ${link}`);
   const closed = fund.status === 'closed';
   const messages = book.filter((b) => b.message);
 
@@ -34,7 +33,7 @@ export default function FundPublic({ fund, t, totals: tot, book, site }: { fund:
         {fund.purpose ? <p className="fd-purpose">{fund.purpose}</p> : null}
         {closed
           ? <p className="fd-purpose" style={{ marginTop: 12 }}><b>הקופה נסגרה.</b> תודה לכל מי שעזר.</p>
-          : <Link className="btn" href={`/f/${t}/give`} style={{ marginTop: 14 }}>להפקיד לקופה · במקום פרחים</Link>}
+          : <Link className="btn" href={`/f/${t}/give`} style={{ marginTop: 14 }}>להפקיד לקופה</Link>}
         <div className="fd-actions">
           <a className="btn-ghost" href={`https://wa.me/?text=${shareText}`} target="_blank" rel="noopener">שתף בוואטסאפ</a>
           <CopyButton text={link} />

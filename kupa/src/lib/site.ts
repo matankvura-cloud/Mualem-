@@ -12,7 +12,6 @@ export async function siteUrl(): Promise<string> {
 
 /** שם המותג. מוגדר במקום אחד כדי שאפשר יהיה להחליף בלי לגעת בקוד. */
 export const BRAND = process.env.NEXT_PUBLIC_BRAND || 'לזכרם';
-export const SLOGAN = 'במקום פרחים';
 /** המותג בצד המשפחה (למשל "אבלות ישראל" כשזה חלק מהאתר של אבלות ישראל). ברירת מחדל: BRAND. */
 export const FAMILY_BRAND = process.env.NEXT_PUBLIC_FAMILY_BRAND || BRAND;
 /** האתר הראשי שחוזרים אליו מצד המשפחה (למשל https://www.avlut.org.il). */

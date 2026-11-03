@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import Footer from '@/components/Footer';
-import { FEE_PCT, FEE_MODE, BRAND, SLOGAN } from '@/lib/site';
+import { FEE_PCT, FEE_MODE, BRAND, TAGLINE } from '@/lib/site';
 import { DEMO } from '@/lib/demo-seed';
 
 const demoMode = process.env.KUPA_DEMO_SEED === '1';
@@ -10,7 +10,7 @@ export default function Landing() {
     <div className="fd">
       <section className="land-hero">
         <p className="fd-eyebrow">{BRAND}</p>
-        <h1>{SLOGAN}</h1>
+        <h1>{TAGLINE}</h1>
         <p>
           קופה דיגיטלית לזכר מי שהלך. המשפחה פותחת אותה בדקה, שולחת קישור אחד,
           וכל מי שרוצה לעזור מפקיד ישירות לקופה במקום לשלוח זר.

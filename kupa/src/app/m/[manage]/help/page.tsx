@@ -2,7 +2,6 @@ import type { Metadata } from 'next';
 import { loadFamily } from '../_shared';
 import { depositsOf } from '@/lib/funds';
 import { ils, fmtDateTime, memOf } from '@/lib/format';
-import { SLOGAN } from '@/lib/site';
 import FamilyShell from '@/components/FamilyShell';
 import CopyButton from '@/components/CopyButton';
 import { IcPeople, IcPlus } from '@/components/icons';
@@ -16,10 +15,10 @@ export default async function HelpPage({ params }: Props) {
   const { fund, tot, publicLink, manageLink } = await loadFamily(manage);
   const deps = await depositsOf(fund.id);
   const paid = deps.filter((d) => d.status === 'paid');
-  const shareText = encodeURIComponent(`${memOf(fund.gender)} ${fund.display_name}. ${SLOGAN}, אפשר להפקיד לקופה של המשפחה: ${publicLink}`);
+  const shareText = encodeURIComponent(`${memOf(fund.gender)} ${fund.display_name}. אפשר להפקיד לקופה של המשפחה: ${publicLink}`);
   return (
     <FamilyShell manage={manage} active="help">
-      <header className="fam-head"><div><h1>עזרה מהקרובים</h1><p>{tot.donors ? `${tot.donors} קרובים השתתפו עד עכשיו, ${ils(tot.raised)} בסך הכול.` : 'שלחו את הקישור לכל מי שרוצה לעזור. במקום פרחים.'}</p></div></header>
+      <header className="fam-head"><div><h1>עזרה מהקרובים</h1><p>{tot.donors ? `${tot.donors} קרובים השתתפו עד עכשיו, ${ils(tot.raised)} בסך הכול.` : 'שלחו את הקישור לכל מי שרוצה לעזור.'}</p></div></header>
       <section className="fam-grid2">
         <div className="panel">
           <h2><IcPeople />הקישור לשיתוף</h2>

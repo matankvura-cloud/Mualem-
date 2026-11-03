@@ -5,7 +5,7 @@ import { notFound } from 'next/navigation';
 import { fundByCard, totals, cardLast4 } from '@/lib/funds';
 import { TOKEN_RE } from '@/lib/tokens';
 import { ils, familyName } from '@/lib/format';
-import { FAMILY_BRAND as BRAND, SLOGAN } from '@/lib/site';
+import { FAMILY_BRAND as BRAND } from '@/lib/site';
 import FamilyCard from '@/components/FamilyCard';
 import ChargeForm from './ChargeForm';
 
@@ -21,7 +21,7 @@ export default async function SupplierPage({ params }: Props) {
   const tot = await totals(fund.id);
   return (
     <div className="fd">
-      <div className="topbar"><b style={{ fontFamily: "'Frank Ruhl Libre',Georgia,serif", color: 'var(--navy)', fontSize: 17 }}>{BRAND}</b><span className="muted">{SLOGAN}</span></div>
+      <div className="topbar"><b style={{ fontFamily: "'Frank Ruhl Libre',Georgia,serif", color: 'var(--navy)', fontSize: 17 }}>{BRAND}</b></div>
       <div className="pad stack" style={{ gap: 16 }}>
         <FamilyCard familyName={familyName(fund.display_name)} last4={cardLast4(fund)} />
         <div className="stats">

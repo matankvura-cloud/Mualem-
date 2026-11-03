@@ -219,7 +219,7 @@ try {
   await page.click('.card:has-text("חברה קדישא") button:has-text("שולם, לרשום")');
   await page.waitForSelector('.card:has-text("חברה קדישא")', { state: 'detached' });
   check(true, 'אחרי האישור הבקשה יורדת מהפתוחות');
-  await page.fill('.card:has-text("פרחים בע״מ") input[name=reason]', 'במקום פרחים, זוכרים?');
+  await page.fill('.card:has-text("פרחים בע״מ") input[name=reason]', 'לכיסוי הזר, זוכרים?');
   await page.click('.card:has-text("פרחים בע״מ") button:has-text("לדחות")');
   await page.waitForSelector('.card:has-text("פרחים בע״מ")', { state: 'detached' });
   const ft = await page.textContent('.stats');
@@ -235,7 +235,7 @@ try {
   await page.screenshot({ path: OUT + '08-admin-fund.png', fullPage: true });
   await page.goto(manageUrl + '/card');
   st = await page.textContent('body');
-  check(st.includes('₪550') && (await page.locator('.pill:has-text("לא אושר")').count()) === 1 && st.includes('במקום פרחים, זוכרים?'), 'המשפחה רואה: שולם ₪550, הבקשה השנייה לא אושרה עם ההסבר');
+  check(st.includes('₪550') && (await page.locator('.pill:has-text("לא אושר")').count()) === 1 && st.includes('לכיסוי הזר, זוכרים?'), 'המשפחה רואה: שולם ₪550, הבקשה השנייה לא אושרה עם ההסבר');
   check((await page.textContent('.stats')).includes('₪130'), 'יתרה זמינה למשפחה ₪130');
 
   // 10. הכרטיס הסגור: הספק סורק ומבקש חיוב

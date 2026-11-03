@@ -45,7 +45,7 @@ export default function GiveForm({ token, displayName, wasWord, showAmounts, all
 
   return (
     <form className="fd-pay" onSubmit={submit} noValidate>
-      <div><h1>במקום פרחים</h1>
+      <div><h1>להפקיד לקופה</h1>
         <p className="lead">ההפקדה מגיעה ישירות לקופה של המשפחה. הם יראו את שמך ואת המילה שתכתוב{showAmounts ? ', ואת הסכום רק אם תרצה' : ''}.</p></div>
 
       <fieldset><legend>סכום</legend>

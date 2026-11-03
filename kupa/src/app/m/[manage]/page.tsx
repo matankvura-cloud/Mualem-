@@ -4,7 +4,7 @@ import { loadFamily } from './_shared';
 import { payoutsOf, requestsOf, depositsOf, tasksDone, documentsOf } from '@/lib/funds';
 import { GENERAL, planByKey } from '@/data/now';
 import { ils, fmtDate, initials, memOf } from '@/lib/format';
-import { CONTACT_PHONE, SLOGAN } from '@/lib/site';
+import { CONTACT_PHONE } from '@/lib/site';
 import { SUPPLIERS } from '@/data/suppliers';
 import FamilyShell from '@/components/FamilyShell';
 import FamilyCard from '@/components/FamilyCard';
@@ -39,7 +39,7 @@ export default async function FamilyHome({ params, searchParams }: Props) {
     { label: 'השבעה: כתובת ושעות', done: hasEvent('shiva') },
     { label: 'אזכרת השלושים', done: hasEvent('shloshim') || hasEvent('azkara') },
   ];
-  const shareText = encodeURIComponent(`${memOf(fund.gender)} ${fund.display_name}. ${SLOGAN}, אפשר להפקיד לקופה של המשפחה: ${publicLink}`);
+  const shareText = encodeURIComponent(`${memOf(fund.gender)} ${fund.display_name}. אפשר להפקיד לקופה של המשפחה: ${publicLink}`);
 
   return (
     <FamilyShell manage={manage} active="home">

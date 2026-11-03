@@ -106,7 +106,7 @@ try {
     .replace(/<a ([^>]*)href="#"/g, '<a $1href="#demo"');
   for (const [file, path] of screens) {
     await page.goto(SITE + path, { waitUntil: 'networkidle' });
-    const title = file === 'index' ? `${BRAND} · במקום פרחים` : await page.title();
+    const title = file === 'index' ? `${BRAND} · קופה דיגיטלית לזכר יקיריכם` : await page.title();
     const bodyInner = rewrite(await page.evaluate(() => document.body.innerHTML));
     const fonts = '<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Heebo:wght@400;500;600;700&family=Frank+Ruhl+Libre:wght@500;700&display=swap" rel="stylesheet">';
     const head = `<title>${title}</title><meta name="claude:viewport-fit-sides" content="cover">${fonts}<style>${css}</style>${extra}`;
