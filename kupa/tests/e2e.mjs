@@ -86,8 +86,8 @@ try {
   await page.click('a.btn:has-text("להפקיד")');
   await page.waitForURL(/\/give$/);
   await page.click('.fd-amts button:has-text("180")');
-  check((await page.textContent('button[type=submit]')).includes('₪191'), 'כפתור מציג 180 + 6% = ₪191');
-  check(await page.locator('.fd-check:has-text("לתפעול")').count() === 0 && (await page.textContent('.fd-note')).includes('₪11'), 'תוספת חובה: אין תיבת ביטול, השורה מציגה ₪11');
+  check((await page.textContent('button[type=submit]')).includes('₪190.80'), 'כפתור מציג 180 + 6% = ₪190.80');
+  check(await page.locator('.fd-check:has-text("לתפעול")').count() === 0 && (await page.textContent('.fd-note')).includes('₪10.80'), 'תוספת חובה: אין תיבת ביטול, השורה מציגה ₪10.80');
   await page.fill('#fdName', 'רותי ואבי שמעוני');
   await page.fill('#fdMsg', 'יעקב היה השכן שכולם היו רוצים. משתתפים בצערכם.');
   await page.fill('#fdMail', 'ruti@example.com');
@@ -187,7 +187,7 @@ try {
   await page.click('button[type=submit]');
   await page.waitForSelector('table.tbl');
   const at = await page.textContent('body');
-  check(at.includes('קובי') && at.includes('₪680') && at.includes('₪41'), 'רשימת קופות: נאסף ₪680, תפעול ₪41 (10.8 + 30)');
+  check(at.includes('קובי') && at.includes('₪680') && at.includes('₪40.80'), 'רשימת קופות: נאסף ₪680, תפעול ₪40.80 (10.8 + 30)');
   // 8א. המשפחה מבקשת תשלום לספק (הקופה סגורה להפקדות, אבל הכסף שבה עדיין זמין)
   console.log('בקשת תשלום לספק');
   await page.goto(manageUrl + '/card');
