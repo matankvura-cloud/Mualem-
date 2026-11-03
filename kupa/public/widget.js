@@ -1,4 +1,4 @@
-/* העוזר של אתרי אבלות ישראל, תל"מ ומארגנים. הטמעה:
+/* העוזר של אתרי אבלות ישראל, תל"מ ומארגנים. הכפתור מופיע רק כשהשירות פעיל (מפתח API מוגדר). הטמעה:
    <script src="https://family.avlut.org.il/widget.js" data-brand="avlut" data-lang="he" defer></script>
    כפתור צף בפינה, חלון שיחה, תשובות בזרימה מ-/api/chat/<brand>. ללא תלויות. */
 (function () {
@@ -30,8 +30,12 @@
   var icon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16v11H9l-5 4z"/><path d="M8 9h8M8 12h5"/></svg>';
   var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'kw-btn'; btn.setAttribute('aria-expanded', 'false'); btn.innerHTML = icon + '<span>' + esc(t.open) + '</span>';
   var box = document.createElement('div'); box.className = 'kw'; box.setAttribute('role', 'dialog'); box.setAttribute('aria-label', t.open); box.hidden = true;
-  document.body.appendChild(btn); document.body.appendChild(box);
   var meta = null, msgs = [], busy = false, key = 'kw-' + brand + '-' + lang;
+  fetch(base + '/api/chat/' + brand + '?lang=' + lang).then(function (r) { return r.json(); }).then(function (m) {
+    if (!m || !m.enabled) return; meta = m;
+    document.body.appendChild(btn); document.body.appendChild(box);
+    var old = document.getElementById('aa-btn'); if (old) old.style.display = 'none';
+  }).catch(function () {});
   try { msgs = JSON.parse(sessionStorage.getItem(key) || '[]'); } catch (e) { msgs = []; }
   function save() { try { sessionStorage.setItem(key, JSON.stringify(msgs.slice(-20))); } catch (e) {} }
   function render() {
@@ -54,7 +58,7 @@
     var x = box.querySelector('.kw-x'); if (x) x.onclick = function () { msgs = []; save(); render(); };
     Array.prototype.forEach.call(box.querySelectorAll('.kw-q button'), function (b) { b.onclick = function () { send(b.getAttribute('data-q')); }; });
   }
-  function open() { box.hidden = false; box.classList.add('on'); btn.setAttribute('aria-expanded', 'true'); if (!meta) { fetch(base + '/api/chat/' + brand + '?lang=' + lang).then(function (r) { return r.json(); }).then(function (m) { meta = m; render(); var i = box.querySelector('.kw-f input'); if (i && !i.disabled) i.focus(); }).catch(function () { meta = { enabled: false, name: '', nameEn: '', phone: '', tel: '', whatsapp: '#', quick: [] }; render(); }); } else { render(); } }
+  function open() { box.hidden = false; box.classList.add('on'); btn.setAttribute('aria-expanded', 'true'); render(); var i = box.querySelector('.kw-f input'); if (i && !i.disabled) i.focus(); }
   function close() { box.classList.remove('on'); box.hidden = true; btn.setAttribute('aria-expanded', 'false'); btn.focus(); }
   btn.onclick = function () { if (box.hidden) open(); else close(); };
   function send(text) {
