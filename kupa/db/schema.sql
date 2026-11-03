@@ -349,3 +349,15 @@ ALTER TABLE kupa_reminders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kupa_help_requests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kupa_employers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kupa_employer_cases ENABLE ROW LEVEL SECURITY;
+
+-- כניסה בטלפון + קוד (בלי SMS): למשפחות, לספקים ולמעסיקים. נעילה אחרי 5 ניסיונות.
+ALTER TABLE kupa_funds ADD COLUMN IF NOT EXISTS login_pin text;
+ALTER TABLE kupa_funds ADD COLUMN IF NOT EXISTS login_fails integer NOT NULL DEFAULT 0;
+ALTER TABLE kupa_funds ADD COLUMN IF NOT EXISTS login_locked_until timestamptz;
+UPDATE kupa_funds SET login_pin = lpad((floor(random() * 1000000))::int::text, 6, '0') WHERE login_pin IS NULL;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS login_fails integer NOT NULL DEFAULT 0;
+ALTER TABLE kupa_suppliers ADD COLUMN IF NOT EXISTS login_locked_until timestamptz;
+ALTER TABLE kupa_employers ADD COLUMN IF NOT EXISTS pin text;
+ALTER TABLE kupa_employers ADD COLUMN IF NOT EXISTS login_fails integer NOT NULL DEFAULT 0;
+ALTER TABLE kupa_employers ADD COLUMN IF NOT EXISTS login_locked_until timestamptz;
+UPDATE kupa_employers SET pin = lpad((floor(random() * 1000000))::int::text, 6, '0') WHERE pin IS NULL;

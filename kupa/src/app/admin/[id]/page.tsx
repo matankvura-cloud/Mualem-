@@ -63,6 +63,7 @@ export default async function AdminFund({ params }: Props) {
               <div className="field"><label className="l" htmlFor="co-phone">טלפון</label><input id="co-phone" name="coordinator_phone" type="tel" defaultValue={fund.coordinator_phone || ''} maxLength={30} dir="ltr" /></div>
             </div>
             <button className="btn-ghost" type="submit" style={{ width: 'auto' }}>לשמור רכז/ת</button>
+            {fund.login_pin ? <p className="muted">קוד הכניסה של המשפחה (טלפון {fund.manager_phone || '—'}): <b dir="ltr" style={{ letterSpacing: '.15em' }}>{fund.login_pin}</b></p> : null}
             {ecase ? <p className="muted">בליווי דרך מעסיק: {ecase.company} · <Link href="/admin/employers">למעסיקים ›</Link></p> : null}
           </form>
           <h3 style={{ fontSize: 15, marginTop: 8 }}>מימושי הטבות ({reds.length})</h3>

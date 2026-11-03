@@ -31,6 +31,7 @@ export default async function EmployerHome({ params, searchParams }: Props) {
         <div><h1 className="page-title">{emp.company}</h1><p className="lead">איש קשר: {emp.contact_name} · {emp.phone}{CONTACT_PHONE ? ` · הליווי: ${CONTACT_PHONE}` : ''}</p></div>
         <section className="card stack" style={{ gap: 6 }}>
           <small className="muted">הקישור לעמוד הזה (סודי)</small><span className="linkbox">{link}</span>
+          {emp.pin ? <p className="muted">או במסך <Link href="/login?as=employer">הכניסה</Link>: הטלפון <span dir="ltr">{emp.phone}</span> וקוד הכניסה <b id="emp-pin" dir="ltr" style={{ letterSpacing: '.15em' }}>{emp.pin}</b>.</p> : null}
           <div className="fd-actions"><CopyButton text={link} className="btn-outline" /><a className="btn-outline" href={`https://wa.me/?text=${encodeURIComponent(`פורטל המעסיקים של ${emp.company} ב${PRODUCT}: ${link}`)}`} target="_blank" rel="noopener">לשלוח לעצמי בוואטסאפ</a></div>
         </section>
         <section className="panel">

@@ -57,6 +57,7 @@ export default async function HelpPage({ params, searchParams }: Props) {
           </div>
           <h3 style={{ fontSize: 15, marginTop: 16 }}>קישור הניהול (סודי, לא מעבירים)</h3>
           <span className="linkbox">{manageLink}</span>
+          {fund.login_pin ? <p className="muted" style={{ marginTop: 6 }}>בלי הקישור: במסך הכניסה מקלידים את הטלפון {fund.manager_phone ? <span dir="ltr">{fund.manager_phone}</span> : 'שמסרתם'} וקוד הכניסה <b dir="ltr" style={{ letterSpacing: '.15em' }}>{fund.login_pin}</b>.</p> : null}
           <div className="fd-actions">
             <CopyButton text={manageLink} label="העתק קישור ניהול" className="btn-outline" />
             <a className="btn-outline" href={`https://wa.me/?text=${encodeURIComponent(`קישור הניהול של הקופה ${memOf(fund.gender)} ${fund.display_name} (לא להעביר הלאה): ${manageLink}`)}`} target="_blank" rel="noopener">לשלוח לעצמי בוואטסאפ</a>

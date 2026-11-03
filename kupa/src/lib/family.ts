@@ -42,7 +42,7 @@ export const HELP_STATUS: Record<string, [string, string]> = { open: ['פתוח'
 export const helpRequestsOf = (fundId: string) => many<HelpRequest>(`SELECT * FROM kupa_help_requests WHERE fund_id = $1 ORDER BY (status = 'done'), created_at DESC`, [fundId]);
 export const openHelpRequests = (fundId: string) => many<HelpRequest>(`SELECT id, fund_id, kind, text, when_text, status, helper_name, NULL AS helper_phone, taken_at, created_at FROM kupa_help_requests WHERE fund_id = $1 AND status <> 'done' ORDER BY created_at DESC`, [fundId]);
 
-export type Employer = { id: string; token: string; company: string; contact_name: string; phone: string; email: string | null; created_at: unknown };
+export type Employer = { id: string; token: string; company: string; contact_name: string; phone: string; email: string | null; pin: string | null; created_at: unknown };
 export type EmployerCase = { id: string; employer_id: string; employee_name: string; deceased_name: string | null; relation: string | null; family_contact: string | null; family_phone: string | null; package: string; status: 'new' | 'contacted' | 'active' | 'done'; fund_id: string | null; approved_at: unknown; note: string | null; created_at: unknown; updated_at: unknown };
 export const CASE_STATUS: Record<string, [string, string]> = { new: ['התקבל', 'pill-warn'], contacted: ['יצרנו קשר', 'pill'], active: ['בליווי', 'pill-ok'], done: ['הסתיים', 'pill-muted'] };
 export const PACKAGES: Record<string, { label: string; what: string }> = {

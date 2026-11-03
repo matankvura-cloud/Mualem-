@@ -37,6 +37,11 @@ export async function redeemSupplierLogin(t: string): Promise<Supplier | null> {
   return sup;
 }
 
+/** קובע עוגיית ספק (אחרי כניסה בטלפון + קוד). */
+export async function setSupplierSession(supplierId: string) {
+  (await cookies()).set(COOKIE, `${supplierId}.${sig(supplierId)}`, { httpOnly: true, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 60 * 60 * 24 * 90 });
+}
+
 export async function supplierLogout() {
   (await cookies()).delete({ name: COOKIE, path: '/' });
 }

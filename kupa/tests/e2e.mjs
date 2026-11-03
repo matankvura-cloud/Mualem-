@@ -72,6 +72,8 @@ try {
   await page.click('button[type=submit]');
   await page.waitForURL(/\/m\/[A-Za-z0-9_-]+\?welcome=1/, { timeout: 20000 });
   const manageUrl = page.url().replace('?welcome=1', '');
+  const familyPin = (await page.locator('#family-pin').textContent()).trim();
+  check(/^\d{6}$/.test(familyPin), 'קוד כניסה בן 6 ספרות מוצג בפתיחה');
   const publicUrl = (await page.locator('.linkbox').first().textContent()).trim();
   check(/\/f\/[A-Za-z0-9_-]{16}$/.test(publicUrl), `קישור ציבורי: ${publicUrl}`);
   check(/\/m\/[A-Za-z0-9_-]{32}$/.test(manageUrl), 'קישור ניהול באורך 32');
@@ -655,6 +657,44 @@ try {
   await page.setViewportSize({ width: 1280, height: 900 });
   await page.goto(manageUrl);
   await page.screenshot({ path: OUT + '13-home-desktop.png', fullPage: true });
+
+
+  // 14. כניסה בטלפון + קוד: משפחה, ספק, מעסיק
+  console.log('כניסה');
+  await page.goto(empUrl);
+  const empPin = (await page.locator('#emp-pin').textContent()).trim();
+  const lp = await browser.newPage();
+  await lp.goto(`${SITE}/login`);
+  check((await lp.locator('button[role=tab]').count()) === 3 && (await lp.locator('button:has-text("כניסה")').count()) === 1, 'מסך הכניסה: 3 לשוניות וכפתור כניסה');
+  await lp.fill('#family-phone', '050-1234567');
+  await lp.fill('#family-pin', '000000');
+  await lp.click('button:has-text("כניסה")');
+  await lp.waitForSelector('.fd-err:has-text("לא נכונים")');
+  check(true, 'קוד שגוי נדחה בלי לחשוף אם הטלפון קיים');
+  await lp.fill('#family-pin', familyPin);
+  await lp.click('button:has-text("כניסה")');
+  await lp.waitForURL((u) => u.toString() === manageUrl);
+  check((await lp.textContent('body')).includes('אנחנו כאן בשבילכם'), 'משפחה נכנסה בטלפון + קוד למרכז המשפחה');
+  await lp.goto(`${SITE}/login?as=supplier`);
+  await lp.fill('#supplier-phone', '+972529876543');
+  await lp.fill('#supplier-pin', supplierPin);
+  await lp.click('button:has-text("כניסה")');
+  await lp.waitForURL(/\/p$/);
+  check((await lp.textContent('body')).includes('קייטרינג של רחל'), 'ספק נכנס בטלפון (בפורמט בינלאומי) + קוד הספק');
+  await lp.goto(`${SITE}/login?as=employer`);
+  await lp.fill('#employer-phone', '0541234567');
+  await lp.fill('#employer-pin', empPin);
+  await lp.click('button:has-text("כניסה")');
+  await lp.waitForURL((u) => u.toString() === empUrl);
+  check((await lp.textContent('body')).includes('חברת אלפא'), 'מעסיק נכנס בטלפון + קוד');
+  // נעילה אחרי 5 ניסיונות
+  await lp.goto(`${SITE}/login`);
+  for (let i = 0; i < 5; i++) { await lp.fill('#family-phone', '0501234567'); await lp.fill('#family-pin', '111111'); await lp.click('button:has-text("כניסה")'); await lp.waitForSelector('.fd-err'); }
+  await lp.fill('#family-pin', familyPin);
+  await lp.click('button:has-text("כניסה")');
+  await lp.waitForSelector('.fd-err:has-text("יותר מדי ניסיונות")');
+  check(true, 'אחרי 5 ניסיונות כושלים: נעילה גם עם הקוד הנכון');
+  await lp.close();
 
   // 9. קופה לזכרה
   console.log('לזכרה');

@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { many, one } from '@/lib/db';
 import { employerByToken, PACKAGES, type EmployerCase } from '@/lib/family';
 import { TOKEN_RE, UUID_RE, token } from '@/lib/tokens';
+import { newPin } from '@/lib/login';
 
 export type EmpState = { error?: string; ok?: string; values?: Record<string, string> } | undefined;
 const str = (fd: FormData, k: string, max: number) => String(fd.get(k) ?? '').trim().slice(0, max);
@@ -24,7 +25,7 @@ export async function registerEmployer(_prev: EmpState, fd: FormData): Promise<E
   if (v.employee_name.length < 2) return { error: 'שם העובד/ת.', values: v };
   if (v.family_phone && !PHONE_OK(v.family_phone)) return { error: 'הטלפון של המשפחה לא תקין.', values: v };
   const t = token(24);
-  const emp = await one<{ id: string }>(`INSERT INTO kupa_employers (token, company, contact_name, phone, email) VALUES ($1,$2,$3,$4,$5) RETURNING id`, [t, v.company, v.contact_name, v.phone, v.email || null]);
+  const emp = await one<{ id: string }>(`INSERT INTO kupa_employers (token, company, contact_name, phone, email, pin) VALUES ($1,$2,$3,$4,$5,$6) RETURNING id`, [t, v.company, v.contact_name, v.phone, v.email || null, newPin()]);
   if (!emp) return { error: 'משהו השתבש. נסו שוב.', values: v };
   await many(`INSERT INTO kupa_employer_cases (employer_id, employee_name, deceased_name, relation, family_contact, family_phone, package, note) VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
     [emp.id, v.employee_name, v.deceased_name || null, v.relation || null, v.family_contact || null, v.family_phone || null, v.package, v.note || null]);
