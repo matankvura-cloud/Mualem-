@@ -23,10 +23,10 @@ async function open(): Promise<Db> {
     const local = /localhost|127\.0\.0\.1/.test(url);
     // pooler במצב transaction (Supabase 6543) לא תומך ב-prepared statements. בסביבה serverless התהליך מוקפא
     // בין בקשות, וחיבור שנשאר פתוח יכול "למות" בשקט; לכן חיבורים לא פעילים נסגרים מהר, ולכל שאילתה יש
-    // timeout: אם היא נתקעת, סוגרים את כל החיבורים, פותחים מחדש ומנסים פעם אחת נוספת.
+    // timeout: אם היא נתקעת (3 שניות), סוגרים את כל החיבורים, פותחים מחדש ומנסים פעם אחת נוספת.
     const make = () => postgres(url, { prepare: false, max: 4, idle_timeout: 5, max_lifetime: 300, connect_timeout: 10, ssl: local ? undefined : 'require', types: { bigint: postgres.BigInt } });
     let sql = make();
-    const QUERY_MS = Math.max(2000, Number(process.env.DB_QUERY_TIMEOUT_MS || 6000));
+    const QUERY_MS = Math.max(1500, Number(process.env.DB_QUERY_TIMEOUT_MS || 3000));
     const run = (text: string, params: unknown[]) => new Promise<unknown[]>((resolve, reject) => {
       const t = setTimeout(() => reject(Object.assign(new Error('db query timeout'), { code: 'KUPA_DB_TIMEOUT' })), QUERY_MS);
       sql.unsafe(text, params as never[]).then((r) => { clearTimeout(t); resolve(r as unknown as unknown[]); }, (e) => { clearTimeout(t); reject(e); });
