@@ -62,3 +62,62 @@ export async function approveCase(empToken: string, caseId: string, _prev: EmpSt
   revalidatePath(`/e/${empToken}`);
   return { ok: 'האישור נרשם. תודה.' };
 }
+
+/** רשימת העובדים: הוספה אחת, ייבוא מרשימה (שורה לעובד: שם, טלפון, מחלקה), מחיקה. */
+export async function addEmployee(empToken: string, _prev: EmpState, fd: FormData): Promise<EmpState> {
+  if (!TOKEN_RE.test(empToken)) return { error: 'הקישור לא תקין' };
+  const emp = await employerByToken(empToken);
+  if (!emp) return { error: 'הקישור לא תקין' };
+  const v = { name: str(fd, 'name', 80), phone: str(fd, 'phone', 30), email: str(fd, 'email', 160), department: str(fd, 'department', 60) };
+  if (v.name.length < 2) return { error: 'שם העובד/ת.', values: v };
+  if (v.phone && !PHONE_OK(v.phone)) return { error: 'הטלפון לא תקין.', values: v };
+  const n = await one<{ n: unknown }>(`SELECT COUNT(*) AS n FROM kupa_employees WHERE employer_id = $1`, [emp.id]);
+  if (Number(n?.n || 0) >= 2000) return { error: 'הגעתם ל-2000 עובדים. דברו איתנו.', values: v };
+  await many(`INSERT INTO kupa_employees (employer_id, name, phone, email, department) VALUES ($1,$2,$3,$4,$5)`, [emp.id, v.name, v.phone || null, v.email || null, v.department || null]);
+  revalidatePath(`/e/${empToken}`);
+  return { ok: `${v.name} נוסף/ה לרשימה.` };
+}
+
+export async function importEmployees(empToken: string, _prev: EmpState, fd: FormData): Promise<EmpState> {
+  if (!TOKEN_RE.test(empToken)) return { error: 'הקישור לא תקין' };
+  const emp = await employerByToken(empToken);
+  if (!emp) return { error: 'הקישור לא תקין' };
+  const text = String(fd.get('rows') || '').slice(0, 200000);
+  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter(Boolean).slice(0, 500);
+  if (!lines.length) return { error: 'הדביקו רשימה: שורה לכל עובד/ת, למשל "דנה לוי, 050-1234567, שיווק".' };
+  let added = 0, skipped = 0;
+  for (const line of lines) {
+    const parts = line.split(/[,\t;]+/).map((p) => p.trim());
+    const name = (parts[0] || '').slice(0, 80);
+    const phone = (parts.find((p, i) => i > 0 && /\d{7,}/.test(p)) || '').slice(0, 30);
+    const dept = (parts.find((p, i) => i > 0 && p && !/\d{7,}/.test(p) && !p.includes('@')) || '').slice(0, 60);
+    const email = (parts.find((p) => p.includes('@')) || '').slice(0, 160);
+    if (name.length < 2 || /^(שם|name)$/i.test(name)) { skipped++; continue; }
+    await many(`INSERT INTO kupa_employees (employer_id, name, phone, email, department) VALUES ($1,$2,$3,$4,$5)`, [emp.id, name, phone || null, email || null, dept || null]);
+    added++;
+  }
+  revalidatePath(`/e/${empToken}`);
+  return { ok: `נוספו ${added} עובדים${skipped ? `, ${skipped} שורות דולגו` : ''}.` };
+}
+
+export async function deleteEmployee(empToken: string, id: string) {
+  if (!TOKEN_RE.test(empToken) || !UUID_RE.test(id)) return;
+  const emp = await employerByToken(empToken);
+  if (!emp) return;
+  await many(`DELETE FROM kupa_employees WHERE id = $1 AND employer_id = $2`, [id, emp.id]);
+  revalidatePath(`/e/${empToken}`);
+}
+
+/** רישום משפחה לליווי מתוך רשימת העובדים: לוחצים על עובד/ת, ממלאים רק מה שקרה. */
+export async function caseForEmployee(empToken: string, employeeId: string, _prev: EmpState, fd: FormData): Promise<EmpState> {
+  if (!TOKEN_RE.test(empToken) || !UUID_RE.test(employeeId)) return { error: 'הקישור לא תקין' };
+  const emp = await employerByToken(empToken);
+  const { employeeById } = await import('@/lib/family');
+  const e = emp ? await employeeById(employeeId, emp.id) : null;
+  if (!emp || !e) return { error: 'העובד/ת לא נמצא/ה' };
+  const v = caseInput(fd);
+  await many(`INSERT INTO kupa_employer_cases (employer_id, employee_id, employee_name, deceased_name, relation, family_contact, family_phone, package, note) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,
+    [emp.id, e.id, e.name, v.deceased_name || null, v.relation || null, v.family_contact || e.name, v.family_phone || e.phone || null, v.package, v.note || null]);
+  revalidatePath(`/e/${empToken}`);
+  return { ok: `המשפחה של ${e.name} נרשמה לליווי. ניצור קשר תוך יום עבודה.` };
+}

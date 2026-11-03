@@ -696,6 +696,28 @@ try {
   check(true, 'אחרי 5 ניסיונות כושלים: נעילה גם עם הקוד הנכון');
   await lp.close();
 
+
+  // 15. מעסיק: רשימת עובדים, ייבוא, ורישום משפחה מתוך הרשימה
+  console.log('עובדים');
+  await page.goto(empUrl);
+  await page.fill('#w-name', 'רון ברק');
+  await page.fill('#w-phone', '0533334444');
+  await page.fill('#w-dept', 'כספים');
+  await page.click('button:has-text("להוסיף עובד/ת")');
+  await page.waitForSelector('.notice-ok:has-text("רון ברק נוסף")');
+  await page.fill('#w-rows', 'שם, טלפון, מחלקה\nמיכל שרון\t052-1112222\tמכירות\nאבי גל, 054-5556666, לוגיסטיקה');
+  await page.click('button:has-text("לייבא את הרשימה")');
+  await page.waitForSelector('.notice-ok:has-text("נוספו 2 עובדים")');
+  check((await page.locator('#employees tbody tr').count()) === 3, 'רשימת העובדים: 3 (אחד ידני, שניים מייבוא, כותרת דולגה)');
+  await page.click('#employees tr:has-text("מיכל שרון") button:has-text("לרשום את המשפחה לליווי")');
+  await page.fill('#employees tr:has-text("מיכל שרון") input[name=relation]', 'אם');
+  await page.click('#employees tr:has-text("מיכל שרון") button:has-text("לרשום לליווי")');
+  await page.waitForSelector('#employees tr:has-text("מיכל שרון") .pill:has-text("התקבל")');
+  check((await page.textContent('.cases')).includes('מיכל שרון') && (await page.textContent('.cases')).includes('אם'), 'המשפחה של העובדת נרשמה מהרשימה, עם הקרבה');
+  await page.goto(`${SITE}/admin`);
+  const adminHome = await page.textContent('body');
+  check(adminHome.includes('משפחות דרך מעסיקים') && adminHome.includes('ספקים פעילים'), 'ניהול: אריחי סקירה למשפחות, ספקים ומעסיקים');
+
   // 9. קופה לזכרה
   console.log('לזכרה');
   await page.setViewportSize({ width: 420, height: 860 });

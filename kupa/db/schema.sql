@@ -361,3 +361,18 @@ ALTER TABLE kupa_employers ADD COLUMN IF NOT EXISTS pin text;
 ALTER TABLE kupa_employers ADD COLUMN IF NOT EXISTS login_fails integer NOT NULL DEFAULT 0;
 ALTER TABLE kupa_employers ADD COLUMN IF NOT EXISTS login_locked_until timestamptz;
 UPDATE kupa_employers SET pin = lpad((floor(random() * 1000000))::int::text, 6, '0') WHERE pin IS NULL;
+
+-- פורטל מעסיקים: רשימת העובדים של המעסיק (כדי לרשום משפחה בלחיצה כשקורה משהו).
+CREATE TABLE IF NOT EXISTS kupa_employees (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  employer_id uuid NOT NULL REFERENCES kupa_employers(id) ON DELETE CASCADE,
+  name text NOT NULL,
+  phone text,
+  email text,
+  department text,
+  note text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS kupa_employees_emp_idx ON kupa_employees(employer_id, name);
+ALTER TABLE kupa_employees ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kupa_employer_cases ADD COLUMN IF NOT EXISTS employee_id uuid REFERENCES kupa_employees(id) ON DELETE SET NULL;

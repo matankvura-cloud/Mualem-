@@ -78,3 +78,8 @@ export async function noticesOf(fund: Fund, base: string): Promise<Notice[]> {
   if (nd) out.push({ key: 'deps', text: nd === 1 ? `${deps[0].last} הפקיד/ה לקופה` : `${nd} הפקדות חדשות לקופה`, href: `${base}/help`, tone: 'ok' });
   return out;
 }
+
+export type Employee = { id: string; employer_id: string; name: string; phone: string | null; email: string | null; department: string | null; note: string | null; created_at: unknown };
+export const employeesOf = (employerId: string) => many<Employee & { case_status: string | null }>(
+  `SELECT e.*, (SELECT c.status FROM kupa_employer_cases c WHERE c.employee_id = e.id ORDER BY c.created_at DESC LIMIT 1) AS case_status FROM kupa_employees e WHERE e.employer_id = $1 ORDER BY e.department NULLS LAST, e.name`, [employerId]);
+export const employeeById = (id: string, employerId: string) => one<Employee>(`SELECT * FROM kupa_employees WHERE id = $1 AND employer_id = $2`, [id, employerId]);

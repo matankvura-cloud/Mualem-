@@ -21,8 +21,9 @@ export default async function SupplierPortal({ searchParams }: Props) {
       <div className="fd"><div className="fd-pay" style={{ paddingTop: 40 }}>
         <div><h1>פורטל ספקים</h1><p className="lead">ספקים משתתפים של {BRAND} מנהלים כאן את ההטבות שלהם ורואים מימושים.</p></div>
         {login === 'expired' ? <div className="notice notice-warn">קישור הכניסה פג או כבר שימש. בקשו קישור חדש.</div> : login === 'bad' ? <div className="notice notice-err">קישור לא תקין.</div> : null}
-        <div className="fd-note">הכניסה היא בקישור אישי שאנחנו שולחים לכם. אין סיסמה. {CONTACT_PHONE ? <>לקבלת קישור או הצטרפות: <a href={`tel:${CONTACT_PHONE}`}>{CONTACT_PHONE}</a>.</> : 'לקבלת קישור או הצטרפות פנו אלינו.'}</div>
-        <Link className="btn-outline" href="/">לדף הבית</Link>
+        <div className="fd-note">נכנסים עם טלפון העסק וקוד הספק בן 6 הספרות, או בקישור האישי שקיבלתם מאיתנו.{CONTACT_PHONE ? <> אין קוד? <a href={`tel:${CONTACT_PHONE}`}>{CONTACT_PHONE}</a>.</> : null}</div>
+        <Link className="btn" href="/login?as=supplier">כניסה בטלפון + קוד</Link>
+        <Link className="btn-outline" href="/suppliers/join">להצטרף כספק</Link>
       </div></div>
     );
   }

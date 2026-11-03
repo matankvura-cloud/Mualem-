@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { isAdmin } from '@/lib/admin';
-import { allFunds } from '@/lib/funds';
+import { allFunds, allSuppliers } from '@/lib/funds';
+import { allEmployerCases } from '@/lib/family';
 import { num } from '@/lib/db';
 import { ils, fmtDate } from '@/lib/format';
 import { LoginForm } from './AdminForms';
@@ -13,13 +14,18 @@ export const metadata: Metadata = { title: 'ניהול', robots: { index: false,
 
 export default async function AdminPage() {
   if (!(await isAdmin())) return <div className="fd"><LoginForm /></div>;
-  const funds = await allFunds();
+  const [funds, sups, cases] = await Promise.all([allFunds(), allSuppliers(), allEmployerCases()]);
   const sum = (k: 'raised' | 'fees' | 'paid_out') => funds.reduce((a, f) => a + num(f[k]), 0);
   return (
     <div className="fd fd-wide">
       <div className="topbar"><Link className="brand" href="/">{BRAND} · ניהול</Link><Link href="/admin/suppliers" className="btn-ghost" style={{ minHeight: 36, fontSize: 13 }}>ספקים והטבות</Link><Link href="/admin/employers" className="btn-ghost" style={{ minHeight: 36, fontSize: 13 }}>מעסיקים</Link>
         <form action={adminLogout}><button className="btn-ghost" type="submit" style={{ minHeight: 36, fontSize: 13 }}>לצאת</button></form></div>
       <div className="pad stack" style={{ gap: 16 }}>
+        <nav className="tiles" aria-label="אזורי הניהול" style={{ gridTemplateColumns: 'repeat(3,minmax(0,1fr))' }}>
+          <Link href="/admin"><b>{funds.length}</b>משפחות<small>{funds.reduce((a, f) => a + num(f.open_requests), 0)} בקשות תשלום ממתינות</small></Link>
+          <Link href="/admin/suppliers"><b>{sups.filter((x) => x.status === 'active').length}</b>ספקים פעילים<small>{sups.filter((x) => x.status === 'pending').length} ממתינים לאישור · {sups.reduce((a, x) => a + num(x.leads_new), 0)} פניות חדשות</small></Link>
+          <Link href="/admin/employers"><b>{cases.filter((c) => c.status !== 'done').length}</b>משפחות דרך מעסיקים<small>{cases.filter((c) => c.status === 'new').length} חדשות · {new Set(cases.map((c) => c.employer_id)).size} מעסיקים</small></Link>
+        </nav>
         <section className="stats">
           <div className="stat"><small>קופות</small><b>{funds.length}</b></div>
           <div className="stat"><small>נאסף בסה״כ</small><b>{ils(sum('raised'))}</b></div>

@@ -31,6 +31,7 @@ export default async function LoginPage({ searchParams }: Props) {
           </div>
         </section>
       </div>
+      <p className="fd-small" style={{ textAlign: 'center', padding: '0 16px 10px' }}><Link href="/admin">ניהול המערכת</Link></p>
       <Footer />
     </div>
   );
