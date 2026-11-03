@@ -18,6 +18,8 @@ Next.js 16 + React 19, בלי Tailwind. מסד: Postgres (Neon דרך Vercel Sto
 | `/f/<token>` | כולם | עמוד הקופה: מי, מתי ואיפה, כמה נאסף, ספר הניחומים. `?paid=1/0` אחרי התשלום |
 | `/f/<token>/give` | כולם | הפקדה: 180/360/540/אחר, שם, מילה, מייל לקבלה, "בלי להציג סכום", תוספת תפעול |
 | `/m/<manage_token>` | משפחה | הבית של המשפחה: כרטיס, יתרה, תשלומים, ספקים, קרובים, ליווי. תתי-מסכים: `/card`, `/file`, `/suppliers`, `/help`, `/support`, `/assistant` |
+| `/m/<manage_token>/now` | משפחה | מה עושים עכשיו: רשימת צעדים כללית + לפי המצב, סימון בוצע והתקדמות |
+| `/m/<manage_token>/file` | משפחה | התיק והמסמכים: רשימת המסמכים, העלאה (PDF/תמונה עד 4MB, נשמר במסד), זכויות, פרטי העמוד ואירועים |
 | `/m/<manage_token>/assistant` | משפחה | העוזר: שיחה עם Claude שמכיר את הקופה (`ANTHROPIC_API_KEY`); מציע בקשות תשלום ככפתור |
 | `/s/<card_token>` | ספק | כרטיס המשפחה הסגור: יתרה זמינה ובקשת חיוב (מתן מאשר) |
 | `/admin` | מתן | סיסמה. כל הקופות, הפקדות, רישום תשלומים לספקים |
@@ -45,7 +47,7 @@ PLAYWRIGHT_PATH=/path/to/node_modules/playwright npm run test:e2e   # או npm i
 
 ## הפריסה הקיימת
 פרויקט Vercel: **family-avlut** (נפרס מהענף `ccr-343644c7-ob2tvp` של `matankvura-cloud/Mualem-`, Root Directory `kupa`).
-- כתובת: https://family-avlut.vercel.app · הדומיין `family.avlut.org.il` משויך לפרויקט אבל ה-DNS עדיין מצביע ל-ChatGPT.
+- כתובת: https://family-avlut.vercel.app · הכתובת הקבועה המיועדת: `my.avlut.org.il` (CNAME `my` → `cname.vercel-dns.com`). `family.avlut.org.il` שייך להדגמה של ChatGPT ולא לכאן.
 - בלי `DATABASE_URL` האתר רץ על מסד בזיכרון (`KUPA_LOCAL_DB=memory`) עם קופה לדוגמה בקישורים קבועים
   (`/m/demo-manage-yaakov-levi-2026-kupa`, `/f/demo-yaakov-levi-2026`, `/s/demo-card-yaakov-levi-2026`). הנתונים מתאפסים.
 - ברגע ש-Neon מחובר (`DATABASE_URL`), הוא גובר, הסכמה רצה ב-build, והקופה לדוגמה לא נזרעת.
