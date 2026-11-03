@@ -40,3 +40,13 @@ export async function redeemSupplierLogin(t: string): Promise<Supplier | null> {
 export async function supplierLogout() {
   (await cookies()).delete({ name: COOKIE, path: '/' });
 }
+
+/** בודק קישור כניסה בלי לצרוך אותו (לתצוגת הדף לפני הלחיצה). */
+export async function peekSupplierLogin(t: string): Promise<{ state: 'ok' | 'used' | 'expired' | 'missing'; name?: string }> {
+  const row = await one<{ used_at: unknown; expired: boolean; name: string }>(
+    `SELECT l.used_at, (l.expires_at <= now()) AS expired, s.name FROM kupa_supplier_logins l JOIN kupa_suppliers s ON s.id = l.supplier_id WHERE l.token_hash = $1`, [hash(t)]);
+  if (!row) return { state: 'missing' };
+  if (row.used_at) return { state: 'used', name: row.name };
+  if (row.expired) return { state: 'expired', name: row.name };
+  return { state: 'ok', name: row.name };
+}

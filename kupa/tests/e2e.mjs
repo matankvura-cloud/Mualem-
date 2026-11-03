@@ -379,10 +379,14 @@ try {
   const phone = await browser.newContext({ viewport: { width: 420, height: 860 }, locale: 'he-IL' });
   const sp2 = await phone.newPage();
   await sp2.goto(loginLink);
+  check((await sp2.textContent('body')).includes('להיכנס לפורטל') && (await sp2.textContent('body')).includes('קייטרינג של רחל'), 'דף הכניסה מציג את שם הספק וכפתור (GET לא צורך את הקישור)');
+  await sp2.goto(loginLink);
+  await sp2.click('button:has-text("להיכנס לפורטל")');
   await sp2.waitForURL(/\/p$/);
   check((await sp2.textContent('body')).includes('קייטרינג של רחל'), 'הספק נכנס מהקישור ורואה את הפורטל שלו');
-  const again = await phone.newPage(); await again.goto(loginLink); await again.waitForURL(/login=expired/); await again.close();
-  check(true, 'קישור הכניסה חד-פעמי: פתיחה שנייה נדחית');
+  const again = await phone.newPage(); await again.goto(loginLink);
+  check((await again.textContent('body')).includes('כבר שימש'), 'קישור הכניסה חד-פעמי: פתיחה שנייה מראה "כבר שימש"');
+  await again.close();
   await sp2.goto(cardLink);
   check((await sp2.textContent('body')).includes('זה לא קוד שנסרק'), 'קישור בלי חתימה: אין מימוש');
   const nowSec = Math.floor(Date.now() / 1000);

@@ -62,3 +62,12 @@ export async function updateSupplierProfile(_prev: FormState, fd: FormData): Pro
 }
 
 export async function supplierSignOut() { await supplierLogout(); redirect('/p'); }
+
+/** לחיצה על "להיכנס" בדף קישור הכניסה. רק POST צורך את הקישור, כך שתצוגה מקדימה של וואטסאפ לא שורפת אותו. */
+export async function enterWithToken(token: string) {
+  const { TOKEN_RE } = await import('@/lib/tokens');
+  const { redeemSupplierLogin } = await import('@/lib/supplier-auth');
+  if (!TOKEN_RE.test(token)) redirect('/p?login=bad');
+  const sup = await redeemSupplierLogin(token);
+  redirect(sup ? '/p' : '/p?login=expired');
+}
