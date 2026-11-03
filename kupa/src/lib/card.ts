@@ -32,11 +32,10 @@ export function verifyCard(cardToken: string, t: string | undefined | null, now 
   return sameSecret(m[2], want) ? { ok: true, ts } : { ok: false, reason: 'bad' };
 }
 
-export type CardState = 'active' | 'blocked' | 'expired' | 'closed';
+export type CardState = 'active' | 'blocked' | 'expired';
 
-/** מצב הכרטיס כפי שהספק והמשפחה רואים אותו. */
-export function cardState(fund: Pick<Fund, 'status' | 'card_status' | 'card_valid_until'>, today = new Date()): CardState {
-  if (fund.status === 'closed') return 'closed';
+/** מצב הכרטיס כפי שהספק והמשפחה רואים אותו. סגירת הקופה להפקדות לא סוגרת את הכרטיס: היתרה וההטבות נשארות. */
+export function cardState(fund: Pick<Fund, 'card_status' | 'card_valid_until'>, today = new Date()): CardState {
   if (fund.card_status === 'blocked') return 'blocked';
   const until = fund.card_valid_until ? new Date(String(fund.card_valid_until)) : null;
   if (until && until.getTime() < new Date(today.toISOString().slice(0, 10)).getTime()) return 'expired';
@@ -44,7 +43,7 @@ export function cardState(fund: Pick<Fund, 'status' | 'card_status' | 'card_vali
 }
 
 export const CARD_STATE_LABEL: Record<CardState, [string, string]> = {
-  active: ['בתוקף', 'pill-ok'], blocked: ['חסום', 'pill-err'], expired: ['פג תוקף', 'pill-muted'], closed: ['הקופה נסגרה', 'pill-muted'],
+  active: ['בתוקף', 'pill-ok'], blocked: ['חסום', 'pill-err'], expired: ['פג תוקף', 'pill-muted'],
 };
 
 /** תוקף ברירת מחדל: 12 חודשים מהפתיחה. */
