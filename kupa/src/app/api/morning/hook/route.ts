@@ -21,18 +21,18 @@ async function handle(req: Request) {
   const depId = String(pick(raw, ['custom', 'Custom', 'customField', 'externalId']) ?? '');
   if (!UUID_RE.test(depId)) { console.error('hook: אין מזהה הפקדה', JSON.stringify(raw).slice(0, 400)); return json({ ok: true, ignored: 'no_id' }); }
 
-  const dep = await one<{ id: string; status: string }>(`SELECT id, status FROM deposits WHERE id = $1`, [depId]);
+  const dep = await one<{ id: string; status: string }>(`SELECT id, status FROM kupa_deposits WHERE id = $1`, [depId]);
   if (!dep) return json({ ok: true, ignored: 'unknown' });
   if (dep.status === 'paid') return json({ ok: true, already: true });
 
   if (!looksPaid(raw)) {
     const bad = failureKind(raw);
-    if (bad) await many(`UPDATE deposits SET status = $2, raw = $3 WHERE id = $1 AND status = 'pending'`, [depId, bad, JSON.stringify(raw)]);
+    if (bad) await many(`UPDATE kupa_deposits SET status = $2, raw = $3 WHERE id = $1 AND status = 'pending'`, [depId, bad, JSON.stringify(raw)]);
     return json({ ok: true, marked: bad || 'ignored' });
   }
   const docNum = pick(raw, ['documentNumber', 'docNumber', 'number']);
   await many(
-    `UPDATE deposits SET status = 'paid', paid_at = now(), raw = $2, doc_number = $3, doc_url = $4 WHERE id = $1`,
+    `UPDATE kupa_deposits SET status = 'paid', paid_at = now(), raw = $2, doc_number = $3, doc_url = $4 WHERE id = $1`,
     [depId, JSON.stringify(raw), docNum != null ? String(docNum) : null, String(pick(raw, ['documentUrl', 'url']) ?? '') || null]);
   return json({ ok: true });
 }

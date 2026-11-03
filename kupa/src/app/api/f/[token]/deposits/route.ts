@@ -36,19 +36,19 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
   const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || req.headers.get('x-real-ip') || '';
   const hash = ipHash(ip);
   const recent = await one<{ n: unknown }>(
-    `SELECT COUNT(*) AS n FROM deposits WHERE fund_id = $1 AND ip_hash = $2 AND status = 'pending' AND created_at > now() - interval '1 hour'`,
+    `SELECT COUNT(*) AS n FROM kupa_deposits WHERE fund_id = $1 AND ip_hash = $2 AND status = 'pending' AND created_at > now() - interval '1 hour'`,
     [fund.id, hash]);
   if (num(recent?.n) >= 10) return json({ error: 'יותר מדי ניסיונות. נסו שוב בעוד שעה.' }, 429);
 
   const dep = await one<{ id: string }>(
-    `INSERT INTO deposits (fund_id, donor_name, donor_email, message, amount, fee_amount, charged_amount, hide_amount, ip_hash)
+    `INSERT INTO kupa_deposits (fund_id, donor_name, donor_email, message, amount, fee_amount, charged_amount, hide_amount, ip_hash)
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9) RETURNING id`,
     [fund.id, name, email, message, amount, fee, charged, hideAmount, hash]);
   if (!dep) return json({ error: 'לא הצלחנו לרשום את ההפקדה' }, 500);
 
   let hook: string;
   try { hook = hookToken(); } catch (e) {
-    await many(`UPDATE deposits SET status = 'failed', raw = $2 WHERE id = $1`, [dep.id, JSON.stringify({ reason: (e as Error).message })]);
+    await many(`UPDATE kupa_deposits SET status = 'failed', raw = $2 WHERE id = $1`, [dep.id, JSON.stringify({ reason: (e as Error).message })]);
     return json({ error: 'הסליקה לא מוגדרת עדיין.' }, 502);
   }
   const site = await siteUrl();
@@ -62,9 +62,9 @@ export async function POST(req: Request, ctx: { params: Promise<{ token: string 
     notifyUrl: `${site}/api/morning/hook?k=${hook}`, custom: dep.id,
   });
   if ('error' in r) {
-    await many(`UPDATE deposits SET status = 'failed', raw = $2 WHERE id = $1`, [dep.id, JSON.stringify({ reason: r.error, http: r.http, body: r.body })]);
+    await many(`UPDATE kupa_deposits SET status = 'failed', raw = $2 WHERE id = $1`, [dep.id, JSON.stringify({ reason: r.error, http: r.http, body: r.body })]);
     return json({ error: 'הסליקה לא זמינה כרגע. נסו שוב בעוד כמה דקות.', detail: r.error }, 502);
   }
-  await many(`UPDATE deposits SET link_url = $2, link_expires_at = now() + interval '24 hours' WHERE id = $1`, [dep.id, r.url]);
+  await many(`UPDATE kupa_deposits SET link_url = $2, link_expires_at = now() + interval '24 hours' WHERE id = $1`, [dep.id, r.url]);
   return json({ ok: true, url: r.url });
 }

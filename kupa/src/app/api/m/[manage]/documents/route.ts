@@ -24,6 +24,6 @@ export async function POST(req: Request, ctx: { params: Promise<{ manage: string
   const name = (String(fd.get('name') || '').trim() || file.name || 'מסמך').slice(0, 120);
   const note = String(fd.get('note') || '').trim().slice(0, 300) || null;
   const buf = Buffer.from(await file.arrayBuffer());
-  await many(`INSERT INTO documents (fund_id, kind, name, mime, size, data, note) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [fund.id, kind, name, mime, buf.length, buf, note]);
+  await many(`INSERT INTO kupa_documents (fund_id, kind, name, mime, size, data, note) VALUES ($1,$2,$3,$4,$5,$6,$7)`, [fund.id, kind, name, mime, buf.length, buf, note]);
   return back(manage, 'doc=ok');
 }

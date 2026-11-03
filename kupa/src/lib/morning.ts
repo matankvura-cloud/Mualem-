@@ -38,7 +38,7 @@ export async function accessToken(): Promise<string> {
 /** מסוף הסליקה: מה-env, אחרת מטבלת settings, אחרת נשלף פעם אחת מ-/plugins ונשמר. */
 export async function pluginId(tok: string): Promise<string | null> {
   if (process.env.MORNING_PLUGIN_ID) return process.env.MORNING_PLUGIN_ID;
-  const stored = await one<{ value: string }>(`SELECT value FROM settings WHERE key = 'MORNING_PLUGIN_ID'`);
+  const stored = await one<{ value: string }>(`SELECT value FROM kupa_settings WHERE key = 'MORNING_PLUGIN_ID'`);
   if (stored?.value) return stored.value;
   const r = await fetch(`${API_BASE}/plugins`, { headers: { authorization: `Bearer ${tok}` }, signal: AbortSignal.timeout(20000) });
   const b = await r.json().catch(() => null);
@@ -46,7 +46,7 @@ export async function pluginId(tok: string): Promise<string | null> {
   const hit = list.find((p) => p?.active && p?.payments && p?.id) ?? list.find((p) => p?.id);
   const id = hit?.id ? String(hit.id) : null;
   if (id) {
-    await many(`INSERT INTO settings (key, value) VALUES ('MORNING_PLUGIN_ID', $1)
+    await many(`INSERT INTO kupa_settings (key, value) VALUES ('MORNING_PLUGIN_ID', $1)
                 ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_at = now()`, [id]);
   }
   return id;

@@ -10,7 +10,7 @@ export async function GET(_req: Request, ctx: { params: Promise<{ manage: string
   if (!TOKEN_RE.test(manage) || !UUID_RE.test(id)) return new Response('bad link', { status: 400 });
   const fund = await fundByManage(manage);
   if (!fund) return new Response('not found', { status: 404 });
-  const d = await one<{ name: string; mime: string; data: Uint8Array | Buffer | string }>(`SELECT name, mime, data FROM documents WHERE id = $1 AND fund_id = $2`, [id, fund.id]);
+  const d = await one<{ name: string; mime: string; data: Uint8Array | Buffer | string }>(`SELECT name, mime, data FROM kupa_documents WHERE id = $1 AND fund_id = $2`, [id, fund.id]);
   if (!d) return new Response('not found', { status: 404 });
   const bytes = typeof d.data === 'string' ? Buffer.from(d.data.replace(/^\\x/, ''), 'hex') : Buffer.from(d.data);
   return new Response(new Uint8Array(bytes), { headers: {

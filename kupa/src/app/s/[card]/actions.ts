@@ -22,7 +22,7 @@ export async function requestCharge(card: string, _prev: ChargeState, fd: FormDa
   const t = await totals(fund.id);
   if (amount > t.available) return { error: `היתרה הזמינה בכרטיס היא ${ils(t.available)}.`, values };
   await many(
-    `INSERT INTO payout_requests (fund_id, payee, purpose, amount, contact, note, source) VALUES ($1,$2,$3,$4,$5,$6,'supplier')`,
+    `INSERT INTO kupa_payout_requests (fund_id, payee, purpose, amount, contact, note, source) VALUES ($1,$2,$3,$4,$5,$6,'supplier')`,
     [fund.id, payee, String(fd.get('purpose') || '').trim().slice(0, 200) || null, amount, contact, String(fd.get('note') || '').trim().slice(0, 400) || null]);
   revalidatePath('/admin'); revalidatePath(`/admin/${fund.id}`); revalidatePath(`/m/${fund.manage_token}/card`);
   return { ok: `הבקשה נשלחה למשפחה ולאישור. אחרי האישור נעביר ${ils(amount)} ל${payee}.` };

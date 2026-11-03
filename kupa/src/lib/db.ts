@@ -1,6 +1,6 @@
-// שכבת מסד הנתונים. פרודקשן: Neon (HTTP) לפי DATABASE_URL.
-// פיתוח/בדיקות בלי מסד: KUPA_LOCAL_DB=memory מריץ Postgres בזיכרון (pglite),
-// עם אותה סכמה — כך שה-SQL זהה בשני המקרים.
+// שכבת מסד הנתונים. פרודקשן: Postgres לפי DATABASE_URL (Supabase, Neon או כל Postgres)
+// דרך postgres.js. פיתוח/בדיקות בלי מסד: KUPA_LOCAL_DB=memory מריץ Postgres בזיכרון
+// (pglite) עם אותה סכמה, כך שה-SQL זהה בשני המקרים.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -19,9 +19,11 @@ export function db(): Promise<Db> {
 async function open(): Promise<Db> {
   const url = process.env.DATABASE_URL || process.env.POSTGRES_URL || '';
   if (url) {
-    const { neon } = await import('@neondatabase/serverless');
-    const sql = neon(url);
-    return { query: async (text, params = []) => (await sql.query(text, params as never[])) as never };
+    const { default: postgres } = await import('postgres');
+    const local = /localhost|127\.0\.0\.1/.test(url);
+    // pooler במצב transaction (Supabase 6543) לא תומך ב-prepared statements; max קטן כי כל פונקציה היא תהליך משלה.
+    const sql = postgres(url, { prepare: false, max: 3, idle_timeout: 20, connect_timeout: 15, ssl: local ? undefined : 'require', types: { bigint: postgres.BigInt } });
+    return { query: async (text, params = []) => (await sql.unsafe(text, params as never[])) as unknown as never };
   }
   if (process.env.KUPA_LOCAL_DB) {
     const { PGlite } = await import('@electric-sql/pglite');

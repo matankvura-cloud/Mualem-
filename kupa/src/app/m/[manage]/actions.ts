@@ -20,7 +20,7 @@ export async function updateFund(manage: string, _prev: ActState, fd: FormData):
   const f = cleanFundInput(fd);
   if (!f.display_name || f.display_name.length < 2) return { error: 'צריך את שם הנפטר/ת.' };
   await many(
-    `UPDATE funds SET display_name=$2, gender=$16, years=$3, city=$4, quote=$5, quote_by=$6, photo_initial=$7, purpose=$8, target_ils=$9,
+    `UPDATE kupa_funds SET display_name=$2, gender=$16, years=$3, city=$4, quote=$5, quote_by=$6, photo_initial=$7, purpose=$8, target_ils=$9,
        surplus_to=$10, manager_name=COALESCE($11, manager_name), manager_phone=COALESCE($12, manager_phone), manager_email=$13,
        show_amounts=$14, allow_messages=$15, updated_at=now() WHERE id=$1`,
     [fund.id, f.display_name, f.years, f.city, f.quote, f.quote_by, f.display_name.trim().charAt(0), f.purpose, f.target_ils,
@@ -39,7 +39,7 @@ export async function addEvent(manage: string, _prev: ActState, fd: FormData): P
   if (!ev.place && !ev.date) return { error: 'צריך לפחות תאריך או מקום.' };
   if (fund.events.length >= 12) return { error: 'אפשר עד 12 אירועים.' };
   const events = [...fund.events, ev].sort((a, b) => (a.date || '9999').localeCompare(b.date || '9999'));
-  await many(`UPDATE funds SET events = $2, updated_at = now() WHERE id = $1`, [fund.id, JSON.stringify(events)]);
+  await many(`UPDATE kupa_funds SET events = $2, updated_at = now() WHERE id = $1`, [fund.id, JSON.stringify(events)]);
   revalidatePath(`/m/${manage}`); revalidatePath(`/f/${fund.token}`);
   return { ok: 'האירוע נוסף.' };
 }
@@ -55,7 +55,7 @@ export async function requestPayout(manage: string, _prev: ActState, fd: FormDat
   const t = await totals(fund.id);
   if (amount > t.available) return { error: `היתרה הזמינה היא ${ils(t.available)}${t.requested ? ` (אחרי ${ils(t.requested)} בבקשות שממתינות)` : ''}.`, values };
   await many(
-    `INSERT INTO payout_requests (fund_id, payee, purpose, amount, contact, note) VALUES ($1,$2,$3,$4,$5,$6)`,
+    `INSERT INTO kupa_payout_requests (fund_id, payee, purpose, amount, contact, note) VALUES ($1,$2,$3,$4,$5,$6)`,
     [fund.id, payee, String(fd.get('purpose') || '').trim().slice(0, 200) || null, amount,
       String(fd.get('contact') || '').trim().slice(0, 200) || null, String(fd.get('note') || '').trim().slice(0, 400) || null]);
   revalidatePath(`/m/${manage}`);
@@ -65,20 +65,20 @@ export async function requestPayout(manage: string, _prev: ActState, fd: FormDat
 export async function cancelRequest(manage: string, id: string) {
   const fund = await own(manage);
   if (!fund) return;
-  await many(`DELETE FROM payout_requests WHERE id = $1 AND fund_id = $2 AND status = 'pending'`, [id, fund.id]);
+  await many(`DELETE FROM kupa_payout_requests WHERE id = $1 AND fund_id = $2 AND status = 'pending'`, [id, fund.id]);
   revalidatePath(`/m/${manage}`);
 }
 
 export async function removeEvent(manage: string, id: string) {
   const fund = await own(manage);
   if (!fund) return;
-  await many(`UPDATE funds SET events = $2, updated_at = now() WHERE id = $1`, [fund.id, JSON.stringify(fund.events.filter((e) => e.id !== id))]);
+  await many(`UPDATE kupa_funds SET events = $2, updated_at = now() WHERE id = $1`, [fund.id, JSON.stringify(fund.events.filter((e) => e.id !== id))]);
   revalidatePath(`/m/${manage}`); revalidatePath(`/f/${fund.token}`);
 }
 
 export async function setStatus(manage: string, status: 'open' | 'closed') {
   const fund = await own(manage);
   if (!fund) return;
-  await many(`UPDATE funds SET status = $2, closed_at = CASE WHEN $2 = 'closed' THEN now() ELSE NULL END, updated_at = now() WHERE id = $1`, [fund.id, status]);
+  await many(`UPDATE kupa_funds SET status = $2, closed_at = CASE WHEN $2 = 'closed' THEN now() ELSE NULL END, updated_at = now() WHERE id = $1`, [fund.id, status]);
   revalidatePath(`/m/${manage}`); revalidatePath(`/f/${fund.token}`);
 }

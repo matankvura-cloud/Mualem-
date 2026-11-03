@@ -14,14 +14,13 @@ if (!url) {
   console.error('migrate: חסר DATABASE_URL'); process.exit(1);
 }
 
-const { neon } = await import('@neondatabase/serverless');
-const sql = neon(url);
-const statements = splitSql(readFileSync(join(here, '..', 'db', 'schema.sql'), 'utf8'));
-for (const s of statements) await sql.query(s);
-console.log(`migrate: ${statements.length} פקודות הורצו.`);
-
-/** פיצול לפי ; בסוף שורה, אחרי הסרת הערות. הסכמה לא מכילה פונקציות עם $$. */
-export function splitSql(text) {
-  return text.split('\n').filter((l) => !l.trim().startsWith('--')).join('\n')
-    .split(/;\s*\n/).map((s) => s.trim()).filter(Boolean);
+const { default: postgres } = await import('postgres');
+const local = /localhost|127\.0\.0\.1/.test(url);
+const sql = postgres(url, { prepare: false, max: 1, ssl: local ? undefined : 'require', connect_timeout: 20 });
+const schema = readFileSync(join(here, '..', 'db', 'schema.sql'), 'utf8');
+try {
+  await sql.unsafe(schema);
+  console.log('migrate: הסכמה הוחלה.');
+} finally {
+  await sql.end({ timeout: 5 });
 }

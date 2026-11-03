@@ -9,7 +9,7 @@ export const DEMO = {
 };
 
 export async function seedDemo(db: Db) {
-  const exists = await db.query(`SELECT 1 FROM funds WHERE token = $1`, [DEMO.token]);
+  const exists = await db.query(`SELECT 1 FROM kupa_funds WHERE token = $1`, [DEMO.token]);
   if (exists.length) return;
   const events = [
     { id: 'ev1', kind: 'funeral', date: '2026-11-03', time: '14:00', place: 'הר המנוחות, גבעת שאול', address: 'חלקה ד׳', maps_url: 'https://maps.google.com/?q=הר+המנוחות' },
@@ -17,7 +17,7 @@ export async function seedDemo(db: Db) {
     { id: 'ev3', kind: 'shloshim', date: '2026-12-02', place: 'הפרטים יישלחו לכל מי שהפקיד' },
   ];
   const f = await db.query<{ id: string }>(
-    `INSERT INTO funds (token, manage_token, card_token, display_name, gender, years, city, quote, quote_by, photo_initial, purpose, target_ils,
+    `INSERT INTO kupa_funds (token, manage_token, card_token, display_name, gender, years, city, quote, quote_by, photo_initial, purpose, target_ils,
        surplus_to, events, manager_name, manager_phone, show_amounts, allow_messages, fee_pct)
      VALUES ($1,$2,$3,'יעקב לוי ז״ל','m','1941 – 2026','ירושלים','אבא תמיד אמר שלא צריך פרחים. אם רוצים לעזור, זה המקום.','המשפחה','י',
        'הקופה מכסה את הלוויה והשבעה. מה שייאסף מעבר לכך מיועד למצבה ולאזכרת השלושים.',34000,'ייתרם לבית הכנסת ״אוהל יעקב״',$4,'רונית לוי','0501234567',true,true,6)
@@ -31,13 +31,13 @@ export async function seedDemo(db: Db) {
   ];
   for (const [name, msg, amount, hide] of deps) {
     await db.query(
-      `INSERT INTO deposits (fund_id, donor_name, message, amount, fee_amount, charged_amount, hide_amount, status, paid_at)
+      `INSERT INTO kupa_deposits (fund_id, donor_name, message, amount, fee_amount, charged_amount, hide_amount, status, paid_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,'paid', now() - interval '1 day')`,
       [id, name, msg, amount, Math.round(amount * 6) / 100, Math.round(amount * 106) / 100, hide]);
   }
-  await db.query(`UPDATE funds SET situation = 'home' WHERE id = $1`, [id]);
-  for (const k of ['g-notice', 'g-id', 'g-contact', 'h1', 'h2']) await db.query(`INSERT INTO tasks_done (fund_id, task_key) VALUES ($1, $2) ON CONFLICT DO NOTHING`, [id, k]);
-  await db.query(`INSERT INTO documents (fund_id, kind, name, mime, size, data, note) VALUES ($1,'death-notice','הודעת פטירה','application/pdf',52,$2,'הדגמה')`, [id, Buffer.from('%PDF-1.4\n%demo\n%%EOF')]);
-  await db.query(`INSERT INTO payouts (fund_id, payee, purpose, amount, note) VALUES ($1,'חברה קדישא ירושלים','הלוויה',1200,'הדגמה')`, [id]);
-  await db.query(`INSERT INTO payout_requests (fund_id, payee, purpose, amount, contact) VALUES ($1,'קייטרינג "שולחן ערוך"','ארוחות לשבעה',600,'אבי 052-0000000')`, [id]);
+  await db.query(`UPDATE kupa_funds SET situation = 'home' WHERE id = $1`, [id]);
+  for (const k of ['g-notice', 'g-id', 'g-contact', 'h1', 'h2']) await db.query(`INSERT INTO kupa_tasks_done (fund_id, task_key) VALUES ($1, $2) ON CONFLICT DO NOTHING`, [id, k]);
+  await db.query(`INSERT INTO kupa_documents (fund_id, kind, name, mime, size, data, note) VALUES ($1,'death-notice','הודעת פטירה','application/pdf',52,$2,'הדגמה')`, [id, Buffer.from('%PDF-1.4\n%demo\n%%EOF')]);
+  await db.query(`INSERT INTO kupa_payouts (fund_id, payee, purpose, amount, note) VALUES ($1,'חברה קדישא ירושלים','הלוויה',1200,'הדגמה')`, [id]);
+  await db.query(`INSERT INTO kupa_payout_requests (fund_id, payee, purpose, amount, contact) VALUES ($1,'קייטרינג "שולחן ערוך"','ארוחות לשבעה',600,'אבי 052-0000000')`, [id]);
 }

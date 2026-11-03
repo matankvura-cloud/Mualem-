@@ -50,14 +50,14 @@ export async function ensureCardToken(fund: Fund): Promise<string> {
   if (fund.card_token) return fund.card_token;
   const { token } = await import('./tokens');
   const t = token(12);
-  await many(`UPDATE funds SET card_token = $2 WHERE id = $1 AND card_token IS NULL`, [fund.id, t]);
+  await many(`UPDATE kupa_funds SET card_token = $2 WHERE id = $1 AND card_token IS NULL`, [fund.id, t]);
   return (await fundById(fund.id))?.card_token ?? t;
 }
 
-export const fundByToken = async (t: string) => normalize(await one<Fund>(`SELECT * FROM funds WHERE token = $1`, [t]));
-export const fundByManage = async (t: string) => normalize(await one<Fund>(`SELECT * FROM funds WHERE manage_token = $1`, [t]));
-export const fundByCard = async (t: string) => normalize(await one<Fund>(`SELECT * FROM funds WHERE card_token = $1`, [t]));
-export const fundById = async (id: string) => normalize(await one<Fund>(`SELECT * FROM funds WHERE id = $1`, [id]));
+export const fundByToken = async (t: string) => normalize(await one<Fund>(`SELECT * FROM kupa_funds WHERE token = $1`, [t]));
+export const fundByManage = async (t: string) => normalize(await one<Fund>(`SELECT * FROM kupa_funds WHERE manage_token = $1`, [t]));
+export const fundByCard = async (t: string) => normalize(await one<Fund>(`SELECT * FROM kupa_funds WHERE card_token = $1`, [t]));
+export const fundById = async (id: string) => normalize(await one<Fund>(`SELECT * FROM kupa_funds WHERE id = $1`, [id]));
 
 export async function totals(fundId: string): Promise<Totals> {
   const r = await one<Record<string, unknown>>(
@@ -66,9 +66,9 @@ export async function totals(fundId: string): Promise<Totals> {
        COALESCE(SUM(fee_amount) FILTER (WHERE status = 'paid'), 0) AS fees,
        COUNT(*) FILTER (WHERE status = 'paid') AS donors,
        COUNT(*) FILTER (WHERE status = 'pending') AS pending,
-       (SELECT COALESCE(SUM(amount), 0) FROM payouts p WHERE p.fund_id = $1) AS paid_out,
-       (SELECT COALESCE(SUM(amount), 0) FROM payout_requests q WHERE q.fund_id = $1 AND q.status = 'pending') AS requested
-     FROM deposits d WHERE d.fund_id = $1`, [fundId]);
+       (SELECT COALESCE(SUM(amount), 0) FROM kupa_payouts p WHERE p.fund_id = $1) AS paid_out,
+       (SELECT COALESCE(SUM(amount), 0) FROM kupa_payout_requests q WHERE q.fund_id = $1 AND q.status = 'pending') AS requested
+     FROM kupa_deposits d WHERE d.fund_id = $1`, [fundId]);
   const t = { raised: num(r?.raised), fees: num(r?.fees), donors: num(r?.donors), pending: num(r?.pending), paid_out: num(r?.paid_out), requested: num(r?.requested) };
   return { ...t, available: Math.max(0, Math.round((t.raised - t.paid_out - t.requested) * 100) / 100) };
 }
@@ -76,7 +76,7 @@ export async function totals(fundId: string): Promise<Totals> {
 /** ספר הניחומים: רק הפקדות ששולמו. סכום רק אם הקופה מציגה והמפקיד לא ביקש להסתיר. */
 export async function book(fund: Fund, limit = 200) {
   const rows = await many<Deposit>(
-    `SELECT donor_name, message, amount, hide_amount, paid_at FROM deposits
+    `SELECT donor_name, message, amount, hide_amount, paid_at FROM kupa_deposits
      WHERE fund_id = $1 AND status = 'paid' ORDER BY paid_at DESC LIMIT $2`, [fund.id, limit]);
   return rows.map((d) => ({
     name: d.donor_name, message: d.message || null,
@@ -85,32 +85,32 @@ export async function book(fund: Fund, limit = 200) {
 }
 
 export const depositsOf = (fundId: string) =>
-  many<Deposit>(`SELECT * FROM deposits WHERE fund_id = $1 ORDER BY created_at DESC LIMIT 500`, [fundId]);
+  many<Deposit>(`SELECT * FROM kupa_deposits WHERE fund_id = $1 ORDER BY created_at DESC LIMIT 500`, [fundId]);
 export const payoutsOf = (fundId: string) =>
-  many<Payout>(`SELECT * FROM payouts WHERE fund_id = $1 ORDER BY paid_on DESC, created_at DESC`, [fundId]);
+  many<Payout>(`SELECT * FROM kupa_payouts WHERE fund_id = $1 ORDER BY paid_on DESC, created_at DESC`, [fundId]);
 
 export const requestsOf = (fundId: string) =>
-  many<PayoutRequest>(`SELECT * FROM payout_requests WHERE fund_id = $1 ORDER BY created_at DESC`, [fundId]);
+  many<PayoutRequest>(`SELECT * FROM kupa_payout_requests WHERE fund_id = $1 ORDER BY created_at DESC`, [fundId]);
 
 export type DocRow = { id: string; kind: string; name: string; mime: string; size: number; note: string | null; created_at: unknown };
 export const documentsOf = (fundId: string) =>
-  many<DocRow>(`SELECT id, kind, name, mime, size, note, created_at FROM documents WHERE fund_id = $1 ORDER BY created_at DESC`, [fundId]);
+  many<DocRow>(`SELECT id, kind, name, mime, size, note, created_at FROM kupa_documents WHERE fund_id = $1 ORDER BY created_at DESC`, [fundId]);
 export const tasksDone = async (fundId: string) =>
-  new Set((await many<{ task_key: string }>(`SELECT task_key FROM tasks_done WHERE fund_id = $1`, [fundId])).map((r) => r.task_key));
+  new Set((await many<{ task_key: string }>(`SELECT task_key FROM kupa_tasks_done WHERE fund_id = $1`, [fundId])).map((r) => r.task_key));
 
 export function bumpViews(fundId: string) {
-  many(`UPDATE funds SET view_count = view_count + 1 WHERE id = $1`, [fundId]).catch(() => {});
+  many(`UPDATE kupa_funds SET view_count = view_count + 1 WHERE id = $1`, [fundId]).catch(() => {});
 }
 
 export type FundSummary = Fund & { raised: unknown; fees: unknown; donors: unknown; paid_out: unknown; open_requests: unknown };
 export const allFunds = () => many<FundSummary>(
   `SELECT f.*,
-     COALESCE((SELECT SUM(amount) FROM deposits d WHERE d.fund_id = f.id AND d.status = 'paid'), 0) AS raised,
-     COALESCE((SELECT SUM(fee_amount) FROM deposits d WHERE d.fund_id = f.id AND d.status = 'paid'), 0) AS fees,
-     (SELECT COUNT(*) FROM deposits d WHERE d.fund_id = f.id AND d.status = 'paid') AS donors,
-     COALESCE((SELECT SUM(amount) FROM payouts p WHERE p.fund_id = f.id), 0) AS paid_out,
-     (SELECT COUNT(*) FROM payout_requests q WHERE q.fund_id = f.id AND q.status = 'pending') AS open_requests
-   FROM funds f ORDER BY f.created_at DESC`);
+     COALESCE((SELECT SUM(amount) FROM kupa_deposits d WHERE d.fund_id = f.id AND d.status = 'paid'), 0) AS raised,
+     COALESCE((SELECT SUM(fee_amount) FROM kupa_deposits d WHERE d.fund_id = f.id AND d.status = 'paid'), 0) AS fees,
+     (SELECT COUNT(*) FROM kupa_deposits d WHERE d.fund_id = f.id AND d.status = 'paid') AS donors,
+     COALESCE((SELECT SUM(amount) FROM kupa_payouts p WHERE p.fund_id = f.id), 0) AS paid_out,
+     (SELECT COUNT(*) FROM kupa_payout_requests q WHERE q.fund_id = f.id AND q.status = 'pending') AS open_requests
+   FROM kupa_funds f ORDER BY f.created_at DESC`);
 
 /* ---------- ניקוי קלט ---------- */
 export const str = (v: unknown, max: number) => String(v ?? '').trim().slice(0, max) || null;
