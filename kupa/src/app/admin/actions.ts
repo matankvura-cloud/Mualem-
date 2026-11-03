@@ -168,3 +168,29 @@ export async function setSupplierVerified(id: string, verified: boolean) {
   await many(`UPDATE kupa_suppliers SET verified = $2, updated_at = now() WHERE id = $1`, [id, verified]);
   revalidatePath(`/admin/suppliers/${id}`); revalidatePath('/admin/suppliers'); revalidatePath('/suppliers');
 }
+
+/** הרכז/ת האישי/ת של המשפחה (מוצג בבית של המשפחה). */
+export async function setCoordinator(fundId: string, fd: FormData) {
+  if (!(await isAdmin()) || !UUID_RE.test(fundId)) return;
+  const name = String(fd.get('coordinator_name') || '').trim().slice(0, 80) || null;
+  const phone = String(fd.get('coordinator_phone') || '').trim().slice(0, 30) || null;
+  await many(`UPDATE kupa_funds SET coordinator_name = $2, coordinator_phone = $3, updated_at = now() WHERE id = $1`, [fundId, name, phone]);
+  revalidatePath(`/admin/${fundId}`);
+}
+
+/** פורטל מעסיקים: סטטוס המקרה וקישור לקופה של המשפחה. */
+export async function setCaseStatus(caseId: string, fd: FormData) {
+  if (!(await isAdmin()) || !UUID_RE.test(caseId)) return;
+  const status = String(fd.get('status') || '');
+  if (!['new', 'contacted', 'active', 'done'].includes(status)) return;
+  const fundId = String(fd.get('fund_id') || '');
+  const fid = UUID_RE.test(fundId) ? fundId : null;
+  await many(`UPDATE kupa_employer_cases SET status = $2, fund_id = $3, updated_at = now() WHERE id = $1`, [caseId, status, fid]);
+  const c = await one<{ approved_at: unknown; note: string | null; company: string }>(`SELECT c.approved_at, c.note, e.company FROM kupa_employer_cases c JOIN kupa_employers e ON e.id = c.employer_id WHERE c.id = $1`, [caseId]);
+  if (fid && c?.approved_at) {
+    await many(`INSERT INTO kupa_forms (fund_id, form_key, status, signer_name, signed_at, note, updated_at) VALUES ($1,'employer','signed',$2,now(),$3,now()) ON CONFLICT (fund_id, form_key) DO UPDATE SET status='signed', signed_at=now(), note=EXCLUDED.note, updated_at=now()`, [fid, c.company, c.company]);
+  } else if (fid) {
+    await many(`INSERT INTO kupa_forms (fund_id, form_key, status, updated_at) VALUES ($1,'employer','signing',now()) ON CONFLICT (fund_id, form_key) DO UPDATE SET status = CASE WHEN kupa_forms.status = 'signed' THEN 'signed' ELSE 'signing' END, updated_at=now()`, [fid]);
+  }
+  revalidatePath('/admin/employers');
+}

@@ -9,7 +9,9 @@ import { num } from '@/lib/db';
 import { siteUrl } from '@/lib/site';
 import { ils, fmtDate, fmtDateTime } from '@/lib/format';
 import { LoginForm, PayoutForm, RequestDecision, CardControls } from '../AdminForms';
-import { deletePayout, adminSetStatus } from '../actions';
+import { deletePayout, adminSetStatus, setCoordinator } from '../actions';
+import { caseOfFund } from '@/lib/family';
+import { COORDINATOR_NAME } from '@/lib/site';
 
 export const dynamic = 'force-dynamic';
 export const metadata: Metadata = { title: 'קופה · ניהול', robots: { index: false, follow: false } };
@@ -23,7 +25,7 @@ export default async function AdminFund({ params }: Props) {
   if (!UUID_RE.test(id)) notFound();
   const fund = await fundById(id);
   if (!fund) notFound();
-  const [tot, deps, pays, reqs, site, reds] = await Promise.all([totals(id), depositsOf(id), payoutsOf(id), requestsOf(id), siteUrl(), redemptionsOf(id)]);
+  const [tot, deps, pays, reqs, site, reds, ecase] = await Promise.all([totals(id), depositsOf(id), payoutsOf(id), requestsOf(id), siteUrl(), redemptionsOf(id), caseOfFund(id)]);
   const cst = cardState(fund); const [cstLabel, cstCls] = CARD_STATE_LABEL[cst];
   const openReqs = reqs.filter((r) => r.status === 'pending');
   const doneReqs = reqs.filter((r) => r.status !== 'pending');
@@ -54,6 +56,15 @@ export default async function AdminFund({ params }: Props) {
           <h2 style={{ fontSize: 18 }}>כרטיס ההטבות <span className={`pill ${cstCls}`}>{cstLabel}</span></h2>
           {fund.card_block_reason && fund.card_status === 'blocked' ? <p className="muted">סיבת החסימה: {fund.card_block_reason}</p> : null}
           <CardControls fundId={id} blocked={fund.card_status === 'blocked'} validUntil={String(fund.card_valid_until || '').slice(0, 10)} />
+          <form action={setCoordinator.bind(null, id)} className="stack" style={{ gap: 8, marginTop: 12 }}>
+            <h3 style={{ fontSize: 15 }}>הרכז/ת האישי/ת של המשפחה</h3>
+            <div className="grid2">
+              <div className="field"><label className="l" htmlFor="co-name">שם</label><input id="co-name" name="coordinator_name" type="text" defaultValue={fund.coordinator_name || ''} placeholder={COORDINATOR_NAME} maxLength={80} /></div>
+              <div className="field"><label className="l" htmlFor="co-phone">טלפון</label><input id="co-phone" name="coordinator_phone" type="tel" defaultValue={fund.coordinator_phone || ''} maxLength={30} dir="ltr" /></div>
+            </div>
+            <button className="btn-ghost" type="submit" style={{ width: 'auto' }}>לשמור רכז/ת</button>
+            {ecase ? <p className="muted">בליווי דרך מעסיק: {ecase.company} · <Link href="/admin/employers">למעסיקים ›</Link></p> : null}
+          </form>
           <h3 style={{ fontSize: 15, marginTop: 8 }}>מימושי הטבות ({reds.length})</h3>
           {reds.length ? <ul className="pay-list">{reds.map((r) => <li key={r.id}><div className="t"><b>{r.supplier_name}</b><small>{r.benefit_title} · {fmtDateTime(r.created_at)}{r.note ? ` · ${r.note}` : ''}</small></div>{Number(r.amount_saved) ? <span className="a">{ils(r.amount_saved)}</span> : null}</li>)}</ul> : <p className="muted">עדיין לא מומשו הטבות.</p>}
         </section>

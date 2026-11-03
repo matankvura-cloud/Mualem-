@@ -10,6 +10,7 @@ export type Fund = {
   events: FundEvent[]; manager_name: string | null; manager_phone: string | null; manager_email: string | null;
   show_amounts: boolean; allow_messages: boolean; fee_pct: unknown; view_count: number; situation: string | null;
   card_status: 'active' | 'blocked'; card_valid_until: unknown; card_block_reason: string | null;
+  coordinator_name: string | null; coordinator_phone: string | null;
   opened_at: unknown; closed_at: unknown; created_at: unknown; updated_at: unknown;
 };
 

@@ -272,3 +272,80 @@ ALTER TABLE kupa_supplier_logins ENABLE ROW LEVEL SECURITY;
 -- הטבלאות נוצרות על ידי kupa_app (בעל הטבלאות), ולכן ה-RLS לא חוסם אותו; anon לא רואה אותן.
 ALTER TABLE kupa_leads ENABLE ROW LEVEL SECURITY;
 ALTER TABLE kupa_reviews ENABLE ROW LEVEL SECURITY;
+
+-- ---------- שלב 2: "לצידכם", מרכז המשפחה לפי ההמחשה ----------
+-- הרכז/ת האישי/ת של המשפחה (ברירת מחדל מהגדרות האתר).
+ALTER TABLE kupa_funds ADD COLUMN IF NOT EXISTS coordinator_name text;
+ALTER TABLE kupa_funds ADD COLUMN IF NOT EXISTS coordinator_phone text;
+
+-- טפסים וחתימות: מצב כל טופס לקופה. status: todo / signing / signed.
+CREATE TABLE IF NOT EXISTS kupa_forms (
+  fund_id uuid NOT NULL REFERENCES kupa_funds(id) ON DELETE CASCADE,
+  form_key text NOT NULL,
+  status text NOT NULL DEFAULT 'todo',
+  signer_name text,
+  signer_id4 text,
+  signed_at timestamptz,
+  note text,
+  updated_at timestamptz NOT NULL DEFAULT now(),
+  PRIMARY KEY (fund_id, form_key)
+);
+
+-- תזכורות של המשפחה (בנוסף לתזכורות שנגזרות מהאירועים).
+CREATE TABLE IF NOT EXISTS kupa_reminders (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  fund_id uuid NOT NULL REFERENCES kupa_funds(id) ON DELETE CASCADE,
+  title text NOT NULL,
+  due_on date,
+  done boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS kupa_reminders_fund_idx ON kupa_reminders(fund_id, done, due_on);
+
+-- בקשות עזרה מהקרובים (ארוחות, סידורים, הוצאות). status: open / taken / done.
+CREATE TABLE IF NOT EXISTS kupa_help_requests (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  fund_id uuid NOT NULL REFERENCES kupa_funds(id) ON DELETE CASCADE,
+  kind text NOT NULL,
+  text text NOT NULL,
+  when_text text,
+  status text NOT NULL DEFAULT 'open',
+  helper_name text,
+  helper_phone text,
+  taken_at timestamptz,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS kupa_help_requests_fund_idx ON kupa_help_requests(fund_id, status, created_at DESC);
+
+-- פורטל מעסיקים: מעסיק רושם משפחה של עובד ומקבל קישור מעקב.
+CREATE TABLE IF NOT EXISTS kupa_employers (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  token text NOT NULL UNIQUE,
+  company text NOT NULL,
+  contact_name text NOT NULL,
+  phone text NOT NULL,
+  email text,
+  created_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS kupa_employer_cases (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  employer_id uuid NOT NULL REFERENCES kupa_employers(id) ON DELETE CASCADE,
+  employee_name text NOT NULL,
+  deceased_name text,
+  relation text,
+  family_contact text,
+  family_phone text,
+  package text NOT NULL DEFAULT 'escort',
+  status text NOT NULL DEFAULT 'new',
+  fund_id uuid REFERENCES kupa_funds(id) ON DELETE SET NULL,
+  approved_at timestamptz,
+  note text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS kupa_employer_cases_emp_idx ON kupa_employer_cases(employer_id, created_at DESC);
+ALTER TABLE kupa_forms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kupa_reminders ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kupa_help_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kupa_employers ENABLE ROW LEVEL SECURITY;
+ALTER TABLE kupa_employer_cases ENABLE ROW LEVEL SECURITY;

@@ -23,4 +23,17 @@ export const IcFlowers = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><circ
 export const IcSteps = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M4 7h2M9 7h11M4 12h2M9 12h11M4 17h2M9 17h11" /></svg>;
 export const IcDoc = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v4h4M9 12h6M9 16h6" /></svg>;
 export const IcChat = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M4 5h16v11H9l-5 4z" /><path d="M8 9h8M8 12h5" /></svg>;
+export const IcBell = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M6 16V11a6 6 0 0 1 12 0v5l1.5 2h-15z" /><path d="M10 20a2 2 0 0 0 4 0" /></svg>;
+export const IcSearch = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><circle cx="11" cy="11" r="6" /><path d="m20 20-4.5-4.5" /></svg>;
+export const IcBook = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M4 5h6a2 2 0 0 1 2 2v13a2 2 0 0 0-2-2H4z" /><path d="M20 5h-6a2 2 0 0 0-2 2v13a2 2 0 0 1 2-2h6z" /></svg>;
+export const IcCalendar = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><rect x="3" y="5" width="18" height="16" rx="2" /><path d="M3 10h18M8 3v4M16 3v4" /><path d="M8 14h3M13 14h3M8 18h3" /></svg>;
+export const IcSign = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M6 3h8l4 4v14H6z" /><path d="M14 3v4h4" /><path d="M9 16c1-3 2-4 3-2s2 1 3-1" /></svg>;
+export const IcBriefcase = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><rect x="3" y="7" width="18" height="13" rx="2" /><path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" /><path d="M3 12h18" /></svg>;
+export const IcQr = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><path d="M14 14h3v3h-3zM20 14v3M17 20h4M14 20h1" /></svg>;
+export const IcGift = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><rect x="3" y="9" width="18" height="4" /><path d="M5 13v8h14v-8M12 9v12" /><path d="M12 9c-2-4-6-4-6-1s4 1 6 1zM12 9c2-4 6-4 6-1s-4 1-6 1z" /></svg>;
+export const IcMenu = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M4 7h16M4 12h16M4 17h16" /></svg>;
+export const IcBag = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M5 8h14l-1 12H6z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" /></svg>;
+export const IcCandle = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M12 3c-1.5 2-1.5 3 0 4 1.5-1 1.5-2 0-4z" /><rect x="9" y="9" width="6" height="11" rx="1" /><path d="M6 20h12" /></svg>;
+export const IcSun = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><circle cx="12" cy="12" r="4" /><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4 7 17M17 7l1.4-1.4" /></svg>;
+export const IcSparkle = () => <svg viewBox="0 0 24 24" {...P} aria-hidden><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z" /><path d="M19 16l.7 2.3L22 19l-2.3.7L19 22l-.7-2.3L16 19l2.3-.7z" /></svg>;
 export const SUP_ICON = { meal: IcMeal, chairs: IcChairs, stone: IcStone, home: IcHouse, flowers: IcFlowers, transport: IcTruck };

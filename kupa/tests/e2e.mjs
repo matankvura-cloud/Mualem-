@@ -147,7 +147,7 @@ try {
   await page.goto(manageUrl);
   const home = await page.textContent('body');
   check(home.includes('אנחנו כאן בשבילכם') && home.includes('כרטיס המשפחה') && home.includes('משפחת לוי') && home.includes('₪680'), 'הבית: כותרת, כרטיס המשפחה, יתרה ₪680');
-  check((await page.locator('.avatars span').count()) === 2, 'עזרה מהקרובים: 2 אווטארים');
+  check(home.includes('כבר 2 קרובים השתתפו'), 'עזרה מהקרובים: 2 קרובים השתתפו');
   await page.goto(manageUrl + '/file');
   await page.selectOption('#kind', 'shloshim');
   await page.fill('#date', '2026-12-02');
@@ -282,13 +282,13 @@ try {
   await page.waitForFunction(() => document.querySelectorAll('.checks.tasks li.done').length === 2);
   check((await page.textContent('.fam-head p')).includes('2 מתוך 15'), 'שני צעדים סומנו: 2 מתוך 15');
   await page.goto(manageUrl);
-  check((await page.textContent('body')).includes('2 מתוך 15 בוצעו'), 'הבית מציג את ההתקדמות');
+  check((await page.textContent('body')).includes('2 מתוך 15'), 'הבית מציג את ההתקדמות');
   await page.goto(manageUrl + '/file');
   const pdf = Buffer.from('%PDF-1.4\n1 0 obj<</Type/Catalog>>endobj\ntrailer<</Root 1 0 R>>\n%%EOF');
   await page.setInputFiles('#doc-file', { name: 'teudat-ptira.pdf', mimeType: 'application/pdf', buffer: pdf });
   await page.selectOption('#doc-kind', 'death-cert');
   await page.fill('#doc-name', 'תעודת פטירה');
-  await page.click('form[enctype="multipart/form-data"] button[type=submit]');
+  await page.click('form[action$="/documents"] button[type=submit]');
   await page.waitForURL(/doc=ok/);
   check((await page.locator('.docs li').count()) === 1 && (await page.locator('.kinds li.have').count()) === 1, 'המסמך נשמר ומסומן ברשימת המסמכים');
   const docHref = await page.getAttribute('.docs li a', 'href');
@@ -297,7 +297,7 @@ try {
   const badDoc = await page.request.get(`${SITE}/m/AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA/doc/${docHref.split('/doc/')[1]}`);
   check(badDoc.status() === 404, 'מסמך לא נגיש עם קישור ניהול אחר');
   await page.setInputFiles('#doc-file', { name: 'big.pdf', mimeType: 'application/pdf', buffer: Buffer.alloc(4.5 * 1024 * 1024, 1) });
-  await page.click('form[enctype="multipart/form-data"] button[type=submit]');
+  await page.click('form[action$="/documents"] button[type=submit]');
   await page.waitForURL(/doc=big/);
   check(true, 'קובץ מעל 4MB נדחה עם הסבר');
 
@@ -546,6 +546,115 @@ try {
   check(rachelPage.includes('הגיעו בזמן') && rachelPage.includes('משפחת לוי'), 'עמוד הספק מציג את הדירוג עם שם המשפחה');
   await page.goto(manageUrl + '/suppliers');
   check((await page.locator('a:has-text("לקבל הצעה עם ההטבה")').first().getAttribute('href')).includes('?f='), 'אזור המשפחה: "לקבל הצעה" מוביל לעמוד הספק עם הקופה');
+
+
+  // 13. "לצידכם": מדריכים, חיפוש, תזכורות, חתימות, עזרה מהקרובים, מעסיקים
+  console.log('לצידכם');
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(manageUrl);
+  const shell = await page.textContent('body');
+  check(shell.includes('לצידכם') && shell.includes('מדריכים וזכויות') && shell.includes('מסמכים וחתימות') && shell.includes('משימות ותזכורות') && shell.includes('הרכזת האישית שלכם') && shell.includes('מדריכים למשפחה') && shell.includes('שירותים והטבות'), 'הבית לפי ההמחשה: ניווט, רכזת, מדריכים, שירותים');
+  check((await page.locator('.fam-search input').count()) === 1 && (await page.locator('.fam-bell').count()) === 1, 'שורת חיפוש ופעמון');
+  check((await page.locator('.gtile').count()) === 8, '4 מדריכים + 4 קטגוריות שירות');
+  await page.click('.gtile:has-text("ימי השבעה")');
+  await page.waitForSelector('.guide-head h1:has-text("ימי השבעה")');
+  check((await page.textContent('body')).includes('הוצאות השבעה'), 'מדריך השבעה נפתח עם התוכן');
+  await page.goto(manageUrl + '/guides');
+  check((await page.locator('.gtile').count()) === 4 && (await page.textContent('body')).includes('הר הכסף'), 'מסך המדריכים: 4 מדריכים וזכויות');
+  // חיפוש
+  await page.fill('.fam-search input', 'צו ירושה');
+  await page.press('.fam-search input', 'Enter');
+  await page.waitForURL(/\/search\?q=/);
+  const sr = await page.textContent('body');
+  check(sr.includes('זכויות וביורוקרטיה') && sr.includes('רשם הירושה') && sr.includes('לשאול את העוזר'), 'חיפוש: מדריך, זכות, והפניה לעוזר');
+  // תזכורות: אוטומטיות מהאירועים + ידנית
+  await page.goto(manageUrl + '/now');
+  const nowTxt = await page.textContent('body');
+  check(nowTxt.includes('תזכורות') && nowTxt.includes('אזכרת השנה'), 'תזכורת אוטומטית לשנה מההלוויה');
+  await page.fill('#rm-title', 'להתקשר לביטוח לאומי');
+  await page.fill('#rm-due', '2030-01-15');
+  await page.click('form:has(#rm-title) button[type=submit]');
+  await page.waitForSelector('.notice-ok:has-text("התזכורת נוספה")');
+  check((await page.textContent('.rems')).includes('להתקשר לביטוח לאומי'), 'תזכורת ידנית נוספה');
+  await page.click('.rems li:has-text("להתקשר לביטוח לאומי") .task-toggle');
+  await page.waitForSelector('details:has-text("בוצעו (1)")');
+  check(true, 'תזכורת סומנה כבוצעה');
+  // טפסים וחתימות
+  await page.goto(manageUrl + '/file');
+  const ff = await page.textContent('#forms');
+  check(ff.includes('טופס בקשת זכויות') && ff.includes('הסכמה לשירות הליווי') && ff.includes('אישור מהמעסיק') && ff.includes('לחתימה'), 'שלושה טפסים, כולם לחתימה');
+  await page.click('#forms li:has-text("טופס בקשת זכויות") button:has-text("לקרוא ולחתום")');
+  await page.fill('#sn-rights', 'יעקב');
+  await page.fill('#si-rights', '1234');
+  await page.check('#forms li:has-text("טופס בקשת זכויות") input[name=agree]');
+  await page.click('#forms li:has-text("טופס בקשת זכויות") button:has-text("לחתום")');
+  await page.waitForSelector('.fd-err:has-text("שם מלא")');
+  check(true, 'חתימה בלי שם מלא נדחית והטופס נשאר');
+  await page.fill('#sn-rights', 'יעקב לוי');
+  check((await page.inputValue('#si-rights')) === '1234' && (await page.isChecked('#forms li:has-text("טופס בקשת זכויות") input[name=agree]')), 'אחרי שגיאה השדות נשמרים');
+  await page.click('#forms li:has-text("טופס בקשת זכויות") button:has-text("לחתום")');
+  await page.waitForSelector('#forms li:has-text("טופס בקשת זכויות") .pill:has-text("נחתם")');
+  check((await page.textContent('#forms')).includes('על ידי יעקב לוי'), 'הטופס נחתם ומוצג שם החותם');
+  await page.goto(manageUrl);
+  check((await page.textContent('.forms-list')).includes('נחתם'), 'הבית מציג "נחתם" על טופס הזכויות');
+  // עזרה מהקרובים: בקשה -> העמוד הציבורי -> קרוב לוקח -> המשפחה רואה
+  await page.goto(manageUrl + '/help?ask=meals');
+  await page.fill('#hr-text', 'ארוחת ערב ליום שלישי, 8 אנשים');
+  await page.fill('#hr-when', 'יום שלישי בערב');
+  await page.click('form#ask button[type=submit]');
+  await page.waitForSelector('.notice-ok:has-text("הבקשה פורסמה")');
+  await page.goto(publicUrl);
+  const pb = await page.textContent('body');
+  check(pb.includes('איך אפשר לעזור') && pb.includes('ארוחת ערב ליום שלישי') && pb.includes('1 בקשות פתוחות'), 'העמוד הציבורי מציג את הבקשה');
+  await page.click('#help button:has-text("אני אעזור")');
+  await page.fill('#help input[name=name]', 'רותי');
+  await page.fill('#help input[name=phone]', '0501112222');
+  await page.click('#help button:has-text("לוקח/ת את זה")');
+  await page.waitForSelector('#help :text("רותי כבר לוקח/ת את זה")');
+  await page.goto(manageUrl + '/help');
+  const ht = await page.textContent('body');
+  check(ht.includes('מישהו לקח') && ht.includes('רותי') && ht.includes('0501112222'), 'המשפחה רואה מי לקח ואת הטלפון');
+  await page.goto(manageUrl + '/updates');
+  check((await page.textContent('body')).includes('רותי לוקח/ת'), 'העדכונים מציגים את העזרה שנלקחה');
+  check((await page.locator('.fam-bell b').count()) === 1, 'הפעמון מציג מונה');
+  // פורטל מעסיקים
+  await page.goto(`${SITE}/e`);
+  await page.fill('#e-company', 'חברת אלפא בע״מ');
+  await page.fill('#e-contact', 'נועה כהן');
+  await page.fill('#e-phone', '0541234567');
+  await page.fill('#c-emp', 'דנה לוי');
+  await page.fill('#c-rel', 'אב');
+  await page.fill('#c-dec', 'יעקב לוי');
+  await page.fill('#c-fp', '0501234567');
+  await page.click('button:has-text("לרשום את המשפחה")');
+  await page.waitForURL(/\/e\/[A-Za-z0-9_-]{32}\?new=1/);
+  const empUrl = page.url().replace('?new=1', '');
+  const et = await page.textContent('body');
+  check(et.includes('חברת אלפא') && et.includes('דנה לוי') && et.includes('התקבל'), 'פורטל המעסיק: המשפחה רשומה בסטטוס התקבל');
+  await page.fill('.cases input[name=signer_name]', 'נועה כהן');
+  await page.check('.cases input[name=agree]');
+  await page.click('.cases button:has-text("לאשר את החבילה")');
+  await page.waitForSelector('.cases :text("אישור המעסיק נרשם")');
+  // אדמין: לקשר לקופה ולעדכן סטטוס -> הטופס "אישור מהמעסיק" נחתם אצל המשפחה
+  await page.goto(`${SITE}/admin/employers`);
+  await page.waitForSelector('.tbl');
+  check((await page.textContent('.tbl')).includes('אושר'), 'האדמין רואה שהמעסיק אישר');
+  await page.selectOption('.tbl select[name=status]', 'active');
+  await page.selectOption('.tbl select[name=fund_id]', { label: 'יעקב (קובי) לוי ז״ל' });
+  await page.click('.tbl button:has-text("לעדכן")');
+  await page.waitForTimeout(800);
+  await page.goto(empUrl);
+  check((await page.textContent('body')).includes('בליווי'), 'המעסיק רואה סטטוס "בליווי"');
+  await page.goto(manageUrl + '/file');
+  check((await page.textContent('#forms li:has-text("אישור מהמעסיק")')).includes('נחתם'), 'אצל המשפחה: אישור מהמעסיק נחתם');
+  // נייד: הבית כמו אפליקציה
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto(manageUrl);
+  check(await page.locator('.app-home').isVisible() && (await page.locator('.app-home a:has-text("הצגת הכרטיס")').count()) === 1, 'נייד: כרטיס + "הצגת הכרטיס"');
+  await page.screenshot({ path: OUT + '13-home-mobile.png', fullPage: true });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto(manageUrl);
+  await page.screenshot({ path: OUT + '13-home-desktop.png', fullPage: true });
 
   // 9. קופה לזכרה
   console.log('לזכרה');

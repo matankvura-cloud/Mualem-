@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Footer from '@/components/Footer';
+import { IcShop, IcBriefcase } from '@/components/icons';
 import { FEE_PCT, FEE_MODE, BRAND, TAGLINE } from '@/lib/site';
 import { DEMO } from '@/lib/demo-seed';
 
@@ -54,9 +55,14 @@ export default function Landing() {
             <Link className="btn-ghost" href="/admin">הניהול של מתן ›</Link>
           </div>
         </section>) : null}
-      <section className="fd-sec" style={{ paddingBottom: 28 }}>
+      <section className="fd-sec" style={{ paddingBottom: 12 }}>
         <Link className="btn" href="/new">לפתוח קופה</Link>
       </section>
+      <section className="fd-sec" style={{ paddingTop: 10 }}><h2>לספקים ולמעסיקים</h2></section>
+      <div className="land-portals">
+        <Link href="/suppliers/join"><b><IcShop />פורטל ספקים</b><small>שירות וקבלת זכאויות למשפחות: סריקת כרטיס המשפחה, בדיקת ההטבה, מעקב אחר מימושים, ופניות ישירות מהמשפחות.</small></Link>
+        <Link href="/e"><b><IcBriefcase />פורטל מעסיקים</b><small>ליווי ותמיכה בעובדים ובמשפחותיהם: רישום משפחה של עובד/ת, מעקב אחר חבילת הליווי, סטטוס ותיאום שירותים.</small></Link>
+      </div>
       <Footer brandLink={false} />
     </div>
   );

@@ -10,9 +10,14 @@ import { eventDay, eventTitle } from '@/lib/format';
 import FamilyShell from '@/components/FamilyShell';
 import { EditFundForm, AddEventForm } from '../ManageForms';
 import { removeEvent, setStatus } from '../actions';
+import { formsOf } from '@/lib/family';
+import { FORM_STATUS } from '@/data/forms';
+import { SignForm } from '../FamilyForms';
+import { markFormSigning } from '../family-actions';
+import { IcSign } from '@/components/icons';
 
 export const dynamic = 'force-dynamic';
-export const metadata: Metadata = { title: 'התיק והמסמכים', robots: { index: false, follow: false } };
+export const metadata: Metadata = { title: 'מסמכים וחתימות', robots: { index: false, follow: false } };
 type Props = { params: Promise<{ manage: string }>; searchParams: Promise<{ doc?: string }> };
 const DOC_MSG: Record<string, [string, string]> = { ok: ['המסמך נשמר בתיק.', 'notice-ok'], empty: ['לא נבחר קובץ.', 'notice-warn'], big: ['הקובץ גדול מדי. עד 4MB.', 'notice-warn'], type: ['אפשר להעלות PDF או תמונה (JPG, PNG, WEBP, HEIC).', 'notice-warn'] };
 const kb = (n: number) => n > 1024 * 1024 ? `${(n / 1048576).toFixed(1)}MB` : `${Math.max(1, Math.round(n / 1024))}KB`;
@@ -21,16 +26,26 @@ export default async function FilePage({ params, searchParams }: Props) {
   const { manage } = await params;
   const { doc } = await searchParams;
   const { fund } = await loadFamily(manage);
-  const docs = await documentsOf(fund.id);
+  const [docs, forms] = await Promise.all([documentsOf(fund.id), formsOf(fund.id)]);
   const have = new Set(docs.map((d) => d.kind));
   const msg = doc ? DOC_MSG[doc] : null;
   const closed = fund.status === 'closed';
   return (
     <FamilyShell manage={manage} active="file">
       <header className="fam-head">
-        <div><h1>התיק והמסמכים</h1><p>המסמכים שצריך, מי מנפיק אותם, והזכויות שמגיעות. וגם מה שמוצג בעמוד הקופה.</p></div>
+        <div><h1>מסמכים וחתימות</h1><p>הטפסים שחותמים כאן, המסמכים שצריך ומי מנפיק אותם, ומה שמוצג בעמוד הקופה.</p></div>
         <span className={`pill ${closed ? 'pill-muted' : 'pill-ok'}`}>{closed ? 'הקופה סגורה' : 'הקופה פתוחה'}</span>
       </header>
+      <section className="panel" id="forms" style={{ marginBottom: 14 }}>
+        <h2><IcSign />טפסים וחתימות</h2>
+        <ul className="forms-full">{forms.map((f) => (
+          <li key={f.def.key}>
+            <div className="t"><b>{f.def.name}</b><span className={`pill ${FORM_STATUS[f.status][1]}`}>{FORM_STATUS[f.status][0]}</span><small>{f.def.what}{f.row?.signed_at ? ` · נחתם ${fmtDate(f.row.signed_at)} על ידי ${f.row.signer_name}` : ''}</small></div>
+            {f.status === 'signed' ? null : f.def.by === 'family' ? <SignForm manage={manage} def={f.def} />
+              : f.status === 'signing' ? <p className="muted">נשלח למעסיק. כשהמעסיק מאשר בפורטל המעסיקים, הסטטוס מתעדכן.</p>
+              : <form action={markFormSigning.bind(null, manage, f.def.key)}><button className="btn-outline" type="submit" style={{ width: 'auto' }}>שלחתי למעסיק</button></form>}
+          </li>))}</ul>
+      </section>
       <section className="fam-grid2" id="docs">
         <div className="panel">
           <h2><IcDoc />המסמכים</h2>
@@ -40,7 +55,7 @@ export default async function FilePage({ params, searchParams }: Props) {
               <li key={k.key} className={have.has(k.key) ? 'have' : ''}><i>{have.has(k.key) ? <IcCheck /> : null}</i>
                 <div><b>{k.name}</b><small>{k.who ? `${k.who} · ` : ''}{k.why}</small>{k.link ? <a href={k.link} target="_blank" rel="noopener">לשירות הרשמי ›</a> : null}</div></li>))}
           </ul>
-          <h3 style={{ fontSize: 15, marginTop: 16 }}>להעלות מסמך לתיק</h3>
+          <h3 style={{ fontSize: 15, marginTop: 16 }} id="upload">להעלות מסמך לתיק</h3>
           <form action={`/api/m/${manage}/documents`} method="post" encType="multipart/form-data" className="stack" style={{ gap: 8, marginTop: 8 }}>
             <div className="grid2">
               <div className="field"><label className="l" htmlFor="doc-kind">סוג</label>
@@ -95,7 +110,7 @@ export default async function FilePage({ params, searchParams }: Props) {
             </form>
           </div>
         </div>
-        <EditFundForm manage={manage} fund={fund} />
+        <div id="details"><EditFundForm manage={manage} fund={fund} /></div>
       </section>
     </FamilyShell>
   );

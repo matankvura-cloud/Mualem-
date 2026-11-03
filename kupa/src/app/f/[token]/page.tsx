@@ -6,6 +6,8 @@ import { TOKEN_RE } from '@/lib/tokens';
 import { siteUrl, BRAND } from '@/lib/site';
 import { memOf } from '@/lib/format';
 import FundPublic from '@/components/FundPublic';
+import HelpBoard from '@/components/HelpBoard';
+import { openHelpRequests } from '@/lib/family';
 import Footer from '@/components/Footer';
 
 export const dynamic = 'force-dynamic';
@@ -43,11 +45,12 @@ export default async function FundPage({ params, searchParams }: Props) {
     );
   }
 
-  const [tot, entries, site] = await Promise.all([totals(fund.id), book(fund), siteUrl()]);
+  const [tot, entries, site, helps] = await Promise.all([totals(fund.id), book(fund), siteUrl(), openHelpRequests(fund.id)]);
   bumpViews(fund.id);
   return (
     <div className="fd">
       <FundPublic fund={fund} t={token} totals={tot} book={entries} site={site} />
+      {helps.length ? <HelpBoard token={token} requests={helps} giveHref={`/f/${token}/give`} /> : null}
       <Footer />
     </div>
   );
